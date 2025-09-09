@@ -43,7 +43,7 @@ import {
   PlayArrow,
   Stop,
   CheckCircle,
-  Error,
+  Error as ErrorIcon,
   Warning,
   Info,
 } from '@mui/icons-material';
@@ -156,13 +156,206 @@ const CodeAnalysis: React.FC = () => {
 
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
+    setAnalysisResults([]);
+    setShowResults(false);
     
-    // Simulate analysis
-    setTimeout(() => {
-      setAnalysisResults(mockAnalysisResults);
+    try {
+      const response = await fetch('http://localhost:8000/api/v1/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code: codeInput,
+          language: selectedLanguage,
+          analysis_types: [analysisType],
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data: any = await response.json();
+      
+      // Transform backend response to frontend format
+      const transformedResults: AnalysisResult[] = [];
+      
+      // Add security issues
+      if (data.security_analysis?.vulnerabilities) {
+        data.security_analysis.vulnerabilities.forEach((vuln: any, index: number) => {
+          transformedResults.push({
+            id: `security-${index}`,
+            type: 'security',
+            severity: vuln.severity || 'medium',
+            title: vuln.type || 'Security Issue',
+            description: vuln.description || 'Security vulnerability detected',
+            file: vuln.file || 'input.code',
+            line: vuln.line || 1,
+            suggestion: vuln.recommendation,
+          });
+        });
+      }
+      
+      // Add AI detection results
+      if (data.ai_detection?.is_ai_generated) {
+        transformedResults.push({
+          id: 'ai-detection',
+          type: 'ai-detection',
+          severity: 'medium',
+          title: 'AI-Generated Code Pattern',
+          description: `Code pattern suggests AI generation with ${Math.round((data.ai_detection.confidence || 0) * 100)}% confidence`,
+          file: 'input.code',
+          line: 1,
+          suggestion: 'Review code for compliance with coding standards',
+        });
+      }
+      
+      // Add quality issues
+      if (data.quality_analysis?.issues) {
+        data.quality_analysis.issues.forEach((issue: any, index: number) => {
+          transformedResults.push({
+            id: `quality-${index}`,
+            type: 'quality',
+            severity: issue.severity || 'medium',
+            title: issue.type || 'Code Quality Issue',
+            description: issue.description || 'Code quality issue detected',
+            file: issue.file || 'input.code',
+            line: issue.line || 1,
+            suggestion: issue.suggestion,
+          });
+        });
+      }
+      
+      // Add performance issues
+      if (data.performance_analysis?.issues) {
+        data.performance_analysis.issues.forEach((issue: any, index: number) => {
+          transformedResults.push({
+            id: `performance-${index}`,
+            type: 'performance',
+            severity: issue.severity || 'low',
+            title: issue.type || 'Performance Issue',
+            description: issue.description || 'Performance issue detected',
+            file: issue.file || 'input.code',
+            line: issue.line || 1,
+            suggestion: issue.suggestion,
+          });
+        });
+      }
+      
+      setAnalysisResults(transformedResults);
       setShowResults(true);
+    } catch (error) {
+      console.error('Analysis failed:', error);
+      setAnalysisResults([]);
+      setShowResults(true);
+    } finally {
       setIsAnalyzing(false);
-    }, 3000);
+    }
+  };
+
+  const handleFileAnalyze = async () => {
+    if (uploadedFiles.length === 0) return;
+    
+    setIsAnalyzing(true);
+    setAnalysisResults([]);
+    setShowResults(false);
+    
+    try {
+      const formData = new FormData();
+      uploadedFiles.forEach((file, index) => {
+        formData.append('file', file);
+      });
+      formData.append('analysis_types', analysisType);
+      
+      const response = await fetch('http://localhost:8000/api/v1/analyze/file', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data: any = await response.json();
+      
+      // Transform backend response to frontend format
+      const transformedResults: AnalysisResult[] = [];
+      
+      // Process results for each file
+      Object.entries(data.results || {}).forEach(([filename, fileResults]: [string, any]) => {
+        // Add security issues
+        if (fileResults.security_analysis?.vulnerabilities) {
+          fileResults.security_analysis.vulnerabilities.forEach((vuln: any, index: number) => {
+            transformedResults.push({
+              id: `${filename}-security-${index}`,
+              type: 'security',
+              severity: vuln.severity || 'medium',
+              title: vuln.type || 'Security Issue',
+              description: vuln.description || 'Security vulnerability detected',
+              file: filename,
+              line: vuln.line || 1,
+              suggestion: vuln.recommendation,
+            });
+          });
+        }
+        
+        // Add AI detection results
+        if (fileResults.ai_detection?.is_ai_generated) {
+          transformedResults.push({
+            id: `${filename}-ai-detection`,
+            type: 'ai-detection',
+            severity: 'medium',
+            title: 'AI-Generated Code Pattern',
+            description: `Code pattern suggests AI generation with ${Math.round((fileResults.ai_detection.confidence || 0) * 100)}% confidence`,
+            file: filename,
+            line: 1,
+            suggestion: 'Review code for compliance with coding standards',
+          });
+        }
+        
+        // Add quality issues
+        if (fileResults.quality_analysis?.issues) {
+          fileResults.quality_analysis.issues.forEach((issue: any, index: number) => {
+            transformedResults.push({
+              id: `${filename}-quality-${index}`,
+              type: 'quality',
+              severity: issue.severity || 'medium',
+              title: issue.type || 'Code Quality Issue',
+              description: issue.description || 'Code quality issue detected',
+              file: filename,
+              line: issue.line || 1,
+              suggestion: issue.suggestion,
+            });
+          });
+        }
+        
+        // Add performance issues
+        if (fileResults.performance_analysis?.issues) {
+          fileResults.performance_analysis.issues.forEach((issue: any, index: number) => {
+            transformedResults.push({
+              id: `${filename}-performance-${index}`,
+              type: 'performance',
+              severity: issue.severity || 'low',
+              title: issue.type || 'Performance Issue',
+              description: issue.description || 'Performance issue detected',
+              file: filename,
+              line: issue.line || 1,
+              suggestion: issue.suggestion,
+            });
+          });
+        }
+      });
+      
+      setAnalysisResults(transformedResults);
+      setShowResults(true);
+    } catch (error) {
+      console.error('File analysis failed:', error);
+      setAnalysisResults([]);
+      setShowResults(true);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const handleResultClick = (result: AnalysisResult) => {
@@ -173,7 +366,7 @@ const CodeAnalysis: React.FC = () => {
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
       case 'high':
-        return <Error color="error" />;
+        return <ErrorIcon color="error" />;
       case 'medium':
         return <Warning color="warning" />;
       case 'low':
@@ -387,13 +580,22 @@ function example() {
                 <Button
                   variant="contained"
                   size="large"
-                  startIcon={<PlayArrow />}
-                  onClick={handleAnalyze}
+                  startIcon={isAnalyzing ? <Stop /> : <PlayArrow />}
+                  onClick={handleFileAnalyze}
                   disabled={uploadedFiles.length === 0 || isAnalyzing}
                   fullWidth
                 >
-                  Analyze Files
+                  {isAnalyzing ? 'Analyzing...' : 'Analyze Files'}
                 </Button>
+
+                {isAnalyzing && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="body2" gutterBottom>
+                      Analysis in progress...
+                    </Typography>
+                    <LinearProgress />
+                  </Box>
+                )}
               </Box>
             </Grid>
           </Grid>

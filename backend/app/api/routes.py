@@ -104,6 +104,10 @@ async def perform_analysis(code: str, filename: str, analysis_types: List[str]) 
     """Perform comprehensive code analysis"""
     results = {}
     
+    # Expand "comprehensive" to all analysis types
+    if "comprehensive" in analysis_types:
+        analysis_types = ["ai_detection", "security", "performance", "quality", "ast"]
+    
     try:
         # AST parsing (always performed for other analyses)
         ast_result = parse_code(code, filename)
@@ -112,7 +116,7 @@ async def perform_analysis(code: str, filename: str, analysis_types: List[str]) 
                 "success": ast_result.success,
                 "language": ast_result.language.value if ast_result.success else "unknown",
                 "metrics": ast_result.metrics.to_dict() if ast_result.metrics else None,
-                "error": ast_result.error_message if not ast_result.success else None
+                "error": ast_result.errors[0] if not ast_result.success and ast_result.errors else None
             }
         
         # AI Detection
@@ -236,12 +240,22 @@ async def analyze_code(
         # Store in database (background task)
         def store_analysis():
             try:
+                import hashlib
+                code_hash = hashlib.sha256(request.code.encode()).hexdigest()
+                
                 analysis = CodeAnalysis(
                     filename=request.filename or "unknown.py",
                     language=results.get("ast", {}).get("language", "unknown"),
-                    analysis_types=request.analysis_types,
-                    results=results,
-                    user_id=current_user.id if current_user else None
+                    code_hash=code_hash,
+                    code_content=request.code,
+                    status="completed",
+                    completed_at=datetime.utcnow(),
+                    # Extract specific results for database fields
+                    ai_detection_confidence=results.get("ai_detection", {}).get("confidence"),
+                    is_ai_generated=results.get("ai_detection", {}).get("is_ai_generated"),
+                    vulnerability_count=len(results.get("security_analysis", {}).get("vulnerabilities", [])),
+                    cyclomatic_complexity=results.get("performance_analysis", {}).get("complexity", {}).get("cyclomatic_complexity"),
+                    lines_of_code=results.get("ast", {}).get("metrics", {}).get("lines_of_code")
                 )
                 db.add(analysis)
                 db.commit()
@@ -305,6 +319,33 @@ async def analyze_file(
         
         # Perform analysis
         results = await perform_analysis(code, file.filename, analysis_types_list)
+        
+        # Store in database (background task)
+        def store_file_analysis():
+            try:
+                import hashlib
+                code_hash = hashlib.sha256(code.encode()).hexdigest()
+                
+                analysis = CodeAnalysis(
+                    filename=file.filename or "unknown",
+                    language=results.get("ast", {}).get("language", "unknown"),
+                    code_hash=code_hash,
+                    code_content=code,
+                    status="completed",
+                    completed_at=datetime.utcnow(),
+                    # Extract specific results for database fields
+                    ai_detection_confidence=results.get("ai_detection", {}).get("confidence"),
+                    is_ai_generated=results.get("ai_detection", {}).get("is_ai_generated"),
+                    vulnerability_count=len(results.get("security_analysis", {}).get("vulnerabilities", [])),
+                    cyclomatic_complexity=results.get("performance_analysis", {}).get("complexity", {}).get("cyclomatic_complexity"),
+                    lines_of_code=results.get("ast", {}).get("metrics", {}).get("lines_of_code")
+                )
+                db.add(analysis)
+                db.commit()
+            except Exception as e:
+                logger.error(f"Failed to store file analysis: {str(e)}")
+        
+        background_tasks.add_task(store_file_analysis)
         
         processing_time = (datetime.utcnow() - start_time).total_seconds() * 1000
         
