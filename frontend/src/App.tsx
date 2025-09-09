@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline, Box } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -155,28 +155,26 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Router>
-          <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-            <Layout>
-              <Routes>
-                {/* Dashboard */}
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/dashboard" element={<Navigate to="/" replace />} />
-                
-                {/* Analysis Pages */}
-                <Route path="/analysis" element={<CodeAnalysis />} />
-                <Route path="/security" element={<SecurityScan />} />
-                <Route path="/performance" element={<PerformanceAnalysis />} />
-                
-                {/* Other Pages */}
-                <Route path="/reports" element={<Reports />} />
-                
-                {/* Catch all route */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </Layout>
-          </Box>
-        </Router>
+        <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+          <Layout>
+            <Routes>
+              {/* Dashboard */}
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Navigate to="/" replace />} />
+              
+              {/* Analysis Pages */}
+              <Route path="/analysis" element={<CodeAnalysis />} />
+              <Route path="/security" element={<SecurityScan />} />
+              <Route path="/performance" element={<PerformanceAnalysis />} />
+              
+              {/* Other Pages */}
+              <Route path="/reports" element={<Reports />} />
+              
+              {/* Catch all route */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Layout>
+        </Box>
         
         {/* Toast notifications */}
         <Toaster
