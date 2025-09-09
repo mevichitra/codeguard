@@ -46,7 +46,7 @@ class CodeAnalysisRequest(BaseModel):
     
     @validator('analysis_types')
     def validate_analysis_types(cls, v):
-        valid_types = {"ai_detection", "security", "performance", "quality", "ast"}
+        valid_types = {"ai_detection", "security", "performance", "quality", "ast", "comprehensive"}
         for analysis_type in v:
             if analysis_type not in valid_types:
                 raise ValueError(f"Invalid analysis type: {analysis_type}. Valid types: {valid_types}")
@@ -112,10 +112,12 @@ async def perform_analysis(code: str, filename: str, analysis_types: List[str]) 
     try:
         # AST parsing (always performed for other analyses)
         ast_result = parse_code(code, filename)
+        language = ast_result.language.value if ast_result.success else "unknown"
+        
         if "ast" in analysis_types:
             results["ast"] = {
                 "success": ast_result.success,
-                "language": ast_result.language.value if ast_result.success else "unknown",
+                "language": language,
                 "metrics": ast_result.metrics.to_dict() if ast_result.metrics else None,
                 "error": ast_result.errors[0] if not ast_result.success and ast_result.errors else None
             }
@@ -181,7 +183,7 @@ async def perform_analysis(code: str, filename: str, analysis_types: List[str]) 
             llm_service = LLMService()
             comprehensive_summary = await llm_service.generate_comprehensive_summary(
                 code=code,
-                filename=filename,
+                language=language,
                 analysis_results=results
             )
             results["comprehensive_summary"] = comprehensive_summary
