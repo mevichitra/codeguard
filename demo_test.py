@@ -386,8 +386,8 @@ class CodeGuardDemo:
             if isinstance(results, dict):
                 for test_name, test_result in results.items():
                     report["summary"]["total_tests"] += 1
-                    # Check for both "error" key and "status": "error" patterns
-                    has_error = "error" in test_result
+                    # Check for both non-null "error" values and "status": "error" patterns
+                    has_error = test_result.get("error") is not None
                     has_error_status = test_result.get("status") == "error"
                     
                     if not has_error and not has_error_status:

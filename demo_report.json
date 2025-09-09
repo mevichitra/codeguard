@@ -1,9 +1,9 @@
 {
-  "timestamp": "2025-09-10 04:26:57",
+  "timestamp": "2025-09-10 04:29:45",
   "summary": {
     "total_tests": 9,
-    "successful_tests": 7,
-    "failed_tests": 2
+    "successful_tests": 9,
+    "failed_tests": 0
   },
   "results": {
     "basic_analysis": {
@@ -203,7 +203,7 @@
                 "A02:2021 \u2013 Cryptographic Failures"
               ],
               "highest_severity": "high",
-              "scan_timestamp": "2025-09-09T22:56:57.316777"
+              "scan_timestamp": "2025-09-09T22:59:45.066793"
             }
           },
           "performance": {
@@ -310,7 +310,7 @@
                 "memory_leak",
                 "high_complexity"
               ],
-              "analysis_timestamp": "2025-09-09T22:56:57.318557"
+              "analysis_timestamp": "2025-09-09T22:59:45.068086"
             }
           },
           "quality": {
@@ -385,7 +385,7 @@
                 "style_consistency": 0
               },
               "critical_issues": 0,
-              "analysis_timestamp": "2025-09-09T22:56:57.319990"
+              "analysis_timestamp": "2025-09-09T22:59:45.069182"
             }
           }
         },
@@ -399,8 +399,8 @@
             "quality"
           ]
         },
-        "timestamp": "2025-09-09T22:56:57.320112",
-        "processing_time_ms": 13.088000000000001
+        "timestamp": "2025-09-09T22:59:45.069272",
+        "processing_time_ms": 11.411
       },
       "javascript_performance": {
         "success": true,
@@ -609,7 +609,7 @@
               "vulnerability_types": [],
               "owasp_categories": [],
               "highest_severity": "info",
-              "scan_timestamp": "2025-09-09T22:56:57.342147"
+              "scan_timestamp": "2025-09-09T22:59:45.077260"
             }
           },
           "performance": {
@@ -641,7 +641,7 @@
               "total_issues": 0,
               "critical_issues": 0,
               "issue_types": [],
-              "analysis_timestamp": "2025-09-09T22:56:57.342795"
+              "analysis_timestamp": "2025-09-09T22:59:45.077872"
             }
           },
           "quality": {
@@ -715,7 +715,7 @@
                 "style_consistency": 0
               },
               "critical_issues": 0,
-              "analysis_timestamp": "2025-09-09T22:56:57.343212"
+              "analysis_timestamp": "2025-09-09T22:59:45.078164"
             }
           }
         },
@@ -729,8 +729,8 @@
             "quality"
           ]
         },
-        "timestamp": "2025-09-09T22:56:57.343316",
-        "processing_time_ms": 2.911
+        "timestamp": "2025-09-09T22:59:45.078203",
+        "processing_time_ms": 2.036
       },
       "java_quality": {
         "success": true,
@@ -855,7 +855,7 @@
               "vulnerability_types": [],
               "owasp_categories": [],
               "highest_severity": "info",
-              "scan_timestamp": "2025-09-09T22:56:57.358712"
+              "scan_timestamp": "2025-09-09T22:59:45.083490"
             }
           },
           "performance": {
@@ -919,7 +919,7 @@
               "issue_types": [
                 "memory_leak"
               ],
-              "analysis_timestamp": "2025-09-09T22:56:57.359937"
+              "analysis_timestamp": "2025-09-09T22:59:45.084284"
             }
           },
           "quality": {
@@ -993,7 +993,7 @@
                 "style_consistency": 0
               },
               "critical_issues": 0,
-              "analysis_timestamp": "2025-09-09T22:56:57.360609"
+              "analysis_timestamp": "2025-09-09T22:59:45.084691"
             }
           }
         },
@@ -1007,8 +1007,8 @@
             "quality"
           ]
         },
-        "timestamp": "2025-09-09T22:56:57.360703",
-        "processing_time_ms": 3.6020000000000003
+        "timestamp": "2025-09-09T22:59:45.084736",
+        "processing_time_ms": 2.1069999999999998
       }
     },
     "llm_integration": {
@@ -1040,7 +1040,7 @@
         "status": "success",
         "data": {
           "status": "healthy",
-          "timestamp": "2025-09-09T22:56:57.394558",
+          "timestamp": "2025-09-09T22:59:45.101542",
           "version": "1.0.0"
         }
       },
@@ -1109,7 +1109,7 @@
               ]
             }
           ],
-          "timestamp": "2025-09-09T22:56:57.405657"
+          "timestamp": "2025-09-09T22:59:45.105335"
         }
       },
       "/api/v1/statistics": {
@@ -1138,7 +1138,7 @@
               "ast"
             ]
           },
-          "timestamp": "2025-09-09T22:56:57.427272"
+          "timestamp": "2025-09-09T22:59:45.115442"
         }
       },
       "/llm/capabilities": {
