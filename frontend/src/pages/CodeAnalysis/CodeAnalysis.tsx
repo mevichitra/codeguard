@@ -82,6 +82,13 @@ interface AnalysisResult {
   suggestion?: string;
 }
 
+interface ComprehensiveSummary {
+  summary: string;
+  key_findings: string[];
+  recommendations: string[];
+  overall_assessment: string;
+}
+
 const mockAnalysisResults: AnalysisResult[] = [
   {
     id: '1',
@@ -136,6 +143,7 @@ const CodeAnalysis: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [resultDialogOpen, setResultDialogOpen] = useState(false);
   const [selectedResult, setSelectedResult] = useState<AnalysisResult | null>(null);
+  const [comprehensiveSummary, setComprehensiveSummary] = useState<ComprehensiveSummary | null>(null);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setUploadedFiles(prev => [...prev, ...acceptedFiles]);
@@ -241,6 +249,11 @@ const CodeAnalysis: React.FC = () => {
             suggestion: issue.suggestion,
           });
         });
+      }
+      
+      // Set comprehensive summary
+      if (data.results?.comprehensive_summary) {
+        setComprehensiveSummary(data.results.comprehensive_summary);
       }
       
       setAnalysisResults(transformedResults);
@@ -638,6 +651,69 @@ function example() {
           </Grid>
         </TabPanel>
       </Paper>
+
+      {/* GPT-4o-mini Comprehensive Summary */}
+      {showResults && comprehensiveSummary && (
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <Psychology sx={{ mr: 1, color: 'primary.main' }} />
+              <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
+                GPT-4o-mini Analysis Summary
+              </Typography>
+            </Box>
+            
+            <Paper sx={{ p: 3, mb: 3, backgroundColor: 'grey.50' }}>
+              <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.6 }}>
+                {comprehensiveSummary.summary}
+              </Typography>
+              
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: 'primary.main' }}>
+                Overall Assessment
+              </Typography>
+              <Typography variant="body2" sx={{ mb: 3, fontStyle: 'italic' }}>
+                {comprehensiveSummary.overall_assessment}
+              </Typography>
+              
+              {comprehensiveSummary.key_findings.length > 0 && (
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: 'warning.main' }}>
+                    Key Findings
+                  </Typography>
+                  <List dense>
+                    {comprehensiveSummary.key_findings.map((finding, index) => (
+                      <ListItem key={index} sx={{ py: 0.5 }}>
+                        <ListItemIcon sx={{ minWidth: 32 }}>
+                          <Info sx={{ fontSize: 16, color: 'warning.main' }} />
+                        </ListItemIcon>
+                        <ListItemText primary={finding} />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Box>
+              )}
+              
+              {comprehensiveSummary.recommendations.length > 0 && (
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: 'success.main' }}>
+                    Recommendations
+                  </Typography>
+                  <List dense>
+                    {comprehensiveSummary.recommendations.map((recommendation, index) => (
+                      <ListItem key={index} sx={{ py: 0.5 }}>
+                        <ListItemIcon sx={{ minWidth: 32 }}>
+                          <CheckCircle sx={{ fontSize: 16, color: 'success.main' }} />
+                        </ListItemIcon>
+                        <ListItemText primary={recommendation} />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Box>
+              )}
+            </Paper>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Analysis Results */}
       {showResults && (
