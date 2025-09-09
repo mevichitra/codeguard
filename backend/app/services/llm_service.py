@@ -1,5 +1,5 @@
 from typing import Dict, List, Optional, Any
-import openai
+from openai import AsyncOpenAI
 import json
 from dataclasses import dataclass
 from enum import Enum
@@ -33,8 +33,10 @@ class LLMService:
     def _setup_client(self):
         """Initialize the LLM client based on provider."""
         if self.provider == LLMProvider.OPENAI:
-            openai.api_key = settings.OPENAI_API_KEY
-            self.client = openai
+            if settings.OPENAI_API_KEY:
+                self.client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+            else:
+                self.client = None
         # Add other providers as needed
     
     async def analyze_code_context(self, code: str, language: str, 
@@ -287,7 +289,9 @@ Respond in JSON format:
     async def _call_llm(self, prompt: str, max_tokens: int = 1000) -> str:
         """Make API call to the LLM provider."""
         if self.provider == LLMProvider.OPENAI:
-            response = await self.client.ChatCompletion.acreate(
+            if not self.client:
+                raise Exception("OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.")
+            response = await self.client.chat.completions.create(
                 model="gpt-4",
                 messages=[
                     {"role": "system", "content": "You are a senior software engineer and security expert. Provide accurate, actionable advice."},

@@ -215,17 +215,12 @@ class CodeGuardDemo:
             analysis_request = {
                 "code": test_data["code"],
                 "language": test_data["language"],
-                "options": {
-                    "enable_security_scan": True,
-                    "enable_performance_analysis": True,
-                    "enable_quality_assessment": True,
-                    "enable_ai_detection": True
-                }
+                "analysis_types": ["ai_detection", "security", "performance", "quality"]
             }
             
             try:
                 response = await self.client.post(
-                    f"{BASE_URL}/api/analyze",
+                    f"{BASE_URL}/api/v1/analyze",
                     json=analysis_request
                 )
                 
@@ -318,8 +313,8 @@ class CodeGuardDemo:
         
         endpoints_to_test = [
             ("/health", "GET", "Health Check"),
-            ("/api/supported-languages", "GET", "Supported Languages"),
-            ("/api/statistics", "GET", "Statistics"),
+            ("/api/v1/supported-languages", "GET", "Supported Languages"),
+            ("/api/v1/statistics", "GET", "Statistics"),
             ("/llm/capabilities", "GET", "LLM Capabilities")
         ]
         

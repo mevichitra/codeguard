@@ -251,6 +251,16 @@ async def log_requests(request: Request, call_next):
 app.include_router(router)
 app.include_router(llm_router)
 
+# Health check endpoint (direct access)
+@app.get("/health", tags=["Health"])
+async def health_check():
+    """Health check endpoint for monitoring."""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat(),
+        "version": "1.0.0"
+    }
+
 # Root endpoint
 @app.get("/", tags=["Root"])
 async def root():

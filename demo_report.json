@@ -1,0 +1,184 @@
+{
+  "timestamp": "2025-09-10 04:23:11",
+  "summary": {
+    "total_tests": 9,
+    "successful_tests": 4,
+    "failed_tests": 5
+  },
+  "results": {
+    "basic_analysis": {
+      "python_vulnerable": {
+        "error": "HTTP 500"
+      },
+      "javascript_performance": {
+        "error": "HTTP 500"
+      },
+      "java_quality": {
+        "error": "HTTP 500"
+      }
+    },
+    "llm_integration": {
+      "code_analysis": {
+        "content": "Analysis failed: OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.",
+        "confidence": 0.0,
+        "reasoning": "LLM service error",
+        "suggestions": [],
+        "metadata": {
+          "error": "OpenAI API key not configured. Please set OPENAI_API_KEY environment variable."
+        },
+        "success": true,
+        "error": null
+      },
+      "ai_detection": {
+        "content": "AI detection analysis failed",
+        "confidence": 0.0,
+        "reasoning": "OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.",
+        "suggestions": [],
+        "metadata": {
+          "error": "OpenAI API key not configured. Please set OPENAI_API_KEY environment variable."
+        },
+        "success": true,
+        "error": null
+      }
+    },
+    "api_endpoints": {
+      "/health": {
+        "status": "success",
+        "data": {
+          "status": "healthy",
+          "timestamp": "2025-09-09T22:53:11.113477",
+          "version": "1.0.0"
+        }
+      },
+      "/api/v1/supported-languages": {
+        "status": "success",
+        "data": {
+          "success": true,
+          "languages": [
+            {
+              "name": "Python",
+              "code": "python",
+              "extensions": [
+                ".py"
+              ]
+            },
+            {
+              "name": "JavaScript",
+              "code": "javascript",
+              "extensions": [
+                ".js",
+                ".mjs"
+              ]
+            },
+            {
+              "name": "TypeScript",
+              "code": "typescript",
+              "extensions": [
+                ".ts"
+              ]
+            },
+            {
+              "name": "Java",
+              "code": "java",
+              "extensions": [
+                ".java"
+              ]
+            },
+            {
+              "name": "C++",
+              "code": "cpp",
+              "extensions": [
+                ".cpp",
+                ".cc",
+                ".cxx"
+              ]
+            },
+            {
+              "name": "C",
+              "code": "c",
+              "extensions": [
+                ".c"
+              ]
+            },
+            {
+              "name": "Go",
+              "code": "go",
+              "extensions": [
+                ".go"
+              ]
+            },
+            {
+              "name": "Rust",
+              "code": "rust",
+              "extensions": [
+                ".rs"
+              ]
+            }
+          ],
+          "timestamp": "2025-09-09T22:53:11.118735"
+        }
+      },
+      "/api/v1/statistics": {
+        "status": "success",
+        "data": {
+          "success": true,
+          "statistics": {
+            "total_analyses": 0,
+            "total_vulnerabilities": 0,
+            "total_ai_patterns": 0,
+            "supported_languages": [
+              "python",
+              "javascript",
+              "typescript",
+              "java",
+              "cpp",
+              "c",
+              "go",
+              "rust"
+            ],
+            "analysis_types": [
+              "ai_detection",
+              "security",
+              "performance",
+              "quality",
+              "ast"
+            ]
+          },
+          "timestamp": "2025-09-09T22:53:11.154656"
+        }
+      },
+      "/llm/capabilities": {
+        "status": "success",
+        "data": {
+          "provider": "openai",
+          "capabilities": [
+            "code_analysis",
+            "security_recommendations",
+            "performance_optimization",
+            "ai_detection",
+            "vulnerability_explanation"
+          ],
+          "limits": {
+            "max_code_size": 10000,
+            "max_context_size": 5000,
+            "max_ai_detection_size": 8000
+          },
+          "supported_languages": [
+            "python",
+            "javascript",
+            "typescript",
+            "java",
+            "cpp",
+            "c",
+            "go",
+            "rust",
+            "php",
+            "ruby",
+            "swift",
+            "kotlin"
+          ]
+        }
+      }
+    }
+  }
+}

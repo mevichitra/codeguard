@@ -95,9 +95,10 @@ def get_current_user(db: Session = Depends(get_db)) -> Optional[User]:
     # TODO: Implement proper authentication
     return None
 
-def check_rate_limit(user_id: str = "anonymous") -> bool:
+async def check_rate_limit(user_id: str = "anonymous") -> bool:
     """Check rate limiting"""
-    return rate_limiter.check_rate_limit(f"api:{user_id}", limit=100, window=3600)
+    allowed, _ = await rate_limiter.is_allowed(f"api:{user_id}", limit=100, window_seconds=3600)
+    return allowed
 
 async def perform_analysis(code: str, filename: str, analysis_types: List[str]) -> Dict[str, Any]:
     """Perform comprehensive code analysis"""
@@ -118,8 +119,8 @@ async def perform_analysis(code: str, filename: str, analysis_types: List[str]) 
         if "ai_detection" in analysis_types:
             ai_result = detect_ai_code(code, filename)
             results["ai_detection"] = {
-                "confidence": ai_result.confidence,
-                "is_ai_generated": ai_result.is_ai_generated,
+                "confidence": ai_result.overall_confidence,
+                "is_ai_generated": ai_result.is_likely_ai_generated,
                 "patterns": [pattern.to_dict() for pattern in ai_result.patterns],
                 "analysis_summary": ai_result.analysis_summary
             }
@@ -192,7 +193,7 @@ async def analyze_code(
     
     # Rate limiting
     user_id = current_user.id if current_user else "anonymous"
-    if not check_rate_limit(user_id):
+    if not await check_rate_limit(user_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
     try:
@@ -269,7 +270,7 @@ async def analyze_file(
     
     # Rate limiting
     user_id = current_user.id if current_user else "anonymous"
-    if not check_rate_limit(user_id):
+    if not await check_rate_limit(user_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
     try:
@@ -324,7 +325,8 @@ async def analyze_batch(
     
     # Rate limiting (stricter for batch)
     user_id = current_user.id if current_user else "anonymous"
-    if not rate_limiter.check_rate_limit(f"batch:{user_id}", limit=10, window=3600):
+    batch_allowed, _ = await rate_limiter.is_allowed(f"batch:{user_id}", limit=10, window_seconds=3600)
+    if not batch_allowed:
         raise HTTPException(status_code=429, detail="Batch analysis rate limit exceeded")
     
     # Limit batch size
@@ -501,27 +503,78 @@ async def get_statistics(
 ):
     """Get analysis statistics"""
     try:
-        query = db.query(CodeAnalysis)
-        
-        if current_user:
-            query = query.filter(CodeAnalysis.user_id == current_user.id)
-        
-        total_analyses = query.count()
-        
-        # Language distribution
-        language_stats = db.query(
-            CodeAnalysis.language,
-            db.func.count(CodeAnalysis.id).label('count')
-        ).group_by(CodeAnalysis.language).all()
+        # Get basic statistics from database
+        total_analyses = db.query(CodeAnalysis).count()
+        total_vulnerabilities = db.query(SecurityVulnerability).count()
+        total_ai_patterns = db.query(AIPattern).count()
         
         return {
-            "total_analyses": total_analyses,
-            "language_distribution": {lang: count for lang, count in language_stats},
+            "success": True,
+            "statistics": {
+                "total_analyses": total_analyses,
+                "total_vulnerabilities": total_vulnerabilities,
+                "total_ai_patterns": total_ai_patterns,
+                "supported_languages": [
+                    "python", "javascript", "typescript", "java", "cpp", "c", "go", "rust"
+                ],
+                "analysis_types": [
+                    "ai_detection", "security", "performance", "quality", "ast"
+                ]
+            },
             "timestamp": datetime.utcnow().isoformat()
         }
-        
     except Exception as e:
-        logger.error(f"Statistics error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error getting statistics: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get statistics")
+
+# Add missing endpoints for demo compatibility
+@router.get("/supported-languages")
+async def get_supported_languages():
+    """Get list of supported programming languages"""
+    return {
+        "success": True,
+        "languages": [
+            {"name": "Python", "code": "python", "extensions": [".py"]},
+            {"name": "JavaScript", "code": "javascript", "extensions": [".js", ".mjs"]},
+            {"name": "TypeScript", "code": "typescript", "extensions": [".ts"]},
+            {"name": "Java", "code": "java", "extensions": [".java"]},
+            {"name": "C++", "code": "cpp", "extensions": [".cpp", ".cc", ".cxx"]},
+            {"name": "C", "code": "c", "extensions": [".c"]},
+            {"name": "Go", "code": "go", "extensions": [".go"]},
+            {"name": "Rust", "code": "rust", "extensions": [".rs"]}
+        ],
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+@router.get("/statistics")
+async def get_statistics_alt(
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user)
+):
+    """Get analysis statistics (alternative endpoint for demo compatibility)"""
+    try:
+        # Get basic statistics from database
+        total_analyses = db.query(CodeAnalysis).count()
+        total_vulnerabilities = db.query(SecurityVulnerability).count()
+        total_ai_patterns = db.query(AIPattern).count()
+        
+        return {
+            "success": True,
+            "statistics": {
+                "total_analyses": total_analyses,
+                "total_vulnerabilities": total_vulnerabilities,
+                "total_ai_patterns": total_ai_patterns,
+                "supported_languages": [
+                    "python", "javascript", "typescript", "java", "cpp", "c", "go", "rust"
+                ],
+                "analysis_types": [
+                    "ai_detection", "security", "performance", "quality", "ast"
+                ]
+            },
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error getting statistics: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get statistics")
 
 # Error handlers are defined in main.py
