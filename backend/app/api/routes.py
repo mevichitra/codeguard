@@ -128,12 +128,25 @@ async def perform_analysis(code: str, filename: str, analysis_types: List[str]) 
         # Security Analysis
         if "security" in analysis_types:
             security_result = scan_code_security(code, filename)
+            # Calculate overall score based on vulnerabilities
+            overall_score = get_security_score(code, filename)
+            # Determine risk level based on score
+            if overall_score >= 80:
+                risk_level = "low"
+            elif overall_score >= 60:
+                risk_level = "medium"
+            elif overall_score >= 40:
+                risk_level = "high"
+            else:
+                risk_level = "critical"
+            
             results["security"] = {
-                "overall_score": security_result.overall_score,
-                "risk_level": security_result.risk_level.value,
+                "overall_score": overall_score,
+                "risk_level": risk_level,
                 "vulnerabilities": [vuln.to_dict() for vuln in security_result.vulnerabilities],
-                "recommendations": security_result.recommendations,
-                "analysis_summary": security_result.analysis_summary
+                "total_count": security_result.total_count,
+                "severity_counts": security_result.severity_counts,
+                "scan_summary": security_result.scan_summary
             }
         
         # Performance Analysis
@@ -218,7 +231,7 @@ async def analyze_code(
         )
         
         # Cache results
-        await cache_manager.set(cache_key, results, ttl=3600)
+        await cache_manager.set(cache_key, results, expire=3600)
         
         # Store in database (background task)
         def store_analysis():
