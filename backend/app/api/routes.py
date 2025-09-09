@@ -22,6 +22,7 @@ from ..services import (
     get_ai_confidence, get_security_score,
     get_performance_score, get_quality_score
 )
+from ..services.llm_service import LLMService
 from ..models.analysis import CodeAnalysis, SecurityVulnerability, AIPattern
 from ..models.user import User
 from ..models.project import Project
@@ -173,6 +174,24 @@ async def perform_analysis(code: str, filename: str, analysis_types: List[str]) 
                 "recommendations": quality_result.recommendations,
                 "improvement_suggestions": quality_result.improvement_suggestions,
                 "analysis_summary": quality_result.analysis_summary
+            }
+        
+        # Generate comprehensive summary using GPT-4o-mini
+        try:
+            llm_service = LLMService()
+            comprehensive_summary = await llm_service.generate_comprehensive_summary(
+                code=code,
+                filename=filename,
+                analysis_results=results
+            )
+            results["comprehensive_summary"] = comprehensive_summary
+        except Exception as llm_error:
+            logger.warning(f"Failed to generate comprehensive summary: {str(llm_error)}")
+            results["comprehensive_summary"] = {
+                "summary": "Summary generation unavailable",
+                "key_findings": [],
+                "recommendations": [],
+                "overall_assessment": "Unable to generate assessment"
             }
         
         return results

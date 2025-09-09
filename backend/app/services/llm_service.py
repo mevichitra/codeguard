@@ -128,6 +128,24 @@ class LLMService:
                 metadata={"error": str(e)}
             )
     
+    async def generate_comprehensive_summary(self, code: str, language: str, 
+                                           analysis_results: Dict[str, Any]) -> LLMResponse:
+        """Generate a comprehensive summary of all analysis results using GPT-4o-mini."""
+        
+        prompt = self._build_comprehensive_summary_prompt(code, language, analysis_results)
+        
+        try:
+            response = await self._call_llm(prompt, max_tokens=1200)
+            return self._parse_summary_response(response)
+        except Exception as e:
+            return LLMResponse(
+                content="Summary generation failed",
+                confidence=0.0,
+                reasoning=str(e),
+                suggestions=[],
+                metadata={"error": str(e)}
+            )
+    
     def _build_analysis_prompt(self, code: str, language: str, 
                               existing_issues: List[Dict]) -> str:
         """Build prompt for general code analysis."""
@@ -292,7 +310,7 @@ Respond in JSON format:
             if not self.client:
                 raise Exception("OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.")
             response = await self.client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": "You are a senior software engineer and security expert. Provide accurate, actionable advice."},
                     {"role": "user", "content": prompt}
@@ -424,6 +442,63 @@ Respond in JSON format:
                     "remediation_steps": data.get("remediation_steps", []),
                     "prevention_measures": data.get("prevention_measures", []),
                     "type": "vulnerability_explanation"
+                }
+            )
+        except json.JSONDecodeError:
+            return LLMResponse(
+                content=response,
+                confidence=0.3,
+                reasoning="Failed to parse structured response",
+                suggestions=[],
+                metadata={"raw_response": response}
+            )
+    
+    def _build_comprehensive_summary_prompt(self, code: str, language: str, 
+                                          analysis_results: Dict[str, Any]) -> str:
+        """Build prompt for comprehensive summary generation."""
+        return f"""
+Generate a comprehensive summary of the code analysis results for the following {language} code:
+
+Code (first 1000 chars):
+```{language}
+{code[:1000]}
+```
+
+Analysis Results:
+{json.dumps(analysis_results, indent=2)[:2000]}
+
+Provide:
+1. Overall code quality assessment
+2. Key findings summary
+3. Priority recommendations
+4. Risk assessment
+5. Next steps
+
+Respond in JSON format:
+{{
+    "overall_quality": "assessment",
+    "key_findings": ["finding1", "finding2"],
+    "priority_recommendations": ["rec1", "rec2"],
+    "risk_assessment": "risk level and explanation",
+    "next_steps": ["step1", "step2"],
+    "confidence": 0.9,
+    "reasoning": "summary basis"
+}}
+"""
+    
+    def _parse_summary_response(self, response: str) -> LLMResponse:
+        """Parse comprehensive summary response."""
+        try:
+            data = json.loads(response)
+            return LLMResponse(
+                content=data.get("overall_quality", ""),
+                confidence=data.get("confidence", 0.5),
+                reasoning=data.get("reasoning", ""),
+                suggestions=data.get("priority_recommendations", []) + data.get("next_steps", []),
+                metadata={
+                    "key_findings": data.get("key_findings", []),
+                    "risk_assessment": data.get("risk_assessment", ""),
+                    "type": "comprehensive_summary"
                 }
             )
         except json.JSONDecodeError:

@@ -281,71 +281,69 @@ const CodeAnalysis: React.FC = () => {
       
       // Transform backend response to frontend format
       const transformedResults: AnalysisResult[] = [];
+      const filename = data.metadata?.filename || 'uploaded_file';
       
-      // Process results for each file
-      Object.entries(data.results || {}).forEach(([filename, fileResults]: [string, any]) => {
-        // Add security issues
-        if (fileResults.security_analysis?.vulnerabilities) {
-          fileResults.security_analysis.vulnerabilities.forEach((vuln: any, index: number) => {
-            transformedResults.push({
-              id: `${filename}-security-${index}`,
-              type: 'security',
-              severity: vuln.severity || 'medium',
-              title: vuln.type || 'Security Issue',
-              description: vuln.description || 'Security vulnerability detected',
-              file: filename,
-              line: vuln.line || 1,
-              suggestion: vuln.recommendation,
-            });
-          });
-        }
-        
-        // Add AI detection results
-        if (fileResults.ai_detection?.is_ai_generated) {
+      // Add security issues
+      if (data.results?.security?.vulnerabilities) {
+        data.results.security.vulnerabilities.forEach((vuln: any, index: number) => {
           transformedResults.push({
-            id: `${filename}-ai-detection`,
-            type: 'ai-detection',
-            severity: 'medium',
-            title: 'AI-Generated Code Pattern',
-            description: `Code pattern suggests AI generation with ${Math.round((fileResults.ai_detection.confidence || 0) * 100)}% confidence`,
+            id: `${filename}-security-${index}`,
+            type: 'security',
+            severity: vuln.severity || 'medium',
+            title: vuln.type || 'Security Issue',
+            description: vuln.description || 'Security vulnerability detected',
             file: filename,
-            line: 1,
-            suggestion: 'Review code for compliance with coding standards',
+            line: vuln.line || 1,
+            suggestion: vuln.recommendation,
           });
-        }
-        
-        // Add quality issues
-        if (fileResults.quality_analysis?.issues) {
-          fileResults.quality_analysis.issues.forEach((issue: any, index: number) => {
-            transformedResults.push({
-              id: `${filename}-quality-${index}`,
-              type: 'quality',
-              severity: issue.severity || 'medium',
-              title: issue.type || 'Code Quality Issue',
-              description: issue.description || 'Code quality issue detected',
-              file: filename,
-              line: issue.line || 1,
-              suggestion: issue.suggestion,
-            });
+        });
+      }
+      
+      // Add AI detection results
+      if (data.results?.ai_detection?.is_ai_generated) {
+        transformedResults.push({
+          id: `${filename}-ai-detection`,
+          type: 'ai-detection',
+          severity: 'medium',
+          title: 'AI-Generated Code Pattern',
+          description: `Code pattern suggests AI generation with ${Math.round((data.results.ai_detection.confidence || 0) * 100)}% confidence`,
+          file: filename,
+          line: 1,
+          suggestion: 'Review code for compliance with coding standards',
+        });
+      }
+      
+      // Add quality issues
+      if (data.results?.quality?.issues) {
+        data.results.quality.issues.forEach((issue: any, index: number) => {
+          transformedResults.push({
+            id: `${filename}-quality-${index}`,
+            type: 'quality',
+            severity: issue.severity || 'medium',
+            title: issue.title || issue.issue_type || 'Code Quality Issue',
+            description: issue.description || 'Code quality issue detected',
+            file: filename,
+            line: issue.line_start || issue.line || 1,
+            suggestion: issue.recommendation || issue.suggestion,
           });
-        }
-        
-        // Add performance issues
-        if (fileResults.performance_analysis?.issues) {
-          fileResults.performance_analysis.issues.forEach((issue: any, index: number) => {
-            transformedResults.push({
-              id: `${filename}-performance-${index}`,
-              type: 'performance',
-              severity: issue.severity || 'low',
-              title: issue.type || 'Performance Issue',
-              description: issue.description || 'Performance issue detected',
-              file: filename,
-              line: issue.line || 1,
-              suggestion: issue.suggestion,
-            });
+        });
+      }
+      
+      // Add performance issues
+      if (data.results?.performance?.issues) {
+        data.results.performance.issues.forEach((issue: any, index: number) => {
+          transformedResults.push({
+            id: `${filename}-performance-${index}`,
+            type: 'performance',
+            severity: issue.severity || 'low',
+            title: issue.title || issue.issue_type || 'Performance Issue',
+            description: issue.description || 'Performance issue detected',
+            file: filename,
+            line: issue.line_start || issue.line || 1,
+            suggestion: issue.recommendation || issue.suggestion,
           });
-        }
-      });
+        });
+      }
       
       setAnalysisResults(transformedResults);
       setShowResults(true);
