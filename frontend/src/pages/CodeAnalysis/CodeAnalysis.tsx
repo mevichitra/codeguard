@@ -582,11 +582,11 @@ const CodeAnalysis: React.FC = () => {
           elevation={0}
           sx={{ 
             mb: 4,
-            borderRadius: 3,
+            borderRadius: 1,
             overflow: 'hidden',
-            border: '1px solid',
-            borderColor: 'divider',
-            bgcolor: 'background.paper'
+            border: '2px solid',
+            borderColor: '#333333',
+            bgcolor: '#1a1a1a'
           }}
         >
           <Tabs
@@ -599,32 +599,35 @@ const CodeAnalysis: React.FC = () => {
                 minHeight: 72,
                 textTransform: 'none',
                 fontSize: '1rem',
-                fontWeight: 600,
+                fontWeight: 'bold',
+                fontFamily: 'monospace',
+                color: '#888888',
                 '&.Mui-selected': {
-                  color: 'primary.main',
-                  bgcolor: 'primary.50'
+                  color: '#00ff41',
+                  bgcolor: '#000000'
                 }
               },
               '& .MuiTabs-indicator': {
                 height: 3,
+                backgroundColor: '#00ff41',
                 borderRadius: '3px 3px 0 0'
               }
             }}
           >
             <Tab 
-              label="Code Input" 
+              label="CODE INPUT" 
               icon={<Code />} 
               iconPosition="start"
               sx={{ gap: 1 }}
             />
             <Tab 
-              label="File Upload" 
+              label="FILE UPLOAD" 
               icon={<FileUpload />} 
               iconPosition="start"
               sx={{ gap: 1 }}
             />
             <Tab 
-              label="Repository Scan" 
+              label="REPO SCAN" 
               icon={<CloudUpload />} 
               iconPosition="start"
               sx={{ gap: 1 }}
@@ -639,46 +642,59 @@ const CodeAnalysis: React.FC = () => {
                   <Paper 
                     elevation={0}
                     sx={{ 
-                      border: '2px dashed',
-                      borderColor: 'primary.200',
-                      borderRadius: 2,
+                      border: '2px solid',
+                      borderColor: '#333333',
+                      borderRadius: 1,
                       p: 3,
-                      bgcolor: 'grey.50',
-                      transition: 'all 0.2s ease-in-out',
+                      bgcolor: '#1a1a1a',
+                      minHeight: '280px',
+                      transition: 'all 0.2s ease',
                       '&:hover': {
-                        borderColor: 'primary.main',
-                        bgcolor: 'primary.50'
+                        borderColor: '#00ff41',
+                        boxShadow: '0 0 20px rgba(0, 255, 65, 0.3)'
                       }
                     }}
                   >
-                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                      📝 Code Input
-                    </Typography>
+                    <Typography variant="h6" sx={{ mb: 2, color: '#00ff41', fontFamily: 'monospace', fontWeight: 'bold' }}>
+                       {'>'} CODE INPUT
+                     </Typography>
                     <TextField
                       fullWidth
                       multiline
                       rows={16}
                       variant="outlined"
-                      label="Paste your code here"
+                      label=""
                       value={codeInput}
                       onChange={(e) => setCodeInput(e.target.value)}
-                      placeholder="// Paste your code here for analysis...
+                      placeholder="// PASTE CODE HERE FOR ANALYSIS
 function example() {
-  console.log('Hello, CodeGuard!');
-  // Your code will be analyzed for security, quality, and performance
+  console.log('CODEGUARD READY');
+  // CODE WILL BE SCANNED FOR VULNERABILITIES
 }"
                       sx={{
                         '& .MuiInputBase-root': {
-                          fontFamily: 'JetBrains Mono, Monaco, Consolas, "Courier New", monospace',
+                          fontFamily: 'monospace',
                           fontSize: '0.9rem',
                           lineHeight: 1.6,
-                          bgcolor: 'background.paper',
-                          borderRadius: 2
+                          bgcolor: '#000000',
+                          color: '#00ff41',
+                          borderRadius: 1,
+                          border: '1px solid #333333'
                         },
                         '& .MuiOutlinedInput-root': {
+                          '& fieldset': {
+                            borderColor: '#333333'
+                          },
                           '&:hover fieldset': {
-                            borderColor: 'primary.main'
+                            borderColor: '#00ff41'
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#00ff41'
                           }
+                        },
+                        '& .MuiInputBase-input::placeholder': {
+                          color: '#888888',
+                          opacity: 1
                         }
                       }}
                     />
@@ -689,17 +705,17 @@ function example() {
                      elevation={0}
                      sx={{ 
                        p: 3,
-                       border: '1px solid',
-                       borderColor: 'divider',
-                       borderRadius: 2,
-                       bgcolor: 'background.paper',
+                       border: '2px solid',
+                       borderColor: '#333333',
+                       borderRadius: 1,
+                       bgcolor: '#1a1a1a',
                        height: 'fit-content',
                        position: 'sticky',
                        top: 20
                      }}
                    >
-                     <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-                       ⚙️ Analysis Settings
+                     <Typography variant="h6" sx={{ mb: 3, color: '#00ff41', fontFamily: 'monospace', fontWeight: 'bold' }}>
+                       {'>'} SCAN CONFIG
                      </Typography>
                      <Stack spacing={3}>
                        <FormControl fullWidth>
@@ -710,12 +726,12 @@ function example() {
                            onChange={(e) => setSelectedLanguage(e.target.value)}
                            sx={{ borderRadius: 2 }}
                          >
-                           <MenuItem value="javascript">🟨 JavaScript</MenuItem>
-                           <MenuItem value="typescript">🔷 TypeScript</MenuItem>
-                           <MenuItem value="python">🐍 Python</MenuItem>
-                           <MenuItem value="java">☕ Java</MenuItem>
-                           <MenuItem value="cpp">⚡ C++</MenuItem>
-                           <MenuItem value="c">🔧 C</MenuItem>
+                           <MenuItem value="javascript">JAVASCRIPT</MenuItem>
+                           <MenuItem value="typescript">TYPESCRIPT</MenuItem>
+                           <MenuItem value="python">PYTHON</MenuItem>
+                           <MenuItem value="java">JAVA</MenuItem>
+                           <MenuItem value="cpp">C++</MenuItem>
+                           <MenuItem value="c">C</MenuItem>
                          </Select>
                        </FormControl>
 
@@ -727,46 +743,51 @@ function example() {
                            onChange={(e) => setAnalysisType(e.target.value)}
                            sx={{ borderRadius: 2 }}
                          >
-                           <MenuItem value="comprehensive">🔍 Comprehensive Analysis</MenuItem>
-                           <MenuItem value="security">🛡️ Security Focus</MenuItem>
-                           <MenuItem value="quality">✨ Code Quality</MenuItem>
-                           <MenuItem value="performance">⚡ Performance Focus</MenuItem>
-                           <MenuItem value="ai-detection">🤖 AI Detection</MenuItem>
+                           <MenuItem value="comprehensive">FULL SCAN</MenuItem>
+                           <MenuItem value="security">SECURITY SCAN</MenuItem>
+                           <MenuItem value="quality">QUALITY SCAN</MenuItem>
+                           <MenuItem value="performance">PERFORMANCE SCAN</MenuItem>
+                           <MenuItem value="pattern-detection">PATTERN DETECTION</MenuItem>
                          </Select>
                        </FormControl>
 
                        <Button
-                         variant="contained"
-                         size="large"
-                         startIcon={isAnalyzing ? <CircularProgress size={20} /> : <PlayArrow />}
-                         onClick={handleAnalyze}
-                         disabled={!codeInput.trim() || isAnalyzing}
-                         sx={{
-                           py: 1.5,
-                           borderRadius: 2,
-                           textTransform: 'none',
-                           fontSize: '1.1rem',
-                           fontWeight: 600,
-                           background: 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)',
-                           boxShadow: '0 4px 20px rgba(102, 126, 234, 0.3)',
-                           '&:hover': {
-                             boxShadow: '0 6px 25px rgba(102, 126, 234, 0.4)',
-                             transform: 'translateY(-1px)'
-                           },
-                           '&:disabled': {
-                             background: 'grey.300'
-                           }
-                         }}
-                       >
-                         {isAnalyzing ? '🔄 Analyzing...' : '🚀 Analyze Code'}
-                       </Button>
+                           variant="contained"
+                           size="large"
+                           startIcon={isAnalyzing ? <CircularProgress size={20} sx={{ color: '#00ff41' }} /> : <PlayArrow />}
+                           onClick={handleAnalyze}
+                           disabled={!codeInput.trim() || isAnalyzing}
+                           sx={{
+                             py: 1.5,
+                             borderRadius: 1,
+                             textTransform: 'none',
+                             fontSize: '1.1rem',
+                             fontWeight: 'bold',
+                             fontFamily: 'monospace',
+                             background: '#000000',
+                             color: '#00ff41',
+                             border: '2px solid #00ff41',
+                             '&:hover': {
+                               backgroundColor: '#00ff41',
+                               color: '#000000',
+                               boxShadow: '0 0 20px rgba(0, 255, 65, 0.5)'
+                             },
+                             '&:disabled': {
+                               background: '#333333',
+                               color: '#666666',
+                               border: '2px solid #666666'
+                             }
+                           }}
+                         >
+                           {isAnalyzing ? 'SCANNING...' : 'EXECUTE SCAN'}
+                         </Button>
 
                        {isAnalyzing && (
                          <Box sx={{ mt: 2 }}>
-                           <Typography variant="body2" gutterBottom sx={{ textAlign: 'center' }}>
-                             🔍 Analysis in progress...
+                           <Typography variant="body2" gutterBottom sx={{ textAlign: 'center', color: '#00ff41', fontFamily: 'monospace' }}>
+                             SCAN IN PROGRESS...
                            </Typography>
-                           <LinearProgress sx={{ borderRadius: 1 }} />
+                           <LinearProgress sx={{ borderRadius: 1, backgroundColor: '#333333', '& .MuiLinearProgress-bar': { backgroundColor: '#00ff41' } }} />
                          </Box>
                        )}
                      </Stack>
@@ -787,30 +808,34 @@ function example() {
                   sx={{
                     p: 6,
                     textAlign: 'center',
-                    border: '3px dashed',
-                    borderColor: isDragActive ? 'primary.main' : 'primary.200',
-                    backgroundColor: isDragActive ? 'primary.50' : 'grey.50',
+                    border: '2px solid',
+                    borderColor: isDragActive ? '#00ff41' : '#333333',
+                    backgroundColor: '#1a1a1a',
                     cursor: 'pointer',
-                    borderRadius: 3,
-                    transition: 'all 0.3s ease-in-out',
+                    borderRadius: 1,
+                    transition: 'all 0.2s ease',
+                    minHeight: '280px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
                     '&:hover': {
-                      borderColor: 'primary.main',
-                      backgroundColor: 'primary.50',
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 8px 25px rgba(102, 126, 234, 0.15)'
+                      borderColor: '#00ff41',
+                      backgroundColor: '#222222',
+                      boxShadow: '0 0 20px rgba(0, 255, 65, 0.3)'
                     }
                   }}
                 >
                   <input {...getInputProps()} />
-                  <CloudUpload sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
-                <Typography variant="h6" gutterBottom>
-                  {isDragActive ? 'Drop files here' : 'Drag & drop files here'}
+                  <CloudUpload sx={{ fontSize: 48, color: '#00ff41', mb: 2 }} />
+                <Typography variant="h6" gutterBottom sx={{ color: '#00ff41', fontFamily: 'monospace', fontWeight: 'bold' }}>
+                  {isDragActive ? '> DROP FILES' : '> UPLOAD CODE'}
                 </Typography>
-                <Typography variant="body2" color="textSecondary" gutterBottom>
-                  or click to select files
+                <Typography variant="body2" sx={{ color: '#ffffff', fontFamily: 'monospace' }} gutterBottom>
+                  CLICK TO SELECT FILES
                 </Typography>
-                <Typography variant="caption" color="textSecondary">
-                  Supported: .js, .ts, .jsx, .tsx, .py, .java, .cpp, .c, .h
+                <Typography variant="caption" sx={{ color: '#888888', fontFamily: 'monospace' }}>
+                  JS | TS | PY | JAVA | CPP | C | H
                 </Typography>
               </Paper>
 
