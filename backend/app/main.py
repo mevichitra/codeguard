@@ -10,6 +10,7 @@ import sys
 from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Dict, Any
+import os
 
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -38,6 +39,11 @@ logger = logging.getLogger(__name__)
 
 # Get settings
 settings = get_settings()
+
+# Environment sanity check
+if 'VIRTUAL_ENV' not in os.environ:
+    # Warn (do not hard fail) if not inside venv to avoid silent use of system Python 3.10
+    print('[WARNING] Not running inside virtualenv (.venv). Activate with: source .venv/bin/activate to avoid dependency mismatch (pydantic_settings).', flush=True)
 
 # Application lifespan management
 @asynccontextmanager

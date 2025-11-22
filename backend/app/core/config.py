@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     HOST: str = Field(default="0.0.0.0", env="HOST")
     PORT: int = Field(default=8000, env="PORT")
     
+    # Hosts (TrustedHostMiddleware)
+    ALLOWED_HOSTS: List[str] = Field(default=["localhost", "127.0.0.1"], env="ALLOWED_HOSTS")
+
     # Security
     SECRET_KEY: str = Field(
         default="codeguard-ai-secret-key-change-in-production",
