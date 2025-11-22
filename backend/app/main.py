@@ -23,6 +23,7 @@ from .core.config import get_settings
 from .core.database import db_manager, init_db
 from .core.redis_client import init_redis, close_redis
 from .api.v1 import analysis, history, health, stats
+from .api.v2 import endpoints as v2_endpoints
 from .api.llm import router as llm_router
 from .models import *  # Import all models to register with SQLAlchemy
 
@@ -258,6 +259,7 @@ app.include_router(analysis.router, prefix="/api/v1")
 app.include_router(history.router, prefix="/api/v1")
 app.include_router(health.router, prefix="/api/v1")
 app.include_router(stats.router, prefix="/api/v1")
+app.include_router(v2_endpoints.router, prefix="/api/v2")
 app.include_router(llm_router)
 
 # Health check endpoint (direct access)
