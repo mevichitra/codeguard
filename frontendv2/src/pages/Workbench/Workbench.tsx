@@ -1,35 +1,12 @@
 import React, { useState } from 'react';
 import { Box, Grid, Paper, Typography, Button, Select, MenuItem, FormControl, CircularProgress } from '@mui/material';
-import { PlayArrow, AutoFixHigh } from '@mui/icons-material';
+import { PlayArrow } from '@mui/icons-material';
 import EditorPanel from './EditorPanel';
 import ResultsPanel from './ResultsPanel';
 import axios from 'axios';
 
 // Types
-export interface AnalysisResult {
-    summary: {
-        security_score: number;
-        quality_score: number;
-        performance_score: number;
-        total_issues: number;
-        critical_issues: number;
-    };
-    issues: Array<{
-        id: string;
-        type: 'security' | 'quality' | 'performance';
-        severity: 'critical' | 'high' | 'medium' | 'low';
-        title: string;
-        description: string;
-        line: number;
-        suggestion: string;
-    }>;
-    ai_detection: {
-        is_ai_generated: boolean;
-        probability: number;
-        confidence: number;
-    };
-    language: string;
-}
+import type { AnalysisResult } from '../../types';
 
 const Workbench: React.FC = () => {
     const [code, setCode] = useState<string>('// Write your code here...\n\nfunction example() {\n  console.log("Hello CodeGuard!");\n}');
@@ -103,7 +80,7 @@ const Workbench: React.FC = () => {
             {/* Split View */}
             <Grid container spacing={2} sx={{ flexGrow: 1, minHeight: 0 }}>
                 {/* Editor Panel */}
-                <Grid item xs={12} lg={7} sx={{ height: '100%' }}>
+                <Grid size={{ xs: 12, lg: 7 }} sx={{ height: '100%' }}>
                     <EditorPanel
                         code={code}
                         language={language}
@@ -113,7 +90,7 @@ const Workbench: React.FC = () => {
                 </Grid>
 
                 {/* Results Panel */}
-                <Grid item xs={12} lg={5} sx={{ height: '100%' }}>
+                <Grid size={{ xs: 12, lg: 5 }} sx={{ height: '100%' }}>
                     <ResultsPanel
                         results={results}
                         isAnalyzing={isAnalyzing}

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Paper, Box } from '@mui/material';
-import Editor, { OnMount } from '@monaco-editor/react';
+import Editor, { type OnMount } from '@monaco-editor/react';
 
 interface EditorPanelProps {
     code: string;

@@ -1,8 +1,8 @@
 import React from 'react';
 import { Box, Card, CardContent, Typography, Chip, Stack, CircularProgress, Alert } from '@mui/material';
-import { Security, Assessment, Speed, AutoFixHigh, BugReport } from '@mui/icons-material';
+import { Security, Assessment, Speed, AutoFixHigh } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AnalysisResult } from './Workbench';
+import type { AnalysisResult } from '../../types';
 
 interface ResultsPanelProps {
     results: AnalysisResult | null;
