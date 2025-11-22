@@ -22,3 +22,9 @@ export interface AnalysisResult {
     };
     language: string;
 }
+
+export interface HistoryItem extends AnalysisResult {
+    id: string;
+    timestamp: number;
+    code: string;
+}

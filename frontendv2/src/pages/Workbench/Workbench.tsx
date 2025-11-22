@@ -3,10 +3,11 @@ import { Box, Grid, Paper, Typography, Button, Select, MenuItem, FormControl, Ci
 import { PlayArrow } from '@mui/icons-material';
 import EditorPanel from './EditorPanel';
 import ResultsPanel from './ResultsPanel';
+import HistoryPanel from './HistoryPanel';
 import axios from 'axios';
 
 // Types
-import type { AnalysisResult } from '../../types';
+import type { AnalysisResult, HistoryItem } from '../../types';
 
 const Workbench: React.FC = () => {
     const [code, setCode] = useState<string>('// Write your code here...\n\nfunction example() {\n  console.log("Hello CodeGuard!");\n}');
@@ -14,6 +15,24 @@ const Workbench: React.FC = () => {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [results, setResults] = useState<AnalysisResult | null>(null);
     const [activeLine, setActiveLine] = useState<number | null>(null);
+    const [history, setHistory] = useState<HistoryItem[]>([]);
+
+    // Load history from local storage on mount
+    React.useEffect(() => {
+        const savedHistory = localStorage.getItem('codeguard_history');
+        if (savedHistory) {
+            try {
+                setHistory(JSON.parse(savedHistory));
+            } catch (e) {
+                console.error('Failed to parse history:', e);
+            }
+        }
+    }, []);
+
+    // Save history to local storage whenever it changes
+    React.useEffect(() => {
+        localStorage.setItem('codeguard_history', JSON.stringify(history));
+    }, [history]);
 
     const handleAnalyze = async () => {
         setIsAnalyzing(true);
@@ -23,7 +42,18 @@ const Workbench: React.FC = () => {
                 code,
                 language
             });
-            setResults(response.data);
+            const result = response.data;
+            setResults(result);
+
+            // Add to history
+            const newHistoryItem: HistoryItem = {
+                ...result,
+                id: Date.now().toString(),
+                timestamp: Date.now(),
+                code: code // Save the code snapshot
+            };
+            setHistory(prev => [newHistoryItem, ...prev]);
+
         } catch (error) {
             console.error('Analysis failed:', error);
             // TODO: Show error toast
@@ -34,6 +64,16 @@ const Workbench: React.FC = () => {
 
     const handleIssueClick = (line: number) => {
         setActiveLine(line);
+    };
+
+    const handleRestoreHistory = (item: HistoryItem) => {
+        setCode(item.code);
+        setLanguage(item.language);
+        setResults(item);
+    };
+
+    const handleDeleteHistory = (id: string) => {
+        setHistory(prev => prev.filter(item => item.id !== id));
     };
 
     return (
@@ -80,7 +120,7 @@ const Workbench: React.FC = () => {
             {/* Split View */}
             <Grid container spacing={2} sx={{ flexGrow: 1, minHeight: 0 }}>
                 {/* Editor Panel */}
-                <Grid size={{ xs: 12, lg: 7 }} sx={{ height: '100%' }}>
+                <Grid size={{ xs: 12, lg: 6 }} sx={{ height: '100%' }}>
                     <EditorPanel
                         code={code}
                         language={language}
@@ -89,13 +129,27 @@ const Workbench: React.FC = () => {
                     />
                 </Grid>
 
-                {/* Results Panel */}
-                <Grid size={{ xs: 12, lg: 5 }} sx={{ height: '100%' }}>
-                    <ResultsPanel
-                        results={results}
-                        isAnalyzing={isAnalyzing}
-                        onIssueClick={handleIssueClick}
-                    />
+                {/* Right Sidebar (Results + History) */}
+                <Grid size={{ xs: 12, lg: 6 }} sx={{ height: '100%' }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, height: '100%' }}>
+                        {/* Results Panel */}
+                        <Box sx={{ flexGrow: 1, minHeight: 0, flexBasis: '60%' }}>
+                            <ResultsPanel
+                                results={results}
+                                isAnalyzing={isAnalyzing}
+                                onIssueClick={handleIssueClick}
+                            />
+                        </Box>
+
+                        {/* History Panel */}
+                        <Box sx={{ flexGrow: 1, minHeight: 0, flexBasis: '40%' }}>
+                            <HistoryPanel
+                                history={history}
+                                onRestore={handleRestoreHistory}
+                                onDelete={handleDeleteHistory}
+                            />
+                        </Box>
+                    </Box>
                 </Grid>
             </Grid>
         </Box>
