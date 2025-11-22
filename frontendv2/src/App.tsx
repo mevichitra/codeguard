@@ -4,7 +4,7 @@ import Layout from './components/Layout/Layout';
 import Workbench from './pages/Workbench/Workbench';
 
 // Placeholder components
-const History = () => <Box sx={{ p: 4 }}>History (Coming Soon)</Box>;
+import History from './pages/History/History';
 
 function App() {
   return (

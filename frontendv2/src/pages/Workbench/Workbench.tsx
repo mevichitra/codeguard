@@ -27,6 +27,20 @@ const Workbench: React.FC = () => {
                 console.error('Failed to parse history:', e);
             }
         }
+
+        // Check for restore target
+        const restoreTarget = localStorage.getItem('codeguard_restore_target');
+        if (restoreTarget) {
+            try {
+                const item = JSON.parse(restoreTarget);
+                setCode(item.code);
+                setLanguage(item.language);
+                setResults(item);
+                localStorage.removeItem('codeguard_restore_target'); // Clear it
+            } catch (e) {
+                console.error('Failed to restore target:', e);
+            }
+        }
     }, []);
 
     // Save history to local storage whenever it changes

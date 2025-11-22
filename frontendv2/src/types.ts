@@ -19,6 +19,24 @@ export interface AnalysisResult {
         is_ai_generated: boolean;
         probability: number;
         confidence: number;
+        detected_patterns?: string[];
+        reasoning?: string;
+    };
+    metrics?: {
+        security: {
+            cwe_ids: string[];
+            cvss_score: number;
+        };
+        quality: {
+            cyclomatic_complexity: number;
+            maintainability_index: number;
+            code_smells: string[];
+        };
+        performance: {
+            time_complexity: string;
+            space_complexity: string;
+            resource_usage: string;
+        };
     };
     language: string;
 }

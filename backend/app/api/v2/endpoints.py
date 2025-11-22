@@ -17,6 +17,7 @@ class AnalysisResponse(BaseModel):
     summary: Dict[str, Any]
     issues: list
     ai_detection: Dict[str, Any]
+    metrics: Dict[str, Any]
     language: str
 
 @router.post("/analyze", response_model=AnalysisResponse)

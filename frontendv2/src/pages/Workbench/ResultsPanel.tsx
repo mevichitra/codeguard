@@ -96,10 +96,69 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({ results, isAnalyzing, onIss
                                     sx={{ borderRadius: 2, bgcolor: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', border: '1px solid rgba(245, 158, 11, 0.3)' }}
                                 >
                                     <Typography variant="subtitle2" fontWeight={700}>AI-Generated Code Detected</Typography>
-                                    <Typography variant="body2">
+                                    <Typography variant="body2" sx={{ mb: 1 }}>
                                         Probability: {results.ai_detection.probability}% (Confidence: {results.ai_detection.confidence}%)
                                     </Typography>
+                                    {results.ai_detection.reasoning && (
+                                        <Typography variant="caption" display="block" sx={{ opacity: 0.8 }}>
+                                            Reasoning: {results.ai_detection.reasoning}
+                                        </Typography>
+                                    )}
                                 </Alert>
+                            )}
+
+                            {/* Detailed Metrics */}
+                            {results.metrics && (
+                                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
+                                    <Card className="glass-card" sx={{ p: 2, borderRadius: 2 }}>
+                                        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1, color: 'text.secondary' }}>Complexity & Quality</Typography>
+                                        <Stack spacing={1}>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <Typography variant="caption">Cyclomatic Complexity</Typography>
+                                                <Typography variant="caption" fontWeight={600}>{results.metrics.quality.cyclomatic_complexity}</Typography>
+                                            </Box>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <Typography variant="caption">Maintainability</Typography>
+                                                <Typography variant="caption" fontWeight={600}>{results.metrics.quality.maintainability_index}</Typography>
+                                            </Box>
+                                            {results.metrics.quality.code_smells.length > 0 && (
+                                                <Box>
+                                                    <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>Code Smells:</Typography>
+                                                    <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                                                        {results.metrics.quality.code_smells.map(smell => (
+                                                            <Chip key={smell} label={smell} size="small" sx={{ height: 20, fontSize: '0.65rem' }} />
+                                                        ))}
+                                                    </Stack>
+                                                </Box>
+                                            )}
+                                        </Stack>
+                                    </Card>
+                                    <Card className="glass-card" sx={{ p: 2, borderRadius: 2 }}>
+                                        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1, color: 'text.secondary' }}>Security & Performance</Typography>
+                                        <Stack spacing={1}>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <Typography variant="caption">Time Complexity</Typography>
+                                                <Typography variant="caption" fontWeight={600}>{results.metrics.performance.time_complexity}</Typography>
+                                            </Box>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <Typography variant="caption">CVSS Score</Typography>
+                                                <Typography variant="caption" fontWeight={600} color={results.metrics.security.cvss_score > 7 ? 'error.main' : 'text.primary'}>
+                                                    {results.metrics.security.cvss_score}
+                                                </Typography>
+                                            </Box>
+                                            {results.metrics.security.cwe_ids.length > 0 && (
+                                                <Box>
+                                                    <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>CWE IDs:</Typography>
+                                                    <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                                                        {results.metrics.security.cwe_ids.map(cwe => (
+                                                            <Chip key={cwe} label={cwe} size="small" color="error" variant="outlined" sx={{ height: 20, fontSize: '0.65rem' }} />
+                                                        ))}
+                                                    </Stack>
+                                                </Box>
+                                            )}
+                                        </Stack>
+                                    </Card>
+                                </Box>
                             )}
 
                             {/* Issues List */}

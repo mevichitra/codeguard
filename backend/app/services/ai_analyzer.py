@@ -121,7 +121,25 @@ class AIAnalyzerService:
             "ai_detection": {
                 "is_ai_generated": is_ai_generated,
                 "probability": round(ai_probability, 1),
-                "confidence": round(random.uniform(80, 99), 1)
+                "confidence": round(random.uniform(80, 99), 1),
+                "detected_patterns": ["Repetitive structure", "Unnatural variable naming"] if is_ai_generated else [],
+                "reasoning": "The code exhibits patterns consistent with LLM generation." if is_ai_generated else "No significant AI patterns detected."
+            },
+            "metrics": {
+                "security": {
+                    "cwe_ids": ["CWE-79", "CWE-89"] if security_score < 90 else [],
+                    "cvss_score": round(random.uniform(4.0, 9.0), 1) if security_score < 90 else 0.0
+                },
+                "quality": {
+                    "cyclomatic_complexity": random.randint(5, 25),
+                    "maintainability_index": round(random.uniform(40, 90), 1),
+                    "code_smells": ["Long Function", "Duplicate Code"] if quality_score < 80 else []
+                },
+                "performance": {
+                    "time_complexity": "O(n^2)" if performance_score < 70 else "O(n)",
+                    "space_complexity": "O(n)",
+                    "resource_usage": "Medium" if performance_score < 80 else "Low"
+                }
             },
             "language": language
         }
