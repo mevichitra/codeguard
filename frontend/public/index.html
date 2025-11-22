@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#667eea" />
+  <meta name="description"
+    content="CodeGuard AI - Advanced code security analysis, quality assessment, and AI detection platform" />
+  <meta name="keywords" content="code analysis, security, AI detection, code quality, vulnerability scanner" />
+  <meta name="author" content="CodeGuard AI Team" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://codeguard-ai.com/" />
+  <meta property="og:title" content="CodeGuard AI - Advanced Code Analysis Platform" />
+  <meta property="og:description"
+    content="Comprehensive code security analysis, quality assessment, and AI-generated code detection" />
+  <meta property="og:image" content="%PUBLIC_URL%/og-image.png" />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://codeguard-ai.com/" />
+  <meta property="twitter:title" content="CodeGuard AI - Advanced Code Analysis Platform" />
+  <meta property="twitter:description"
+    content="Comprehensive code security analysis, quality assessment, and AI-generated code detection" />
+  <meta property="twitter:image" content="%PUBLIC_URL%/twitter-image.png" />
+
+  <!-- Preconnect to external domains -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+
+  <!-- Apple Touch Icon -->
+  <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+
+  <!-- Manifest -->
+  <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+
+  <!-- Security Headers -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="X-Frame-Options" content="DENY" />
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+
+  <!-- Performance optimizations -->
+  <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+  <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+
+  <title>CodeGuard AI - Advanced Code Analysis Platform</title>
+
+  <!-- Inline critical CSS for faster loading -->
+  <style>
+    /* Critical CSS for initial render */
+    body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background-color: #f5f7fa;
+    }
+
+    #root {
+      min-height: 100vh;
+    }
+
+    /* Loading spinner */
+    .loading-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .loading-text {
+      color: white;
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Hide loading when React app loads */
+    .app-loaded .loading-container {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <noscript>
+    <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
+      <h2>JavaScript Required</h2>
+      <p>CodeGuard AI requires JavaScript to run. Please enable JavaScript in your browser and refresh the page.</p>
+      <p>If you're having trouble, please contact our support team.</p>
+    </div>
+  </noscript>
+
+  <!-- Loading screen -->
+  <div class="loading-container" id="loading-screen">
+    <div style="text-align: center;">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Loading CodeGuard AI...</div>
+    </div>
+  </div>
+
+  <!-- React app root -->
+  <div id="root"></div>
+
+  <!-- Hide loading screen when app loads -->
+  <script>
+    window.addEventListener('load', function () {
+      setTimeout(function () {
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+          loadingScreen.style.opacity = '0';
+          loadingScreen.style.transition = 'opacity 0.5s ease-out';
+          setTimeout(function () {
+            loadingScreen.style.display = 'none';
+          }, 500);
+        }
+      }, 1000);
+    });
+  </script>
+
+  <!-- Service Worker Registration  -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('%PUBLIC_URL%/sw.js')
+          .then(function (registration) {
+            console.log('SW registered: ', registration);
+          })
+          .catch(function (registrationError) {
+            console.log('SW registration failed: ', registrationError);
+          });
+      });
+    }
+  </script>
+</body>
+
+</html>
