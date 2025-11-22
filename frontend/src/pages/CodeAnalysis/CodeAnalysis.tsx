@@ -519,1238 +519,533 @@ const CodeAnalysis: React.FC = () => {
   };
 
   return (
-    <Box sx={{ width: '75vw', height: '100vh', background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-      {/* Arcade Console Header */}
-      <Box
-        sx={{
-          bgcolor: '#1a1a1a',
-          color: '#00ff00',
-          py: 2,
-          px: 0,
-          mb: 0,
-          border: 'none',
-          borderRadius: 0,
-          position: 'relative',
-          overflow: 'hidden',
-          fontFamily: 'monospace',
-          flexShrink: 0
-        }}
-      >
-        <Box sx={{ position: 'relative', zIndex: 1, width: '100%' }}>
-          <Typography
-            variant="h3"
-            component="h1"
-            gutterBottom
-            sx={{
-              fontFamily: 'monospace',
-              fontWeight: 700,
-              fontSize: { xs: '2rem', md: '2.5rem' },
-              textAlign: 'center',
-              mb: 2,
-              color: '#00ff00',
-              textShadow: '0 0 10px #00ff00'
-            }}
-          >
-            {'>'}  CODEGUARD_ANALYSIS.EXE
-          </Typography>
-          <Typography
-            variant="h6"
-            sx={{
-              fontFamily: 'monospace',
-              textAlign: 'center',
-              opacity: 0.8,
-              maxWidth: '600px',
-              mx: 'auto',
-              lineHeight: 1.6,
-              fontSize: { xs: '0.9rem', md: '1rem' },
-              color: '#cccccc'
-            }}
-          >
-            TERMINAL-BASED CODE ANALYSIS FOR SECURITY, QUALITY & PERFORMANCE
-          </Typography>
-        </Box>
+    <Box sx={{ maxWidth: 1600, mx: 'auto', pb: 4 }}>
+      {/* Header Section */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }} className="text-gradient-primary">
+          Code Analysis
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          Comprehensive security, quality, and performance scanning for your codebase.
+        </Typography>
       </Box>
 
-      {/* Modern Analysis Tabs */}
-      <Box sx={{ width: '100%', flex: 1, overflow: 'auto' }}>
-        <Box sx={{ width: '100%' }}>
-          <Paper
-            elevation={0}
-            sx={{
-              mb: 4,
-              borderRadius: 1,
-              overflow: 'hidden',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              bgcolor: 'rgba(26, 26, 26, 0.6)',
-              backdropFilter: 'blur(10px)',
-              boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
-            }}
-          >
-            <Tabs
-              value={activeTab}
-              onChange={handleTabChange}
-              aria-label="analysis tabs"
-              variant="fullWidth"
-              sx={{
-                '& .MuiTab-root': {
-                  minHeight: 72,
-                  textTransform: 'none',
-                  fontSize: '1rem',
-                  fontWeight: 'bold',
-                  fontFamily: 'monospace',
-                  color: '#888888',
-                  '&.Mui-selected': {
-                    color: '#00ff41',
-                    bgcolor: '#000000'
+      {/* Main Content */}
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Card elevation={0} className="glass-card">
+            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+              <Tabs
+                value={activeTab}
+                onChange={handleTabChange}
+                sx={{
+                  '& .MuiTab-root': {
+                    minHeight: 64,
+                    fontSize: '0.95rem',
+                    fontWeight: 600,
                   }
-                },
-                '& .MuiTabs-indicator': {
-                  height: 3,
-                  backgroundColor: '#00ff41',
-                  borderRadius: '3px 3px 0 0'
-                }
-              }}
-            >
-              <Tab
-                label="CODE INPUT"
-                icon={<Code />}
-                iconPosition="start"
-                sx={{ gap: 1 }}
-              />
-              <Tab
-                label="FILE UPLOAD"
-                icon={<FileUpload />}
-                iconPosition="start"
-                sx={{ gap: 1 }}
-              />
-              <Tab
-                label="REPO SCAN"
-                icon={<CloudUpload />}
-                iconPosition="start"
-                sx={{ gap: 1 }}
-              />
-            </Tabs>
+                }}
+              >
+                <Tab label="Code Input" icon={<Code fontSize="small" />} iconPosition="start" />
+                <Tab label="File Upload" icon={<FileUpload fontSize="small" />} iconPosition="start" />
+                <Tab label="Repository Scan" icon={<CloudUpload fontSize="small" />} iconPosition="start" />
+              </Tabs>
+            </Box>
 
             {/* Code Input Tab */}
             <TabPanel value={activeTab} index={0}>
-              <Box sx={{ p: 4 }}>
-                <Grid container spacing={4}>
-                  <Grid item xs={12} lg={10}>
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        border: '2px solid',
-                        borderColor: '#333333',
-                        borderRadius: 1,
-                        p: 3,
-                        bgcolor: '#1a1a1a',
-                        minHeight: '280px',
-                        transition: 'all 0.2s ease',
-                        '&:hover': {
-                          borderColor: '#00ff41',
-                          boxShadow: '0 0 20px rgba(0, 255, 65, 0.3)'
-                        }
-                      }}
-                    >
-                      <Typography variant="h6" sx={{ mb: 2, color: '#00ff41', fontFamily: 'monospace', fontWeight: 'bold' }}>
-                        {'>'} CODE INPUT
-                      </Typography>
-                      <TextField
-                        fullWidth
-                        multiline
-                        rows={16}
-                        variant="outlined"
-                        label=""
-                        value={codeInput}
-                        onChange={(e) => setCodeInput(e.target.value)}
-                        placeholder="// PASTE CODE HERE FOR ANALYSIS
-function example() {
-  console.log('CODEGUARD READY');
-  // CODE WILL BE SCANNED FOR VULNERABILITIES
-}"
-                        sx={{
-                          '& .MuiInputBase-root': {
-                            fontFamily: 'monospace',
-                            fontSize: '0.9rem',
-                            lineHeight: 1.6,
-                            bgcolor: '#000000',
-                            color: '#00ff41',
-                            borderRadius: 1,
-                            border: '1px solid #333333'
-                          },
-                          '& .MuiOutlinedInput-root': {
-                            '& fieldset': {
-                              borderColor: '#333333'
-                            },
-                            '&:hover fieldset': {
-                              borderColor: '#00ff41'
-                            },
-                            '&.Mui-focused fieldset': {
-                              borderColor: '#00ff41'
-                            }
-                          },
-                          '& .MuiInputBase-input::placeholder': {
-                            color: '#888888',
-                            opacity: 1
-                          }
-                        }}
-                      />
-                    </Paper>
-                  </Grid>
-                  <Grid item xs={12} lg={4}>
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        p: 3,
-                        border: '2px solid',
-                        borderColor: '#333333',
-                        borderRadius: 1,
-                        bgcolor: '#1a1a1a',
-                        height: 'fit-content',
-                        position: 'sticky',
-                        top: 20
-                      }}
-                    >
-                      <Typography variant="h6" sx={{ mb: 3, color: '#00ff41', fontFamily: 'monospace', fontWeight: 'bold' }}>
-                        {'>'} SCAN CONFIG
-                      </Typography>
-                      <Stack spacing={3}>
-                        <FormControl fullWidth>
-                          <InputLabel>Programming Language</InputLabel>
-                          <Select
-                            value={selectedLanguage}
-                            label="Programming Language"
-                            onChange={(e) => setSelectedLanguage(e.target.value)}
-                            sx={{
-                              borderRadius: 2,
-                              '& .MuiSelect-select': {
-                                color: '#ffffff'
-                              },
-                              '& .MuiInputLabel-root': {
-                                color: '#cccccc'
-                              }
-                            }}
-                            MenuProps={{
-                              PaperProps: {
-                                sx: {
-                                  '& .MuiMenuItem-root': {
-                                    color: '#ffffff',
-                                    backgroundColor: '#1a1a1a',
-                                    '&:hover': {
-                                      backgroundColor: '#333333'
-                                    }
-                                  }
-                                }
-                              }
-                            }}
-                          >
-                            <MenuItem value="javascript">JAVASCRIPT</MenuItem>
-                            <MenuItem value="typescript">TYPESCRIPT</MenuItem>
-                            <MenuItem value="python">PYTHON</MenuItem>
-                            <MenuItem value="java">JAVA</MenuItem>
-                            <MenuItem value="cpp">C++</MenuItem>
-                            <MenuItem value="c">C</MenuItem>
-                          </Select>
-                        </FormControl>
-
-                        <FormControl fullWidth>
-                          <InputLabel>Analysis Scope</InputLabel>
-                          <Select
-                            value={analysisType}
-                            label="Analysis Scope"
-                            onChange={(e) => setAnalysisType(e.target.value)}
-                            sx={{
-                              borderRadius: 2,
-                              '& .MuiSelect-select': {
-                                color: '#ffffff'
-                              },
-                              '& .MuiInputLabel-root': {
-                                color: '#cccccc'
-                              }
-                            }}
-                            MenuProps={{
-                              PaperProps: {
-                                sx: {
-                                  '& .MuiMenuItem-root': {
-                                    color: '#ffffff',
-                                    backgroundColor: '#1a1a1a',
-                                    '&:hover': {
-                                      backgroundColor: '#333333'
-                                    }
-                                  }
-                                }
-                              }
-                            }}
-                          >
-                            <MenuItem value="comprehensive">FULL SCAN</MenuItem>
-                            <MenuItem value="security">SECURITY SCAN</MenuItem>
-                            <MenuItem value="quality">QUALITY SCAN</MenuItem>
-                            <MenuItem value="performance">PERFORMANCE SCAN</MenuItem>
-                            <MenuItem value="ai_detection">AI CODE DETECTION</MenuItem>
-                          </Select>
-                        </FormControl>
-
-                        <Button
-                          variant="contained"
-                          size="large"
-                          startIcon={isAnalyzing ? <CircularProgress size={20} sx={{ color: '#00ff41' }} /> : <PlayArrow />}
-                          onClick={handleAnalyze}
-                          disabled={!codeInput.trim() || isAnalyzing}
-                          sx={{
-                            py: 1.5,
-                            borderRadius: 1,
-                            textTransform: 'none',
-                            fontSize: '1.1rem',
-                            fontWeight: 'bold',
-                            fontFamily: 'monospace',
-                            background: '#000000',
-                            color: '#ffffff',
-                            border: '2px solid #00ff41',
-                            '&:hover': {
-                              backgroundColor: '#00ff41',
-                              color: '#000000',
-                              boxShadow: '0 0 20px rgba(0, 255, 65, 0.5)'
-                            },
-                            '&:disabled': {
-                              background: '#333333',
-                              color: '#cccccc',
-                              border: '2px solid #666666'
-                            }
-                          }}
-                        >
-                          {isAnalyzing ? 'SCANNING...' : 'EXECUTE SCAN'}
-                        </Button>
-
-                        {isAnalyzing && (
-                          <Box sx={{ mt: 2 }}>
-                            <Typography variant="body2" gutterBottom sx={{ textAlign: 'center', color: '#00ff41', fontFamily: 'monospace' }}>
-                              SCAN IN PROGRESS...
-                            </Typography>
-                            <LinearProgress sx={{ borderRadius: 1, backgroundColor: '#333333', '& .MuiLinearProgress-bar': { backgroundColor: '#00ff41' } }} />
-                          </Box>
-                        )}
-                      </Stack>
-                    </Paper>
-                  </Grid>
+              <Grid container spacing={3}>
+                <Grid item xs={12} lg={8}>
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={20}
+                    variant="outlined"
+                    placeholder="// Paste your code here for analysis..."
+                    value={codeInput}
+                    onChange={(e) => setCodeInput(e.target.value)}
+                    className="code-block"
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        fontFamily: '"JetBrains Mono", monospace',
+                        fontSize: '0.9rem',
+                        bgcolor: 'background.paper',
+                      }
+                    }}
+                  />
                 </Grid>
-              </Box>
+                <Grid item xs={12} lg={4}>
+                  <Stack spacing={3}>
+                    <Card variant="outlined">
+                      <CardContent>
+                        <Typography variant="h6" gutterBottom>Configuration</Typography>
+                        <Stack spacing={3}>
+                          <FormControl fullWidth size="small">
+                            <InputLabel>Language</InputLabel>
+                            <Select
+                              value={selectedLanguage}
+                              label="Language"
+                              onChange={(e) => setSelectedLanguage(e.target.value)}
+                            >
+                              <MenuItem value="javascript">JavaScript</MenuItem>
+                              <MenuItem value="typescript">TypeScript</MenuItem>
+                              <MenuItem value="python">Python</MenuItem>
+                              <MenuItem value="java">Java</MenuItem>
+                              <MenuItem value="cpp">C++</MenuItem>
+                              <MenuItem value="c">C</MenuItem>
+                            </Select>
+                          </FormControl>
+
+                          <FormControl fullWidth size="small">
+                            <InputLabel>Analysis Type</InputLabel>
+                            <Select
+                              value={analysisType}
+                              label="Analysis Type"
+                              onChange={(e) => setAnalysisType(e.target.value)}
+                            >
+                              <MenuItem value="comprehensive">Comprehensive Scan</MenuItem>
+                              <MenuItem value="security">Security Only</MenuItem>
+                              <MenuItem value="quality">Quality Only</MenuItem>
+                              <MenuItem value="performance">Performance Only</MenuItem>
+                              <MenuItem value="ai_detection">AI Detection Only</MenuItem>
+                            </Select>
+                          </FormControl>
+
+                          <Button
+                            variant="contained"
+                            size="large"
+                            startIcon={isAnalyzing ? <CircularProgress size={20} color="inherit" /> : <PlayArrow />}
+                            onClick={handleAnalyze}
+                            disabled={!codeInput.trim() || isAnalyzing}
+                            fullWidth
+                          >
+                            {isAnalyzing ? 'Analyzing...' : 'Start Analysis'}
+                          </Button>
+                        </Stack>
+                      </CardContent>
+                    </Card>
+
+                    {isAnalyzing && (
+                      <Card variant="outlined">
+                        <CardContent>
+                          <Stack spacing={2} alignItems="center">
+                            <CircularProgress size={40} />
+                            <Typography variant="body2" color="text.secondary">
+                              Analyzing your code...
+                            </Typography>
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </Stack>
+                </Grid>
+              </Grid>
             </TabPanel>
 
             {/* File Upload Tab */}
             <TabPanel value={activeTab} index={1}>
-              <Box sx={{ p: 4 }}>
-                <Grid container spacing={4}>
-                  <Grid item xs={12} lg={10}>
-                    <Paper
-                      {...getRootProps()}
-                      elevation={0}
-                      sx={{
-                        p: 6,
-                        textAlign: 'center',
-                        border: '2px solid',
-                        borderColor: isDragActive ? '#00ff41' : '#333333',
-                        backgroundColor: '#1a1a1a',
-                        cursor: 'pointer',
-                        borderRadius: 1,
-                        transition: 'all 0.2s ease',
-                        minHeight: '280px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        '&:hover': {
-                          borderColor: '#00ff41',
-                          backgroundColor: '#222222',
-                          boxShadow: '0 0 20px rgba(0, 255, 65, 0.3)'
-                        }
-                      }}
-                    >
-                      <input {...getInputProps()} />
-                      <CloudUpload sx={{ fontSize: 48, color: '#00ff41', mb: 2 }} />
-                      <Typography variant="h6" gutterBottom sx={{ color: '#00ff41', fontFamily: 'monospace', fontWeight: 'bold' }}>
-                        {isDragActive ? '> DROP FILES' : '> UPLOAD CODE'}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: '#ffffff', fontFamily: 'monospace' }} gutterBottom>
-                        CLICK TO SELECT FILES
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: '#888888', fontFamily: 'monospace' }}>
-                        JS | TS | PY | JAVA | CPP | C | H
-                      </Typography>
-                    </Paper>
+              <Grid container spacing={3} justifyContent="center">
+                <Grid item xs={12} md={8}>
+                  <Box
+                    {...getRootProps()}
+                    sx={{
+                      border: '2px dashed',
+                      borderColor: isDragActive ? 'primary.main' : 'divider',
+                      borderRadius: 4,
+                      p: 6,
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      bgcolor: isDragActive ? 'action.hover' : 'background.paper',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        borderColor: 'primary.main',
+                        bgcolor: 'action.hover',
+                      }
+                    }}
+                  >
+                    <input {...getInputProps()} />
+                    <CloudUpload sx={{ fontSize: 64, color: 'primary.main', mb: 2, opacity: 0.8 }} />
+                    <Typography variant="h6" gutterBottom>
+                      {isDragActive ? 'Drop files here' : 'Drag & drop files or click to browse'}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Supports .js, .ts, .py, .java, .cpp, .c, .h
+                    </Typography>
+                  </Box>
 
-                    {uploadedFiles.length > 0 && (
-                      <Box sx={{ mt: 2 }}>
-                        <Typography variant="subtitle2" gutterBottom sx={{ color: '#00ff41', fontFamily: 'monospace', fontWeight: 'bold' }}>
-                          {'>'}  UPLOADED FILES ({uploadedFiles.length})
-                        </Typography>
-                        <List dense>
-                          {uploadedFiles.map((file, index) => (
-                            <ListItem key={index} sx={{ bgcolor: '#1a1a1a', mb: 1, borderRadius: 1, border: '1px solid #333333' }}>
+                  {uploadedFiles.length > 0 && (
+                    <Box sx={{ mt: 4 }}>
+                      <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                        Uploaded Files ({uploadedFiles.length})
+                      </Typography>
+                      <List sx={{ bgcolor: 'background.paper', borderRadius: 2, border: 1, borderColor: 'divider' }}>
+                        {uploadedFiles.map((file, index) => (
+                          <React.Fragment key={index}>
+                            {index > 0 && <Divider />}
+                            <ListItem>
                               <ListItemIcon>
-                                <Code sx={{ color: '#00ff41' }} />
+                                <Code color="primary" />
                               </ListItemIcon>
                               <ListItemText
                                 primary={file.name}
                                 secondary={`${(file.size / 1024).toFixed(1)} KB`}
-                                sx={{
-                                  '& .MuiListItemText-primary': { color: '#ffffff', fontFamily: 'monospace' },
-                                  '& .MuiListItemText-secondary': { color: '#888888', fontFamily: 'monospace' }
-                                }}
                               />
                             </ListItem>
-                          ))}
-                        </List>
-                      </Box>
-                    )}
-                  </Grid>
-                  <Grid item xs={12} lg={4}>
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        p: 3,
-                        border: '2px solid',
-                        borderColor: '#333333',
-                        borderRadius: 1,
-                        bgcolor: '#1a1a1a',
-                        height: 'fit-content',
-                        position: 'sticky',
-                        top: 20
-                      }}
-                    >
-                      <Typography variant="h6" sx={{ mb: 3, color: '#00ff41', fontFamily: 'monospace', fontWeight: 'bold' }}>
-                        {'>'} SCAN CONFIG
-                      </Typography>
-                      <Stack spacing={3}>
-                        <FormControl fullWidth>
-                          <InputLabel>Analysis Scope</InputLabel>
-                          <Select
-                            value={analysisType}
-                            label="Analysis Scope"
-                            onChange={(e) => setAnalysisType(e.target.value)}
-                            sx={{
-                              borderRadius: 2,
-                              '& .MuiSelect-select': {
-                                color: '#ffffff'
-                              },
-                              '& .MuiInputLabel-root': {
-                                color: '#cccccc'
-                              }
-                            }}
-                            MenuProps={{
-                              PaperProps: {
-                                sx: {
-                                  '& .MuiMenuItem-root': {
-                                    color: '#ffffff',
-                                    backgroundColor: '#1a1a1a',
-                                    '&:hover': {
-                                      backgroundColor: '#333333'
-                                    }
-                                  }
-                                }
-                              }
-                            }}
-                          >
-                            <MenuItem value="comprehensive">FULL SCAN</MenuItem>
-                            <MenuItem value="security">SECURITY SCAN</MenuItem>
-                            <MenuItem value="quality">QUALITY SCAN</MenuItem>
-                            <MenuItem value="performance">PERFORMANCE SCAN</MenuItem>
-                            <MenuItem value="ai-detection">PATTERN DETECTION</MenuItem>
-                          </Select>
-                        </FormControl>
-
+                          </React.Fragment>
+                        ))}
+                      </List>
+                      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
                         <Button
                           variant="contained"
                           size="large"
-                          startIcon={isAnalyzing ? <Stop /> : <PlayArrow />}
+                          startIcon={isAnalyzing ? <CircularProgress size={20} color="inherit" /> : <PlayArrow />}
                           onClick={handleFileAnalyze}
-                          disabled={uploadedFiles.length === 0 || isAnalyzing}
-                          fullWidth
-                          sx={{
-                            background: '#000000',
-                            border: '2px solid #00ff41',
-                            color: '#ffffff',
-                            fontFamily: 'monospace',
-                            fontWeight: 'bold',
-                            borderRadius: 1,
-                            py: 1.5,
-                            '&:hover': {
-                              background: '#00ff41',
-                              color: '#000000',
-                              boxShadow: '0 0 20px rgba(0, 255, 65, 0.5)'
-                            },
-                            '&:disabled': {
-                              background: '#333333',
-                              border: '2px solid #666666',
-                              color: '#cccccc'
-                            }
-                          }}
+                          disabled={isAnalyzing}
                         >
-                          {isAnalyzing ? 'SCANNING...' : 'EXECUTE SCAN'}
+                          {isAnalyzing ? 'Analyzing Files...' : 'Analyze Files'}
                         </Button>
-
-                        {isAnalyzing && (
-                          <Box sx={{ mt: 2 }}>
-                            <Typography variant="body2" gutterBottom sx={{ textAlign: 'center', color: '#00ff41', fontFamily: 'monospace' }}>
-                              SCAN IN PROGRESS...
-                            </Typography>
-                            <LinearProgress sx={{ borderRadius: 1, backgroundColor: '#333333', '& .MuiLinearProgress-bar': { backgroundColor: '#00ff41' } }} />
-                          </Box>
-                        )}
-                      </Stack>
-                    </Paper>
-                  </Grid>
+                      </Box>
+                    </Box>
+                  )}
                 </Grid>
-              </Box>
+              </Grid>
             </TabPanel>
 
             {/* Repository Scan Tab */}
             <TabPanel value={activeTab} index={2}>
-              <Box sx={{ p: 4 }}>
-                <Grid container spacing={4}>
-                  <Grid item xs={12} lg={10}>
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        border: '2px solid',
-                        borderColor: '#333333',
-                        borderRadius: 1,
-                        p: 3,
-                        bgcolor: '#1a1a1a',
-                        minHeight: '280px',
-                        transition: 'all 0.2s ease',
-                        '&:hover': {
-                          borderColor: '#00ff41',
-                          boxShadow: '0 0 20px rgba(0, 255, 65, 0.3)'
-                        }
+              <Grid container spacing={3} justifyContent="center">
+                <Grid item xs={12} md={6}>
+                  <Stack spacing={3}>
+                    <Alert severity="info" icon={<Info fontSize="inherit" />}>
+                      Repository scanning requires authentication. Please configure your GitHub token in settings.
+                    </Alert>
+                    <TextField
+                      fullWidth
+                      label="Repository URL"
+                      placeholder="https://github.com/username/repository"
+                      variant="outlined"
+                      InputProps={{
+                        startAdornment: <CloudUpload color="action" sx={{ mr: 1 }} />,
                       }}
+                    />
+                    <TextField
+                      fullWidth
+                      label="Branch"
+                      placeholder="main"
+                      variant="outlined"
+                    />
+                    <Button
+                      variant="contained"
+                      size="large"
+                      disabled
+                      fullWidth
                     >
-                      <Typography variant="h6" sx={{ mb: 2, color: '#00ff41', fontFamily: 'monospace', fontWeight: 'bold' }}>
-                        {'>'} REPO CONFIG
-                      </Typography>
-                      <Stack spacing={3}>
-                        <TextField
-                          fullWidth
-                          label=""
-                          placeholder="https://github.com/username/repository"
-                          variant="outlined"
-                          sx={{
-                            '& .MuiInputBase-root': {
-                              fontFamily: 'monospace',
-                              fontSize: '0.9rem',
-                              bgcolor: '#000000',
-                              color: '#00ff41',
-                              borderRadius: 1,
-                              border: '1px solid #333333'
-                            },
-                            '& .MuiOutlinedInput-root': {
-                              '& fieldset': {
-                                borderColor: '#333333'
-                              },
-                              '&:hover fieldset': {
-                                borderColor: '#00ff41'
-                              },
-                              '&.Mui-focused fieldset': {
-                                borderColor: '#00ff41'
-                              }
-                            },
-                            '& .MuiInputBase-input::placeholder': {
-                              color: '#888888',
-                              opacity: 1
-                            }
-                          }}
-                        />
-                        <TextField
-                          fullWidth
-                          label=""
-                          placeholder="main (branch)"
-                          variant="outlined"
-                          sx={{
-                            '& .MuiInputBase-root': {
-                              fontFamily: 'monospace',
-                              fontSize: '0.9rem',
-                              bgcolor: '#000000',
-                              color: '#00ff41',
-                              borderRadius: 1,
-                              border: '1px solid #333333'
-                            },
-                            '& .MuiOutlinedInput-root': {
-                              '& fieldset': {
-                                borderColor: '#333333'
-                              },
-                              '&:hover fieldset': {
-                                borderColor: '#00ff41'
-                              },
-                              '&.Mui-focused fieldset': {
-                                borderColor: '#00ff41'
-                              }
-                            },
-                            '& .MuiInputBase-input::placeholder': {
-                              color: '#888888',
-                              opacity: 1
-                            }
-                          }}
-                        />
-                        <Alert
-                          severity="info"
-                          sx={{
-                            borderRadius: 1,
-                            bgcolor: '#1a1a1a',
-                            border: '1px solid #333333',
-                            color: '#888888',
-                            fontFamily: 'monospace',
-                            '& .MuiAlert-icon': {
-                              color: '#00ff41'
-                            }
-                          }}
-                        >
-                          REPO SCANNING REQUIRES AUTH CONFIG
-                        </Alert>
-                      </Stack>
-                    </Paper>
-                  </Grid>
-                  <Grid item xs={12} lg={4}>
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        p: 3,
-                        border: '2px solid',
-                        borderColor: '#333333',
-                        borderRadius: 1,
-                        bgcolor: '#1a1a1a',
-                        height: 'fit-content',
-                        position: 'sticky',
-                        top: 20
-                      }}
-                    >
-                      <Typography variant="h6" sx={{ mb: 3, color: '#00ff41', fontFamily: 'monospace', fontWeight: 'bold' }}>
-                        {'>'} REPO ACTIONS
-                      </Typography>
-                      <Stack spacing={3}>
-                        <Button
-                          variant="contained"
-                          size="large"
-                          startIcon={<CloudUpload />}
-                          fullWidth
-                          disabled
-                          sx={{
-                            background: '#333333',
-                            border: '2px solid #666666',
-                            color: '#666666',
-                            fontFamily: 'monospace',
-                            fontWeight: 'bold',
-                            borderRadius: 1,
-                            py: 1.5,
-                            '&:disabled': {
-                              background: '#333333',
-                              border: '2px solid #666666',
-                              color: '#cccccc'
-                            }
-                          }}
-                        >
-                          SCAN REPOSITORY
-                        </Button>
-                        <Typography variant="caption" sx={{ textAlign: 'center', color: '#888888', fontFamily: 'monospace' }}>
-                          COMING SOON
-                        </Typography>
-                      </Stack>
-                    </Paper>
-                  </Grid>
-                </Grid>
-              </Box>
-            </TabPanel>
-          </Paper>
-
-          {/* Analysis Metrics Dashboard */}
-          {showResults && analysisMetrics && (
-            <Box sx={{ mb: 4 }}>
-              <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 700, color: '#00ff41', fontFamily: 'monospace' }}>
-                {'>'}  ANALYSIS_OVERVIEW.DAT
-              </Typography>
-              <Grid container spacing={3}>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Card
-                    elevation={0}
-                    sx={{
-                      textAlign: 'center',
-                      p: 3,
-                      borderRadius: 1,
-                      bgcolor: '#1a1a1a',
-                      border: '2px solid #333333',
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        borderColor: '#00ff41',
-                        boxShadow: '0 0 20px rgba(0, 255, 65, 0.3)'
-                      }
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-                      <BugReport sx={{ color: '#ff4444', fontSize: 32 }} />
-                      <Typography variant="h3" sx={{ fontWeight: 700, color: '#ff4444', fontFamily: 'monospace' }}>
-                        {analysisMetrics.totalIssues}
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 500, color: '#cccccc', fontFamily: 'monospace' }}>
-                        TOTAL_ISSUES
-                      </Typography>
-                    </Box>
-                  </Card>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Card
-                    elevation={0}
-                    sx={{
-                      textAlign: 'center',
-                      p: 3,
-                      borderRadius: 1,
-                      bgcolor: '#1a1a1a',
-                      border: '2px solid #333333',
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        borderColor: '#00ff41',
-                        boxShadow: '0 0 20px rgba(0, 255, 65, 0.3)'
-                      }
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-                      <Security sx={{ color: '#ffaa00', fontSize: 32 }} />
-                      <Typography variant="h3" sx={{ fontWeight: 700, color: '#ffaa00', fontFamily: 'monospace' }}>
-                        {analysisMetrics.criticalIssues}
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 500, color: '#cccccc', fontFamily: 'monospace' }}>
-                        CRITICAL_ISSUES
-                      </Typography>
-                    </Box>
-                  </Card>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Card
-                    elevation={0}
-                    sx={{
-                      textAlign: 'center',
-                      p: 3,
-                      borderRadius: 1,
-                      bgcolor: '#1a1a1a',
-                      border: '2px solid #333333',
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        borderColor: '#00ff41',
-                        boxShadow: '0 0 20px rgba(0, 255, 65, 0.3)'
-                      }
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-                      <Code sx={{ color: '#00aaff', fontSize: 32 }} />
-                      <Typography variant="h3" sx={{ fontWeight: 700, color: '#00aaff', fontFamily: 'monospace' }}>
-                        {analysisMetrics.linesAnalyzed}
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 500, color: '#cccccc', fontFamily: 'monospace' }}>
-                        LINES_ANALYZED
-                      </Typography>
-                    </Box>
-                  </Card>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Card
-                    elevation={0}
-                    sx={{
-                      textAlign: 'center',
-                      p: 3,
-                      borderRadius: 1,
-                      bgcolor: '#1a1a1a',
-                      border: '2px solid #333333',
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        borderColor: '#00ff41',
-                        boxShadow: '0 0 20px rgba(0, 255, 65, 0.3)'
-                      }
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-                      <Schedule sx={{ color: '#00ff41', fontSize: 32 }} />
-                      <Typography variant="h3" sx={{ fontWeight: 700, color: '#00ff41', fontFamily: 'monospace' }}>
-                        {(analysisMetrics.analysisTime / 1000).toFixed(1)}s
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 500, color: '#cccccc', fontFamily: 'monospace' }}>
-                        ANALYSIS_TIME
-                      </Typography>
-                    </Box>
-                  </Card>
+                      Scan Repository (Coming Soon)
+                    </Button>
+                  </Stack>
                 </Grid>
               </Grid>
-            </Box>
-          )}
+            </TabPanel>
+          </Card>
+        </Grid>
+      </Grid>
 
-          {/* AI Detection Alert Card */}
-          {showResults && analysisMetrics && analysisMetrics.aiDetectionIssues > 0 && (
-            <Card
-              sx={{
-                mb: 3,
-                background: 'rgba(20, 20, 30, 0.8)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(147, 51, 234, 0.5)',
-                boxShadow: '0 0 20px rgba(147, 51, 234, 0.2)'
-              }}
+      {/* Analysis Metrics Dashboard */}
+      {showResults && analysisMetrics && (
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="h5" gutterBottom sx={{ fontWeight: 700, mb: 3 }}>
+            Analysis Overview
+          </Typography>
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card className="glass-card" sx={{ textAlign: 'center', p: 3, height: '100%' }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                  <BugReport color="error" sx={{ fontSize: 32 }} />
+                  <Typography variant="h3" sx={{ fontWeight: 700, color: 'error.main' }}>
+                    {analysisMetrics.totalIssues}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                    Total Issues
+                  </Typography>
+                </Box>
+              </Card>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card className="glass-card" sx={{ textAlign: 'center', p: 3, height: '100%' }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                  <Security color="warning" sx={{ fontSize: 32 }} />
+                  <Typography variant="h3" sx={{ fontWeight: 700, color: 'warning.main' }}>
+                    {analysisMetrics.criticalIssues}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                    Critical Issues
+                  </Typography>
+                </Box>
+              </Card>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card className="glass-card" sx={{ textAlign: 'center', p: 3, height: '100%' }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                  <Code color="info" sx={{ fontSize: 32 }} />
+                  <Typography variant="h3" sx={{ fontWeight: 700, color: 'info.main' }}>
+                    {analysisMetrics.linesAnalyzed}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                    Lines Analyzed
+                  </Typography>
+                </Box>
+              </Card>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card className="glass-card" sx={{ textAlign: 'center', p: 3, height: '100%' }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                  <Schedule color="success" sx={{ fontSize: 32 }} />
+                  <Typography variant="h3" sx={{ fontWeight: 700, color: 'success.main' }}>
+                    {(analysisMetrics.analysisTime / 1000).toFixed(1)}s
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                    Analysis Time
+                  </Typography>
+                </Box>
+              </Card>
+            </Grid>
+          </Grid>
+        </Box>
+      )}
+
+      {/* AI Detection Alert Card */}
+      {showResults && analysisMetrics && analysisMetrics.aiDetectionIssues > 0 && (
+        <Card
+          sx={{
+            mt: 4,
+            mb: 4,
+            background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(79, 70, 229, 0.1) 100%)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(147, 51, 234, 0.3)',
+          }}
+        >
+          <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 3, flexWrap: 'wrap' }}>
+            <Box sx={{ p: 2, borderRadius: '50%', bgcolor: 'rgba(147, 51, 234, 0.2)' }}>
+              <Psychology sx={{ fontSize: 40, color: '#9333ea' }} />
+            </Box>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
+                AI-Generated Code Detected
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Analysis indicates a high probability of AI-generated patterns in this code.
+                Confidence: <strong>{Math.round((analysisResults.find(r => r.type === 'ai-detection')?.confidence || 0))}%</strong>
+              </Typography>
+            </Box>
+            <Button
+              variant="outlined"
+              color="secondary"
+              onClick={() => setExpandedAccordion('ai-detection')}
             >
-              <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                <Box sx={{ p: 2, borderRadius: '50%', bgcolor: 'rgba(147, 51, 234, 0.2)' }}>
-                  <Psychology sx={{ fontSize: 40, color: '#9333ea' }} />
+              View Details
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Comprehensive Summary */}
+      {showResults && comprehensiveSummary && (
+        <Card className="glass-card" sx={{ mb: 4 }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+              <Analytics sx={{ mr: 1.5, color: 'primary.main' }} />
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                AI Analysis Summary
+              </Typography>
+            </Box>
+
+            <Paper elevation={0} sx={{ p: 3, mb: 3, bgcolor: 'action.hover', borderRadius: 2 }}>
+              <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.7 }}>
+                {comprehensiveSummary.summary}
+              </Typography>
+
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: 'primary.main' }}>
+                Overall Assessment
+              </Typography>
+              <Typography variant="body2" sx={{ mb: 0, fontStyle: 'italic' }}>
+                {comprehensiveSummary.overall_assessment}
+              </Typography>
+            </Paper>
+
+            <Grid container spacing={4}>
+              {comprehensiveSummary.key_findings.length > 0 && (
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 700, color: 'warning.main', display: 'flex', alignItems: 'center' }}>
+                    <Info fontSize="small" sx={{ mr: 1 }} /> Key Findings
+                  </Typography>
+                  <List dense>
+                    {comprehensiveSummary.key_findings.map((finding, index) => (
+                      <ListItem key={index} sx={{ px: 0 }}>
+                        <ListItemIcon sx={{ minWidth: 28 }}>
+                          <Box sx={{ w: 6, h: 6, borderRadius: '50%', bgcolor: 'warning.main' }} />
+                        </ListItemIcon>
+                        <ListItemText primary={finding} />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Grid>
+              )}
+
+              {comprehensiveSummary.recommendations.length > 0 && (
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 700, color: 'success.main', display: 'flex', alignItems: 'center' }}>
+                    <CheckCircle fontSize="small" sx={{ mr: 1 }} /> Recommendations
+                  </Typography>
+                  <List dense>
+                    {comprehensiveSummary.recommendations.map((recommendation, index) => (
+                      <ListItem key={index} sx={{ px: 0 }}>
+                        <ListItemIcon sx={{ minWidth: 28 }}>
+                          <Box sx={{ w: 6, h: 6, borderRadius: '50%', bgcolor: 'success.main' }} />
+                        </ListItemIcon>
+                        <ListItemText primary={recommendation} />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Grid>
+              )}
+            </Grid>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Detailed Results */}
+      {showResults && (
+        <Box sx={{ mb: 8 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Typography variant="h5" sx={{ fontWeight: 700 }}>
+              Detailed Findings
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Tooltip title="Re-analyze">
+                <Button startIcon={<Refresh />} onClick={handleAnalyze} size="small">
+                  Refresh
+                </Button>
+              </Tooltip>
+            </Box>
+          </Box>
+
+          {['security', 'quality', 'performance', 'ai-detection'].map((category) => {
+            const categoryResults = analysisResults.filter(result => result.type === category);
+            if (categoryResults.length === 0) return null;
+
+            return (
+              <Box key={category} sx={{ mb: 3 }}>
+                <Typography variant="h6" sx={{ mb: 2, textTransform: 'capitalize', display: 'flex', alignItems: 'center', gap: 1 }}>
+                  {getTypeIcon(category)} {category.replace('-', ' ')} Issues
+                  <Chip label={categoryResults.length} size="small" color="default" />
+                </Typography>
+
+                {categoryResults.map((result) => (
+                  <Accordion
+                    key={result.id}
+                    expanded={expandedAccordion === result.id}
+                    onChange={(_, isExpanded) => setExpandedAccordion(isExpanded ? result.id : false)}
+                    sx={{
+                      mb: 1,
+                      borderRadius: '12px !important',
+                      '&:before': { display: 'none' },
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    <AccordionSummary expandIcon={<ExpandMore />}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', gap: 2 }}>
+                        {getSeverityIcon(result.severity)}
+                        <Box sx={{ flexGrow: 1 }}>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                            {result.title}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {result.file}:{result.line}
+                          </Typography>
+                        </Box>
+                        <Chip
+                          label={result.severity.toUpperCase()}
+                          color={getSeverityColor(result.severity) as any}
+                          size="small"
+                          sx={{ fontWeight: 700, fontSize: '0.7rem', height: 24 }}
+                        />
+                      </Box>
+                    </AccordionSummary>
+                    <AccordionDetails sx={{ bgcolor: 'action.hover', borderTop: '1px solid', borderColor: 'divider' }}>
+                      <Typography variant="body2" paragraph>
+                        {result.description}
+                      </Typography>
+                      {result.suggestion && (
+                        <Alert severity="info" sx={{ mt: 1, mb: 2 }}>
+                          <Typography variant="subtitle2" gutterBottom>Suggestion:</Typography>
+                          {result.suggestion}
+                        </Alert>
+                      )}
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        <Chip label={`Impact: ${result.impact || 'N/A'}`} size="small" variant="outlined" />
+                        <Chip label={`Effort: ${result.effort || 'N/A'}`} size="small" variant="outlined" />
+                        {result.confidence && (
+                          <Chip label={`Confidence: ${result.confidence}%`} size="small" variant="outlined" />
+                        )}
+                      </Box>
+                    </AccordionDetails>
+                  </Accordion>
+                ))}
+              </Box>
+            );
+          })}
+        </Box>
+      )}
+
+      {/* Result Dialog */}
+      <Dialog
+        open={resultDialogOpen}
+        onClose={() => setResultDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: 3 }
+        }}
+      >
+        {selectedResult && (
+          <>
+            <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {getSeverityIcon(selectedResult.severity)}
+              <Box>
+                <Typography variant="h6">{selectedResult.title}</Typography>
+                <Typography variant="caption" color="text.secondary">{selectedResult.id}</Typography>
+              </Box>
+            </DialogTitle>
+            <DialogContent dividers>
+              <Stack spacing={2}>
+                <Box>
+                  <Typography variant="subtitle2" gutterBottom>Description</Typography>
+                  <Typography variant="body1">{selectedResult.description}</Typography>
                 </Box>
                 <Box>
-                  <Typography variant="h5" sx={{ color: '#e9d5ff', fontWeight: 'bold', fontFamily: 'monospace', mb: 1 }}>
-                    AI-GENERATED CODE DETECTED
-                  </Typography>
-                  <Typography variant="body1" sx={{ color: '#d8b4fe', fontFamily: 'monospace' }}>
-                    Analysis indicates a high probability of AI-generated patterns in this code.
-                    Confidence: {Math.round((analysisResults.find(r => r.type === 'ai-detection')?.confidence || 0))}%
+                  <Typography variant="subtitle2" gutterBottom>Location</Typography>
+                  <Typography variant="body2" sx={{ fontFamily: 'monospace', bgcolor: 'action.hover', p: 1, borderRadius: 1 }}>
+                    {selectedResult.file}:{selectedResult.line}
                   </Typography>
                 </Box>
-                <Button
-                  variant="outlined"
-                  sx={{
-                    ml: 'auto',
-                    borderColor: '#9333ea',
-                    color: '#d8b4fe',
-                    '&:hover': { borderColor: '#a855f7', bgcolor: 'rgba(147, 51, 234, 0.1)' }
-                  }}
-                  onClick={() => setExpandedAccordion('ai-detection')}
-                >
-                  VIEW DETAILS
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Detailed Analysis Breakdown */}
-          {showResults && analysisMetrics && (
-            <Card sx={{ mb: 3 }}>
-              <CardContent>
-                <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
-                  Analysis Breakdown
-                </Typography>
-                <Grid container spacing={3}>
-                  <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 3 }}>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                        Issue Distribution
-                      </Typography>
-                      <Stack spacing={2}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <Security sx={{ color: 'error.main', mr: 1, fontSize: 20 }} />
-                            <Typography variant="body2">Security</Typography>
-                          </Box>
-                          <Badge badgeContent={analysisMetrics.securityIssues} color="error" />
-                        </Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <Assessment sx={{ color: 'warning.main', mr: 1, fontSize: 20 }} />
-                            <Typography variant="body2">Quality</Typography>
-                          </Box>
-                          <Badge badgeContent={analysisMetrics.qualityIssues} color="warning" />
-                        </Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <Speed sx={{ color: 'info.main', mr: 1, fontSize: 20 }} />
-                            <Typography variant="body2">Performance</Typography>
-                          </Box>
-                          <Badge badgeContent={analysisMetrics.performanceIssues} color="info" />
-                        </Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <Psychology sx={{ color: 'secondary.main', mr: 1, fontSize: 20 }} />
-                            <Typography variant="body2">AI Detection</Typography>
-                          </Box>
-                          <Badge badgeContent={analysisMetrics.aiDetectionIssues} color="secondary" />
-                        </Box>
-                      </Stack>
-                    </Paper>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 3 }}>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                        Code Quality Metrics
-                      </Typography>
-                      <Stack spacing={2}>
-                        <Box>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                            <Typography variant="body2">Code Complexity</Typography>
-                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                              {analysisMetrics.codeComplexity}
-                            </Typography>
-                          </Box>
-                          <LinearProgress
-                            variant="determinate"
-                            value={Math.min((analysisMetrics.codeComplexity || 0) * 5, 100)}
-                            color={analysisMetrics.codeComplexity && analysisMetrics.codeComplexity > 15 ? 'error' :
-                              analysisMetrics.codeComplexity && analysisMetrics.codeComplexity > 10 ? 'warning' : 'success'}
-                          />
-                        </Box>
-                        <Box>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                            <Typography variant="body2">Maintainability Index</Typography>
-                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                              {analysisMetrics.maintainabilityIndex}%
-                            </Typography>
-                          </Box>
-                          <LinearProgress
-                            variant="determinate"
-                            value={analysisMetrics.maintainabilityIndex || 0}
-                            color={analysisMetrics.maintainabilityIndex && analysisMetrics.maintainabilityIndex < 50 ? 'error' :
-                              analysisMetrics.maintainabilityIndex && analysisMetrics.maintainabilityIndex < 75 ? 'warning' : 'success'}
-                          />
-                        </Box>
-                      </Stack>
-                    </Paper>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* GPT-4o-mini Comprehensive Summary */}
-          {showResults && comprehensiveSummary && (
-            <Card sx={{ mb: 3 }}>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Psychology sx={{ mr: 1, color: 'primary.main' }} />
-                  <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
-                    GPT-4o-mini Analysis Summary
-                  </Typography>
-                </Box>
-
-                <Paper sx={{ p: 3, mb: 3, backgroundColor: 'grey.50' }}>
-                  <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.6 }}>
-                    {comprehensiveSummary.summary}
-                  </Typography>
-
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: 'primary.main' }}>
-                    Overall Assessment
-                  </Typography>
-                  <Typography variant="body2" sx={{ mb: 3, fontStyle: 'italic' }}>
-                    {comprehensiveSummary.overall_assessment}
-                  </Typography>
-
-                  {comprehensiveSummary.key_findings.length > 0 && (
-                    <Box sx={{ mb: 3 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: 'warning.main' }}>
-                        Key Findings
-                      </Typography>
-                      <List dense>
-                        {comprehensiveSummary.key_findings.map((finding, index) => (
-                          <ListItem key={index} sx={{ py: 0.5 }}>
-                            <ListItemIcon sx={{ minWidth: 32 }}>
-                              <Info sx={{ fontSize: 16, color: 'warning.main' }} />
-                            </ListItemIcon>
-                            <ListItemText primary={finding} />
-                          </ListItem>
-                        ))}
-                      </List>
-                    </Box>
-                  )}
-
-                  {comprehensiveSummary.recommendations.length > 0 && (
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: 'success.main' }}>
-                        Recommendations
-                      </Typography>
-                      <List dense>
-                        {comprehensiveSummary.recommendations.map((recommendation, index) => (
-                          <ListItem key={index} sx={{ py: 0.5 }}>
-                            <ListItemIcon sx={{ minWidth: 32 }}>
-                              <CheckCircle sx={{ fontSize: 16, color: 'success.main' }} />
-                            </ListItemIcon>
-                            <ListItemText primary={recommendation} />
-                          </ListItem>
-                        ))}
-                      </List>
-                    </Box>
-                  )}
-                </Paper>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Analysis Results */}
-          {showResults && (
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                  <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
-                    Analysis Results ({analysisResults.length} issues found)
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Tooltip title="Copy Results">
-                      <IconButton size="small">
-                        <ContentCopy />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Download Report">
-                      <IconButton size="small">
-                        <Download />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Re-analyze">
-                      <IconButton size="small" onClick={handleAnalyze}>
-                        <Refresh />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </Box>
-
-                {/* Results by Category */}
-                <Box sx={{ mb: 3 }}>
-                  {['security', 'quality', 'performance', 'ai-detection'].map((category) => {
-                    const categoryResults = analysisResults.filter(result => result.type === category);
-                    if (categoryResults.length === 0) return null;
-
-                    return (
-                      <Accordion
-                        key={category}
-                        expanded={expandedAccordion === category}
-                        onChange={() => setExpandedAccordion(expandedAccordion === category ? false : category)}
-                        sx={{ mb: 1 }}
-                      >
-                        <AccordionSummary expandIcon={<ExpandMore />}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-                            {getTypeIcon(category)}
-                            <Typography variant="subtitle1" sx={{ fontWeight: 600, textTransform: 'capitalize' }}>
-                              {category.replace('-', ' ')} Issues
-                            </Typography>
-                            <Chip
-                              label={categoryResults.length}
-                              size="small"
-                              color={category === 'security' ? 'error' :
-                                category === 'quality' ? 'warning' :
-                                  category === 'performance' ? 'info' : 'secondary'}
-                            />
-                          </Box>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                          <TableContainer component={Paper} variant="outlined">
-                            <Table size="small">
-                              <TableHead>
-                                <TableRow>
-                                  <TableCell>Severity</TableCell>
-                                  <TableCell>Issue</TableCell>
-                                  <TableCell>Location</TableCell>
-                                  <TableCell>Impact</TableCell>
-                                  <TableCell>Effort</TableCell>
-                                  <TableCell>Confidence</TableCell>
-                                  <TableCell>Actions</TableCell>
-                                </TableRow>
-                              </TableHead>
-                              <TableBody>
-                                {categoryResults.map((result) => (
-                                  <TableRow key={result.id} hover>
-                                    <TableCell>
-                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        {getSeverityIcon(result.severity)}
-                                        <Chip
-                                          label={result.severity.toUpperCase()}
-                                          size="small"
-                                          color={getSeverityColor(result.severity) as any}
-                                        />
-                                      </Box>
-                                    </TableCell>
-                                    <TableCell>
-                                      <Box>
-                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                          {result.title}
-                                        </Typography>
-                                        <Typography variant="caption" color="textSecondary">
-                                          {result.description}
-                                        </Typography>
-                                      </Box>
-                                    </TableCell>
-                                    <TableCell>
-                                      <Typography variant="caption">
-                                        {result.file}:{result.line}
-                                      </Typography>
-                                    </TableCell>
-                                    <TableCell>
-                                      <Chip
-                                        label={result.impact || 'Medium'}
-                                        size="small"
-                                        variant="outlined"
-                                        color={result.impact === 'High' ? 'error' :
-                                          result.impact === 'Medium' ? 'warning' : 'success'}
-                                      />
-                                    </TableCell>
-                                    <TableCell>
-                                      <Chip
-                                        label={result.effort?.toUpperCase() || 'MEDIUM'}
-                                        size="small"
-                                        variant="outlined"
-                                      />
-                                    </TableCell>
-                                    <TableCell>
-                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <CircularProgress
-                                          variant="determinate"
-                                          value={result.confidence || 85}
-                                          size={20}
-                                          color={result.confidence && result.confidence > 90 ? 'success' :
-                                            result.confidence && result.confidence > 70 ? 'warning' : 'error'}
-                                        />
-                                        <Typography variant="caption">
-                                          {result.confidence || 85}%
-                                        </Typography>
-                                      </Box>
-                                    </TableCell>
-                                    <TableCell>
-                                      <IconButton
-                                        size="small"
-                                        onClick={() => handleResultClick(result)}
-                                      >
-                                        <Info />
-                                      </IconButton>
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </TableContainer>
-                        </AccordionDetails>
-                      </Accordion>
-                    );
-                  })}
-                </Box>
-
-                {/* Summary List View */}
-                <Accordion
-                  expanded={expandedAccordion === 'overview'}
-                  onChange={() => setExpandedAccordion(expandedAccordion === 'overview' ? false : 'overview')}
-                >
-                  <AccordionSummary expandIcon={<ExpandMore />}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Analytics />
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                        Overview - All Issues
-                      </Typography>
-                    </Box>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <List>
-                      {analysisResults.map((result, index) => (
-                        <React.Fragment key={result.id}>
-                          <ListItem
-                            button
-                            onClick={() => handleResultClick(result)}
-                            sx={{
-                              border: 1,
-                              borderColor: 'divider',
-                              borderRadius: 1,
-                              mb: 1,
-                              '&:hover': {
-                                backgroundColor: 'action.hover',
-                              },
-                            }}
-                          >
-                            <ListItemIcon>
-                              {getSeverityIcon(result.severity)}
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                                    {result.title}
-                                  </Typography>
-                                  <Chip
-                                    icon={getTypeIcon(result.type)}
-                                    label={result.type.replace('-', ' ').toUpperCase()}
-                                    size="small"
-                                    variant="outlined"
-                                  />
-                                  <Chip
-                                    label={result.severity.toUpperCase()}
-                                    size="small"
-                                    color={getSeverityColor(result.severity) as any}
-                                  />
-                                  {result.confidence && (
-                                    <Chip
-                                      label={`${result.confidence}% confidence`}
-                                      size="small"
-                                      variant="outlined"
-                                      color="info"
-                                    />
-                                  )}
-                                </Box>
-                              }
-                              secondary={
-                                <Box sx={{ mt: 1 }}>
-                                  <Typography variant="body2" color="textSecondary">
-                                    {result.description}
-                                  </Typography>
-                                  <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-                                    <Typography variant="caption" color="textSecondary">
-                                      📁 {result.file}:{result.line}
-                                    </Typography>
-                                    {result.category && (
-                                      <Typography variant="caption" color="textSecondary">
-                                        🏷️ {result.category}
-                                      </Typography>
-                                    )}
-                                    {result.impact && (
-                                      <Typography variant="caption" color="textSecondary">
-                                        ⚡ Impact: {result.impact}
-                                      </Typography>
-                                    )}
-                                  </Box>
-                                </Box>
-                              }
-                            />
-                          </ListItem>
-                          {index < analysisResults.length - 1 && <Divider sx={{ my: 1 }} />}
-                        </React.Fragment>
-                      ))}
-                    </List>
-                  </AccordionDetails>
-                </Accordion>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Result Detail Dialog */}
-          <Dialog
-            open={resultDialogOpen}
-            onClose={() => setResultDialogOpen(false)}
-            maxWidth="md"
-            fullWidth
-          >
-            {selectedResult && (
-              <>
-                <DialogTitle>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    {getSeverityIcon(selectedResult.severity)}
-                    <Typography variant="h6">{selectedResult.title}</Typography>
-                    <Chip
-                      label={selectedResult.severity.toUpperCase()}
-                      size="small"
-                      color={getSeverityColor(selectedResult.severity) as any}
-                    />
-                  </Box>
-                </DialogTitle>
-                <DialogContent>
-                  <Typography variant="body1" gutterBottom>
-                    <strong>Description:</strong> {selectedResult.description}
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary" gutterBottom>
-                    <strong>File:</strong> {selectedResult.file}:{selectedResult.line}
-                  </Typography>
-                  {selectedResult.suggestion && (
-                    <Alert severity="info" sx={{ mt: 2 }}>
-                      <strong>Suggestion:</strong> {selectedResult.suggestion}
+                {selectedResult.suggestion && (
+                  <Box>
+                    <Typography variant="subtitle2" gutterBottom>Recommendation</Typography>
+                    <Alert severity="success" icon={<CheckCircle fontSize="inherit" />}>
+                      {selectedResult.suggestion}
                     </Alert>
-                  )}
-                </DialogContent>
-                <DialogActions>
-                  <Button onClick={() => setResultDialogOpen(false)}>Close</Button>
-                  <Button variant="contained">View in Editor</Button>
-                </DialogActions>
-              </>
-            )}
-          </Dialog>
-        </Box>
-      </Box>
+                  </Box>
+                )}
+              </Stack>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setResultDialogOpen(false)}>Close</Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
     </Box>
   );
 };

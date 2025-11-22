@@ -32,119 +32,114 @@ function App() {
   const { isDarkMode } = useThemeStore();
 
   // Create theme based on dark mode preference
+  // Create theme based on dark mode preference
   const theme = createTheme({
     palette: {
       mode: isDarkMode ? 'dark' : 'light',
       primary: {
-        main: '#2563eb',
-        light: '#3b82f6',
-        dark: '#1d4ed8',
+        main: '#6366f1', // Indigo
+        light: '#818cf8',
+        dark: '#4f46e5',
+        contrastText: '#ffffff',
       },
       secondary: {
-        main: '#7c3aed',
-        light: '#8b5cf6',
-        dark: '#6d28d9',
-      },
-      error: {
-        main: '#dc2626',
-        light: '#ef4444',
-        dark: '#b91c1c',
-      },
-      warning: {
-        main: '#d97706',
-        light: '#f59e0b',
-        dark: '#b45309',
-      },
-      success: {
-        main: '#059669',
-        light: '#10b981',
-        dark: '#047857',
+        main: '#ec4899', // Pink
+        light: '#f472b6',
+        dark: '#db2777',
+        contrastText: '#ffffff',
       },
       background: {
-        default: isDarkMode ? '#0f172a' : '#f8fafc',
-        paper: isDarkMode ? '#1e293b' : '#ffffff',
+        default: isDarkMode ? '#0f172a' : '#f8fafc', // Slate 900 / Slate 50
+        paper: isDarkMode ? '#1e293b' : '#ffffff',   // Slate 800 / White
       },
       text: {
-        primary: isDarkMode ? '#f1f5f9' : '#0f172a',
+        primary: isDarkMode ? '#f8fafc' : '#0f172a',
         secondary: isDarkMode ? '#94a3b8' : '#64748b',
+      },
+      success: {
+        main: '#10b981',
+        light: '#34d399',
+        dark: '#059669',
+      },
+      warning: {
+        main: '#f59e0b',
+        light: '#fbbf24',
+        dark: '#d97706',
+      },
+      error: {
+        main: '#ef4444',
+        light: '#f87171',
+        dark: '#dc2626',
+      },
+      info: {
+        main: '#3b82f6',
+        light: '#60a5fa',
+        dark: '#2563eb',
       },
     },
     typography: {
-      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-      h1: {
-        fontSize: '2.5rem',
-        fontWeight: 700,
-        lineHeight: 1.2,
-      },
-      h2: {
-        fontSize: '2rem',
-        fontWeight: 600,
-        lineHeight: 1.3,
-      },
-      h3: {
-        fontSize: '1.5rem',
-        fontWeight: 600,
-        lineHeight: 1.4,
-      },
-      h4: {
-        fontSize: '1.25rem',
-        fontWeight: 600,
-        lineHeight: 1.4,
-      },
-      h5: {
-        fontSize: '1.125rem',
-        fontWeight: 600,
-        lineHeight: 1.4,
-      },
-      h6: {
-        fontSize: '1rem',
-        fontWeight: 600,
-        lineHeight: 1.4,
-      },
-      body1: {
-        fontSize: '1rem',
-        lineHeight: 1.6,
-      },
-      body2: {
-        fontSize: '0.875rem',
-        lineHeight: 1.6,
-      },
+      fontFamily: '"Inter", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", sans-serif',
+      h1: { fontWeight: 700, letterSpacing: '-0.025em' },
+      h2: { fontWeight: 700, letterSpacing: '-0.025em' },
+      h3: { fontWeight: 600, letterSpacing: '-0.025em' },
+      h4: { fontWeight: 600, letterSpacing: '-0.025em' },
+      h5: { fontWeight: 600 },
+      h6: { fontWeight: 600 },
+      button: { textTransform: 'none', fontWeight: 600 },
     },
     shape: {
-      borderRadius: 8,
+      borderRadius: 12,
     },
     components: {
       MuiButton: {
         styleOverrides: {
           root: {
-            textTransform: 'none',
-            fontWeight: 500,
-            borderRadius: 8,
-            padding: '8px 16px',
+            borderRadius: 10,
+            boxShadow: 'none',
+            '&:hover': {
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+            },
           },
-        },
-      },
-      MuiCard: {
-        styleOverrides: {
-          root: {
-            borderRadius: 12,
-            boxShadow: isDarkMode
-              ? '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)'
-              : '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+          containedPrimary: {
+            background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
           },
         },
       },
       MuiPaper: {
         styleOverrides: {
           root: {
-            borderRadius: 12,
+            backgroundImage: 'none',
+          },
+          elevation1: {
+            boxShadow: isDarkMode
+              ? '0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3)'
+              : '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
           },
         },
       },
-      MuiChip: {
+      MuiCard: {
         styleOverrides: {
           root: {
-            borderRadius: 6,
+            borderRadius: 16,
+            border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid rgba(0, 0, 0, 0.05)',
+          },
+        },
+      },
+      MuiAppBar: {
+        styleOverrides: {
+          root: {
+            background: isDarkMode ? 'rgba(15, 23, 42, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+            backdropFilter: 'blur(12px)',
+            borderBottom: isDarkMode ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid rgba(0, 0, 0, 0.05)',
+            boxShadow: 'none',
+          },
+        },
+      },
+      MuiDrawer: {
+        styleOverrides: {
+          paper: {
+            background: isDarkMode ? '#0f172a' : '#ffffff',
+            borderRight: isDarkMode ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid rgba(0, 0, 0, 0.05)',
           },
         },
       },
@@ -161,21 +156,21 @@ function App() {
               {/* Dashboard */}
               <Route path="/" element={<Dashboard />} />
               <Route path="/dashboard" element={<Navigate to="/" replace />} />
-              
+
               {/* Analysis Pages */}
               <Route path="/analysis" element={<CodeAnalysis />} />
               <Route path="/security" element={<SecurityScan />} />
               <Route path="/performance" element={<PerformanceAnalysis />} />
-              
+
               {/* Other Pages */}
               <Route path="/reports" element={<Reports />} />
-              
+
               {/* Catch all route */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Layout>
         </Box>
-        
+
         {/* Toast notifications */}
         <Toaster
           position="top-right"

@@ -127,40 +127,46 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   const drawer = (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Logo and Title */}
       <Box
         sx={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          p: 2,
-          minHeight: 64,
+          p: 3,
+          minHeight: 80,
         }}
       >
         <Box
           sx={{
             width: 40,
             height: 40,
-            borderRadius: 2,
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderRadius: 3,
+            background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             mr: 2,
+            boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
           }}
         >
           <SecurityIcon sx={{ color: 'white', fontSize: 24 }} />
         </Box>
-        <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 700 }}>
-          CodeGuard AI
-        </Typography>
+        <Box>
+          <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+            CodeGuard
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+            AI Security Platform
+          </Typography>
+        </Box>
       </Box>
-      
-      <Divider />
-      
+
       {/* Navigation Items */}
-      <List sx={{ px: 1 }}>
+      <List sx={{ px: 2, flexGrow: 1 }}>
+        <Typography variant="caption" sx={{ px: 2, py: 1, display: 'block', fontWeight: 600, color: 'text.secondary', letterSpacing: '0.05em' }}>
+          MAIN MENU
+        </Typography>
         {navigationItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
@@ -168,23 +174,26 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <ListItemButton
                 onClick={() => handleNavigate(item.path)}
                 sx={{
-                  borderRadius: 2,
-                  mx: 1,
-                  backgroundColor: isActive ? 'primary.main' : 'transparent',
-                  color: isActive ? 'primary.contrastText' : 'text.primary',
+                  borderRadius: 3,
+                  mx: 0,
+                  py: 1.5,
+                  backgroundColor: isActive ? (isDarkMode ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.08)') : 'transparent',
+                  color: isActive ? 'primary.main' : 'text.secondary',
                   '&:hover': {
-                    backgroundColor: isActive ? 'primary.dark' : 'action.hover',
+                    backgroundColor: isActive ? (isDarkMode ? 'rgba(99, 102, 241, 0.25)' : 'rgba(99, 102, 241, 0.12)') : 'action.hover',
+                    color: isActive ? 'primary.main' : 'text.primary',
                   },
                 }}
               >
                 <ListItemIcon
                   sx={{
-                    color: isActive ? 'primary.contrastText' : 'text.secondary',
-                    minWidth: 40,
+                    color: isActive ? 'primary.main' : 'text.secondary',
+                    minWidth: 44,
+                    transition: 'color 0.2s',
                   }}
                 >
                   {item.badge ? (
-                    <Badge badgeContent={item.badge} color="error">
+                    <Badge badgeContent={item.badge} color="error" sx={{ '& .MuiBadge-badge': { boxShadow: '0 0 0 2px var(--mui-palette-background-paper)' } }}>
                       {item.icon}
                     </Badge>
                   ) : (
@@ -194,35 +203,61 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <ListItemText
                   primary={item.text}
                   primaryTypographyProps={{
-                    fontSize: '0.875rem',
+                    fontSize: '0.9rem',
                     fontWeight: isActive ? 600 : 500,
                   }}
                 />
+                {isActive && (
+                  <Box
+                    sx={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: '50%',
+                      bgcolor: 'primary.main',
+                      ml: 1,
+                    }}
+                  />
+                )}
               </ListItemButton>
             </ListItem>
           );
         })}
       </List>
-      
-      <Divider sx={{ mt: 'auto', mb: 2 }} />
-      
-      {/* Theme Toggle */}
-      <Box sx={{ px: 3, pb: 2 }}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={isDarkMode}
-              onChange={toggleDarkMode}
-              icon={<LightMode sx={{ fontSize: 16 }} />}
-              checkedIcon={<DarkMode sx={{ fontSize: 16 }} />}
-            />
-          }
-          label={
-            <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
+
+      {/* User Profile Section */}
+      <Box sx={{ p: 2 }}>
+        <Box
+          sx={{
+            p: 2,
+            borderRadius: 4,
+            bgcolor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+            border: isDarkMode ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <Avatar sx={{ width: 36, height: 36, bgcolor: 'primary.main', mr: 1.5 }}>
+              <AccountCircle />
+            </Avatar>
+            <Box sx={{ overflow: 'hidden' }}>
+              <Typography variant="subtitle2" noWrap sx={{ fontWeight: 600 }}>
+                Demo User
+              </Typography>
+              <Typography variant="caption" color="text.secondary" noWrap>
+                Pro Plan
+              </Typography>
+            </Box>
+          </Box>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
               Dark Mode
             </Typography>
-          }
-        />
+            <Switch
+              size="small"
+              checked={isDarkMode}
+              onChange={toggleDarkMode}
+            />
+          </Box>
+        </Box>
       </Box>
     </Box>
   );
@@ -235,14 +270,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
-          backgroundColor: 'background.paper',
+          backgroundColor: 'transparent',
+          backdropFilter: 'blur(12px)',
           color: 'text.primary',
           boxShadow: 'none',
-          borderBottom: 1,
-          borderColor: 'divider',
+          borderBottom: 'none',
+          zIndex: (theme) => theme.zIndex.drawer + 1,
         }}
       >
-        <Toolbar>
+        <Toolbar sx={{ minHeight: 80 }}>
           <IconButton
             color="inherit"
             aria-label="open drawer"
@@ -252,40 +288,49 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           >
             <MenuIcon />
           </IconButton>
-          
+
           {/* Page Title */}
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            {navigationItems.find(item => item.path === location.pathname)?.text || 'Dashboard'}
-          </Typography>
-          
-          {/* Notifications */}
-          <Tooltip title="Notifications">
-            <IconButton color="inherit" sx={{ mr: 1 }}>
-              <Badge badgeContent={4} color="error">
-                <Notifications />
-              </Badge>
-            </IconButton>
-          </Tooltip>
-          
-          {/* Profile Menu */}
-          <Tooltip title="Account">
-            <IconButton
-              size="large"
-              edge="end"
-              aria-label="account of current user"
-              aria-controls="primary-search-account-menu"
-              aria-haspopup="true"
-              onClick={handleProfileMenuOpen}
-              color="inherit"
-            >
-              <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
-                <AccountCircle />
-              </Avatar>
-            </IconButton>
-          </Tooltip>
+          <Box sx={{ flexGrow: 1 }}>
+            <Typography variant="h5" component="div" sx={{ fontWeight: 700, color: 'text.primary' }}>
+              {navigationItems.find(item => item.path === location.pathname)?.text || 'Dashboard'}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Overview of your security posture
+            </Typography>
+          </Box>
+
+          {/* Actions */}
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Tooltip title="Notifications">
+              <IconButton
+                sx={{
+                  bgcolor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                  borderRadius: 3,
+                  '&:hover': { bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }
+                }}
+              >
+                <Badge badgeContent={4} color="error">
+                  <Notifications fontSize="small" />
+                </Badge>
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Settings">
+              <IconButton
+                onClick={() => navigate('/settings')}
+                sx={{
+                  bgcolor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                  borderRadius: 3,
+                  '&:hover': { bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }
+                }}
+              >
+                <SettingsIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
         </Toolbar>
       </AppBar>
-      
+
       {/* Profile Menu */}
       <Menu
         anchorEl={anchorEl}
@@ -300,21 +345,31 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         }}
         open={Boolean(anchorEl)}
         onClose={handleProfileMenuClose}
+        PaperProps={{
+          elevation: 0,
+          sx: {
+            overflow: 'visible',
+            filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
+            mt: 1.5,
+            borderRadius: 3,
+            minWidth: 180,
+          },
+        }}
       >
         <MenuItem onClick={handleProfileMenuClose}>
-          <AccountCircle sx={{ mr: 2 }} />
+          <AccountCircle sx={{ mr: 2, fontSize: 20 }} />
           Profile
         </MenuItem>
         <MenuItem onClick={() => { handleProfileMenuClose(); navigate('/settings'); }}>
-          <SettingsIcon sx={{ mr: 2 }} />
+          <SettingsIcon sx={{ mr: 2, fontSize: 20 }} />
           Settings
         </MenuItem>
         <Divider />
         <MenuItem onClick={handleProfileMenuClose}>
-          <Typography color="error">Logout</Typography>
+          <Typography color="error" variant="body2" fontWeight={600}>Logout</Typography>
         </MenuItem>
       </Menu>
-      
+
       {/* Drawer */}
       <Box
         component="nav"
@@ -335,12 +390,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               boxSizing: 'border-box',
               width: drawerWidth,
               borderRight: 'none',
+              backgroundImage: 'none',
             },
           }}
         >
           {drawer}
         </Drawer>
-        
+
         {/* Desktop drawer */}
         <Drawer
           variant="permanent"
@@ -351,6 +407,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               width: drawerWidth,
               borderRight: 'none',
               backgroundColor: 'background.paper',
+              backgroundImage: 'none',
             },
           }}
           open
@@ -358,7 +415,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {drawer}
         </Drawer>
       </Box>
-      
+
       {/* Main content */}
       <Box
         component="main"
@@ -370,8 +427,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           backgroundColor: 'background.default',
         }}
       >
-        <Toolbar /> {/* Spacer for fixed AppBar */}
-        {children}
+        <Toolbar sx={{ minHeight: 80 }} /> {/* Spacer for fixed AppBar */}
+        <Box sx={{ maxWidth: 1600, mx: 'auto' }}>
+          {children}
+        </Box>
       </Box>
     </Box>
   );
