@@ -1,37 +1,25 @@
-#!/usr/bin/env python3
-"""
-CodeGuard AI - API Routes
-
-RESTful API endpoints for code analysis services.
-"""
-
-import logging
 from datetime import datetime
 from typing import Dict, List, Optional, Any
-
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, BackgroundTasks
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, validator
 from sqlalchemy.orm import Session
+import logging
 
-from ..core.database import get_db
-from ..core.redis_client import cache_manager, rate_limiter
-from ..services import (
+from ...core.database import get_db
+from ...core.redis_client import cache_manager, rate_limiter
+from ...services import (
     parse_code, detect_ai_code, scan_code_security,
     analyze_code_performance, assess_code_quality,
     get_ai_confidence, get_security_score,
     get_performance_score, get_quality_score
 )
-from ..services.llm_service import LLMService
-from ..models.analysis import CodeAnalysis, SecurityVulnerability, AIPattern
-from ..models.user import User
-from ..models.project import Project
+from ...services.llm_service import LLMService
+from ...models.analysis import CodeAnalysis
+from ...models.user import User
+from ..deps import get_current_user
 
-# Configure logging
+router = APIRouter(tags=["Analysis"])
 logger = logging.getLogger(__name__)
-
-# Create router
-router = APIRouter(prefix="/api/v1", tags=["CodeGuard AI"])
 
 # Request/Response Models
 class CodeAnalysisRequest(BaseModel):
@@ -52,13 +40,6 @@ class CodeAnalysisRequest(BaseModel):
                 raise ValueError(f"Invalid analysis type: {analysis_type}. Valid types: {valid_types}")
         return v
 
-class FileAnalysisRequest(BaseModel):
-    """Request model for file analysis"""
-    analysis_types: List[str] = Field(
-        default=["ai_detection", "security", "performance", "quality"],
-        description="Types of analysis to perform"
-    )
-
 class BatchAnalysisRequest(BaseModel):
     """Request model for batch analysis"""
     files: List[Dict[str, str]] = Field(..., description="List of files with 'filename' and 'code' keys")
@@ -76,26 +57,7 @@ class AnalysisResponse(BaseModel):
     timestamp: datetime
     processing_time_ms: float
 
-class HealthResponse(BaseModel):
-    """Health check response"""
-    status: str
-    timestamp: datetime
-    version: str = "1.0.0"
-    services: Dict[str, str]
-
-class ErrorResponse(BaseModel):
-    """Error response model"""
-    error: str
-    message: str
-    timestamp: datetime
-    request_id: Optional[str] = None
-
 # Utility Functions
-def get_current_user(db: Session = Depends(get_db)) -> Optional[User]:
-    """Get current user (placeholder for authentication)"""
-    # TODO: Implement proper authentication
-    return None
-
 async def check_rate_limit(user_id: str = "anonymous") -> bool:
     """Check rate limiting"""
     allowed, _ = await rate_limiter.is_allowed(f"api:{user_id}", limit=100, window_seconds=3600)
@@ -203,21 +165,6 @@ async def perform_analysis(code: str, filename: str, analysis_types: List[str]) 
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 # API Endpoints
-
-@router.get("/health", response_model=HealthResponse)
-async def health_check():
-    """Health check endpoint"""
-    return HealthResponse(
-        status="healthy",
-        timestamp=datetime.utcnow(),
-        services={
-            "ast_parser": "operational",
-            "ai_detector": "operational",
-            "security_scanner": "operational",
-            "performance_analyzer": "operational",
-            "quality_assessor": "operational"
-        }
-    )
 
 @router.post("/analyze", response_model=AnalysisResponse)
 async def analyze_code(
@@ -498,158 +445,3 @@ async def quick_quality_score(request: CodeAnalysisRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-# Analysis History Endpoints
-
-@router.get("/history")
-async def get_analysis_history(
-    limit: int = 50,
-    offset: int = 0,
-    db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user)
-):
-    """Get analysis history"""
-    try:
-        query = db.query(CodeAnalysis)
-        
-        if current_user:
-            query = query.filter(CodeAnalysis.user_id == current_user.id)
-        
-        analyses = query.order_by(CodeAnalysis.created_at.desc()).offset(offset).limit(limit).all()
-        
-        return {
-            "analyses": [{
-                "id": analysis.id,
-                "filename": analysis.filename,
-                "language": analysis.language,
-                "analysis_types": analysis.analysis_types,
-                "created_at": analysis.created_at.isoformat(),
-                "status": analysis.status.value
-            } for analysis in analyses],
-            "total": query.count(),
-            "limit": limit,
-            "offset": offset
-        }
-        
-    except Exception as e:
-        logger.error(f"History retrieval error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.get("/history/{analysis_id}")
-async def get_analysis_result(
-    analysis_id: str,
-    db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user)
-):
-    """Get specific analysis result"""
-    try:
-        query = db.query(CodeAnalysis).filter(CodeAnalysis.id == analysis_id)
-        
-        if current_user:
-            query = query.filter(CodeAnalysis.user_id == current_user.id)
-        
-        analysis = query.first()
-        
-        if not analysis:
-            raise HTTPException(status_code=404, detail="Analysis not found")
-        
-        return {
-            "id": analysis.id,
-            "filename": analysis.filename,
-            "language": analysis.language,
-            "analysis_types": analysis.analysis_types,
-            "results": analysis.results,
-            "created_at": analysis.created_at.isoformat(),
-            "status": analysis.status.value
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Analysis retrieval error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-# Statistics Endpoints
-
-@router.get("/stats")
-async def get_statistics(
-    db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user)
-):
-    """Get analysis statistics"""
-    try:
-        # Get basic statistics from database
-        total_analyses = db.query(CodeAnalysis).count()
-        total_vulnerabilities = db.query(SecurityVulnerability).count()
-        total_ai_patterns = db.query(AIPattern).count()
-        
-        return {
-            "success": True,
-            "statistics": {
-                "total_analyses": total_analyses,
-                "total_vulnerabilities": total_vulnerabilities,
-                "total_ai_patterns": total_ai_patterns,
-                "supported_languages": [
-                    "python", "javascript", "typescript", "java", "cpp", "c", "go", "rust"
-                ],
-                "analysis_types": [
-                    "ai_detection", "security", "performance", "quality", "ast"
-                ]
-            },
-            "timestamp": datetime.utcnow().isoformat()
-        }
-    except Exception as e:
-        logger.error(f"Error getting statistics: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get statistics")
-
-# Add missing endpoints for demo compatibility
-@router.get("/supported-languages")
-async def get_supported_languages():
-    """Get list of supported programming languages"""
-    return {
-        "success": True,
-        "languages": [
-            {"name": "Python", "code": "python", "extensions": [".py"]},
-            {"name": "JavaScript", "code": "javascript", "extensions": [".js", ".mjs"]},
-            {"name": "TypeScript", "code": "typescript", "extensions": [".ts"]},
-            {"name": "Java", "code": "java", "extensions": [".java"]},
-            {"name": "C++", "code": "cpp", "extensions": [".cpp", ".cc", ".cxx"]},
-            {"name": "C", "code": "c", "extensions": [".c"]},
-            {"name": "Go", "code": "go", "extensions": [".go"]},
-            {"name": "Rust", "code": "rust", "extensions": [".rs"]}
-        ],
-        "timestamp": datetime.utcnow().isoformat()
-    }
-
-@router.get("/statistics")
-async def get_statistics_alt(
-    db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user)
-):
-    """Get analysis statistics (alternative endpoint for demo compatibility)"""
-    try:
-        # Get basic statistics from database
-        total_analyses = db.query(CodeAnalysis).count()
-        total_vulnerabilities = db.query(SecurityVulnerability).count()
-        total_ai_patterns = db.query(AIPattern).count()
-        
-        return {
-            "success": True,
-            "statistics": {
-                "total_analyses": total_analyses,
-                "total_vulnerabilities": total_vulnerabilities,
-                "total_ai_patterns": total_ai_patterns,
-                "supported_languages": [
-                    "python", "javascript", "typescript", "java", "cpp", "c", "go", "rust"
-                ],
-                "analysis_types": [
-                    "ai_detection", "security", "performance", "quality", "ast"
-                ]
-            },
-            "timestamp": datetime.utcnow().isoformat()
-        }
-    except Exception as e:
-        logger.error(f"Error getting statistics: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get statistics")
-
-# Error handlers are defined in main.py
