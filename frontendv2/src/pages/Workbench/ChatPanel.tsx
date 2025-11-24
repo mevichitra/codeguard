@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Box, Paper, Typography, TextField, IconButton, List, ListItem, CircularProgress, Avatar } from '@mui/material';
 import { Send, SmartToy, Person } from '@mui/icons-material';
 import type { ChatMessage } from '../../types';
+import ReactMarkdown from 'react-markdown';
 
 interface ChatPanelProps {
     messages: ChatMessage[];
@@ -91,10 +92,21 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ messages, onSendMessage, isLoadin
                                     p: 1.5,
                                     borderRadius: 2,
                                     bgcolor: msg.role === 'user' ? 'secondary.dark' : 'action.hover',
-                                    color: 'text.primary'
+                                    color: 'text.primary',
+                                    '& pre': {
+                                        m: 0,
+                                        p: 1,
+                                        borderRadius: 1,
+                                        bgcolor: 'background.paper',
+                                        overflow: 'auto',
+                                        fontSize: '0.875rem',
+                                    },
+                                    '& code': {
+                                        fontFamily: 'monospace',
+                                    }
                                 }}
                             >
-                                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{msg.content}</Typography>
+                                <ReactMarkdown>{msg.content}</ReactMarkdown>
                             </Paper>
                         </Box>
                     </ListItem>

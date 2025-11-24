@@ -169,21 +169,48 @@ class AIAnalyzerService:
         if self.enabled:
              # TODO: Implement real LLM chat
              await asyncio.sleep(1.0)
-             return self._mock_chat_response(message)
+             return self._mock_chat_response(message, code)
         else:
-             return self._mock_chat_response(message)
+             return self._mock_chat_response(message, code)
 
-    def _mock_chat_response(self, message: str) -> str:
+    def _mock_chat_response(self, message: str, code: str) -> str:
         """
         Generates a mock response for the chat.
         """
         message_lower = message.lower()
         if "fix" in message_lower or "improve" in message_lower:
-            return "I suggest refactoring the nested loops to improve performance. You might also want to add input validation to prevent potential security issues."
+            return f"""I suggest refactoring the code to improve performance and readability. Here is a suggested improvement:
+
+```python
+def optimized_function(data):
+    # Use a set for O(1) lookups
+    seen = set()
+    result = []
+    for item in data:
+        if item not in seen:
+            result.append(item)
+            seen.add(item)
+    return result
+```
+
+This change reduces the time complexity from O(n^2) to O(n)."""
         elif "explain" in message_lower:
-            return "This code appears to be processing data. It iterates through a list and performs some calculations. The complexity seems to be O(n^2)."
+            return f"""This code appears to be processing data. It iterates through a list and performs some calculations.
+
+Here is a breakdown of the logic:
+1.  **Initialization**: Variables are set up.
+2.  **Loop**: The code iterates over the input.
+3.  **Condition**: It checks for specific criteria.
+
+The complexity seems to be O(n^2) due to the nested operations."""
         elif "security" in message_lower:
-            return "I found a potential injection vulnerability. Ensure you are sanitizing all user inputs before using them in queries."
+            return """I found a potential injection vulnerability. Ensure you are sanitizing all user inputs before using them in queries.
+
+Example of secure usage:
+```python
+# Use parameterized queries
+cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+```"""
         else:
             return f"That's an interesting point about the {message}. Could you elaborate on how you'd like to change the code?"
 
