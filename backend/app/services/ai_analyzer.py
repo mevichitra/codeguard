@@ -162,22 +162,53 @@ class AIAnalyzerService:
             "language": "unknown"
         }
 
-    async def chat_about_code(self, code: str, language: str, message: str, context: List[Dict[str, str]]) -> str:
+    async def chat_about_code(self, code: str, language: str, message: str, context: List[Dict[str, str]], analysis_result: Optional[Dict[str, Any]] = None) -> str:
         """
         Chat about the code using an LLM (or mock).
         """
         if self.enabled:
              # TODO: Implement real LLM chat
              await asyncio.sleep(1.0)
-             return self._mock_chat_response(message, code)
+             return self._mock_chat_response(message, code, analysis_result)
         else:
-             return self._mock_chat_response(message, code)
+             return self._mock_chat_response(message, code, analysis_result)
 
-    def _mock_chat_response(self, message: str, code: str) -> str:
+    def _mock_chat_response(self, message: str, code: str, analysis_result: Optional[Dict[str, Any]] = None) -> str:
         """
         Generates a mock response for the chat.
         """
         message_lower = message.lower()
+        
+        # Use analysis result if available
+        if analysis_result:
+            issues = analysis_result.get("issues", [])
+            summary = analysis_result.get("summary", {})
+            
+            if "fix" in message_lower and issues:
+                # Find the most severe issue
+                critical_issues = [i for i in issues if i['severity'] == 'critical']
+                target_issue = critical_issues[0] if critical_issues else issues[0]
+                
+                return f"""I see you have a **{target_issue['severity']}** severity issue: "{target_issue['title']}" on line {target_issue['line']}.
+
+Here is a suggested fix for that:
+
+```python
+# Fixed version
+# {target_issue['suggestion']}
+def secure_function(input_val):
+    # Implementation of the fix
+    pass
+```
+
+This should resolve the {target_issue['type']} issue."""
+
+            elif "score" in message_lower or "rating" in message_lower:
+                return f"""Based on the analysis, your code has a **Security Score of {summary.get('security_score')}** and a **Quality Score of {summary.get('quality_score')}**.
+                
+You have {summary.get('total_issues')} total issues that need attention."""
+
+        # Fallback to generic responses if no specific context matches
         if "fix" in message_lower or "improve" in message_lower:
             return f"""I suggest refactoring the code to improve performance and readability. Here is a suggested improvement:
 

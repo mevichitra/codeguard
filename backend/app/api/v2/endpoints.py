@@ -42,6 +42,7 @@ class ChatRequest(BaseModel):
     language: str
     message: str
     context: Optional[list] = [] # Previous messages for context
+    analysis_result: Optional[Dict[str, Any]] = None
 
 class ChatResponse(BaseModel):
     reply: str
@@ -55,7 +56,13 @@ async def chat_about_code(
     Chat about the code with the AI.
     """
     try:
-        reply = await ai_analyzer.chat_about_code(request.code, request.language, request.message, request.context)
+        reply = await ai_analyzer.chat_about_code(
+            request.code, 
+            request.language, 
+            request.message, 
+            request.context,
+            request.analysis_result
+        )
         return {"reply": reply}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

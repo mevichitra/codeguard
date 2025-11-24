@@ -98,7 +98,8 @@ const Workbench: React.FC = () => {
                 code,
                 language,
                 message,
-                context: chatMessages.map(m => ({ role: m.role, content: m.content }))
+                context: chatMessages.map(m => ({ role: m.role, content: m.content })),
+                analysis_result: results
             });
 
             const botMessage: ChatMessage = {
