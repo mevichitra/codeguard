@@ -46,3 +46,10 @@ export interface HistoryItem extends AnalysisResult {
     timestamp: number;
     code: string;
 }
+
+export interface ChatMessage {
+    id: string;
+    role: 'user' | 'assistant';
+    content: string;
+    timestamp: number;
+}

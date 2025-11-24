@@ -37,6 +37,29 @@ async def analyze_code(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+class ChatRequest(BaseModel):
+    code: str
+    language: str
+    message: str
+    context: Optional[list] = [] # Previous messages for context
+
+class ChatResponse(BaseModel):
+    reply: str
+
+@router.post("/chat", response_model=ChatResponse)
+async def chat_about_code(
+    request: ChatRequest,
+    # current_user: User = Depends(get_current_user)
+):
+    """
+    Chat about the code with the AI.
+    """
+    try:
+        reply = await ai_analyzer.chat_about_code(request.code, request.language, request.message, request.context)
+        return {"reply": reply}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/history")
 async def get_analysis_history(
     # current_user: User = Depends(get_current_user)

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Box, Grid, Paper, Typography, Button, Select, MenuItem, FormControl, CircularProgress } from '@mui/material';
-import { PlayArrow } from '@mui/icons-material';
+import { Box, Grid, Paper, Typography, Button, Select, MenuItem, FormControl, CircularProgress, Tabs, Tab } from '@mui/material';
+import { PlayArrow, Assessment, Chat, History } from '@mui/icons-material';
 import EditorPanel from './EditorPanel';
 import ResultsPanel from './ResultsPanel';
 import HistoryPanel from './HistoryPanel';
+import ChatPanel from './ChatPanel';
 import axios from 'axios';
 
 // Types
-import type { AnalysisResult, HistoryItem } from '../../types';
+import type { AnalysisResult, HistoryItem, ChatMessage } from '../../types';
 
 const Workbench: React.FC = () => {
     const [code, setCode] = useState<string>('// Write your code here...\n\nfunction example() {\n  console.log("Hello CodeGuard!");\n}');
@@ -16,6 +17,11 @@ const Workbench: React.FC = () => {
     const [results, setResults] = useState<AnalysisResult | null>(null);
     const [activeLine, setActiveLine] = useState<number | null>(null);
     const [history, setHistory] = useState<HistoryItem[]>([]);
+
+    // Chat State
+    const [activeTab, setActiveTab] = useState(0);
+    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+    const [isChatLoading, setIsChatLoading] = useState(false);
 
     // Load history from local storage on mount
     React.useEffect(() => {
@@ -51,6 +57,7 @@ const Workbench: React.FC = () => {
     const handleAnalyze = async () => {
         setIsAnalyzing(true);
         setResults(null); // Reset results
+        setActiveTab(0); // Switch to results tab
         try {
             const response = await axios.post('http://localhost:8000/api/v2/analyze', {
                 code,
@@ -76,6 +83,45 @@ const Workbench: React.FC = () => {
         }
     };
 
+    const handleSendMessage = async (message: string) => {
+        const newMessage: ChatMessage = {
+            id: Date.now().toString(),
+            role: 'user',
+            content: message,
+            timestamp: Date.now()
+        };
+        setChatMessages(prev => [...prev, newMessage]);
+        setIsChatLoading(true);
+
+        try {
+            const response = await axios.post('http://localhost:8000/api/v2/chat', {
+                code,
+                language,
+                message,
+                context: chatMessages.map(m => ({ role: m.role, content: m.content }))
+            });
+
+            const botMessage: ChatMessage = {
+                id: (Date.now() + 1).toString(),
+                role: 'assistant',
+                content: response.data.reply,
+                timestamp: Date.now()
+            };
+            setChatMessages(prev => [...prev, botMessage]);
+        } catch (error) {
+            console.error('Chat failed:', error);
+            // Add error message
+            setChatMessages(prev => [...prev, {
+                id: (Date.now() + 1).toString(),
+                role: 'assistant',
+                content: "Sorry, I encountered an error processing your request.",
+                timestamp: Date.now()
+            }]);
+        } finally {
+            setIsChatLoading(false);
+        }
+    };
+
     const handleIssueClick = (line: number) => {
         setActiveLine(line);
     };
@@ -84,6 +130,7 @@ const Workbench: React.FC = () => {
         setCode(item.code);
         setLanguage(item.language);
         setResults(item);
+        setActiveTab(0); // Switch to results
     };
 
     const handleDeleteHistory = (id: string) => {
@@ -143,25 +190,61 @@ const Workbench: React.FC = () => {
                     />
                 </Grid>
 
-                {/* Right Sidebar (Results + History) */}
+                {/* Right Sidebar (Tabs: Results, Chat, History) */}
                 <Grid size={{ xs: 12, lg: 6 }} sx={{ height: '100%' }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, height: '100%' }}>
-                        {/* Results Panel */}
-                        <Box sx={{ flexGrow: 1, minHeight: 0, flexBasis: '60%' }}>
-                            <ResultsPanel
-                                results={results}
-                                isAnalyzing={isAnalyzing}
-                                onIssueClick={handleIssueClick}
-                            />
-                        </Box>
 
-                        {/* History Panel */}
-                        <Box sx={{ flexGrow: 1, minHeight: 0, flexBasis: '40%' }}>
-                            <HistoryPanel
-                                history={history}
-                                onRestore={handleRestoreHistory}
-                                onDelete={handleDeleteHistory}
-                            />
+                        {/* Tabs */}
+                        <Paper className="glass-panel" sx={{ borderRadius: 3 }}>
+                            <Tabs
+                                value={activeTab}
+                                onChange={(_, newValue) => setActiveTab(newValue)}
+                                variant="fullWidth"
+                                sx={{ minHeight: 48 }}
+                            >
+                                <Tab icon={<Assessment fontSize="small" />} iconPosition="start" label="Results" />
+                                <Tab icon={<Chat fontSize="small" />} iconPosition="start" label="Chat" />
+                                <Tab icon={<History fontSize="small" />} iconPosition="start" label="History" />
+                            </Tabs>
+                        </Paper>
+
+                        {/* Tab Content */}
+                        <Box sx={{ flexGrow: 1, minHeight: 0, position: 'relative' }}>
+                            {/* Results Tab */}
+                            <Box sx={{
+                                display: activeTab === 0 ? 'block' : 'none',
+                                height: '100%'
+                            }}>
+                                <ResultsPanel
+                                    results={results}
+                                    isAnalyzing={isAnalyzing}
+                                    onIssueClick={handleIssueClick}
+                                />
+                            </Box>
+
+                            {/* Chat Tab */}
+                            <Box sx={{
+                                display: activeTab === 1 ? 'block' : 'none',
+                                height: '100%'
+                            }}>
+                                <ChatPanel
+                                    messages={chatMessages}
+                                    onSendMessage={handleSendMessage}
+                                    isLoading={isChatLoading}
+                                />
+                            </Box>
+
+                            {/* History Tab */}
+                            <Box sx={{
+                                display: activeTab === 2 ? 'block' : 'none',
+                                height: '100%'
+                            }}>
+                                <HistoryPanel
+                                    history={history}
+                                    onRestore={handleRestoreHistory}
+                                    onDelete={handleDeleteHistory}
+                                />
+                            </Box>
                         </Box>
                     </Box>
                 </Grid>

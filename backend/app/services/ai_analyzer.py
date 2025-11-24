@@ -162,4 +162,29 @@ class AIAnalyzerService:
             "language": "unknown"
         }
 
+    async def chat_about_code(self, code: str, language: str, message: str, context: List[Dict[str, str]]) -> str:
+        """
+        Chat about the code using an LLM (or mock).
+        """
+        if self.enabled:
+             # TODO: Implement real LLM chat
+             await asyncio.sleep(1.0)
+             return self._mock_chat_response(message)
+        else:
+             return self._mock_chat_response(message)
+
+    def _mock_chat_response(self, message: str) -> str:
+        """
+        Generates a mock response for the chat.
+        """
+        message_lower = message.lower()
+        if "fix" in message_lower or "improve" in message_lower:
+            return "I suggest refactoring the nested loops to improve performance. You might also want to add input validation to prevent potential security issues."
+        elif "explain" in message_lower:
+            return "This code appears to be processing data. It iterates through a list and performs some calculations. The complexity seems to be O(n^2)."
+        elif "security" in message_lower:
+            return "I found a potential injection vulnerability. Ensure you are sanitizing all user inputs before using them in queries."
+        else:
+            return f"That's an interesting point about the {message}. Could you elaborate on how you'd like to change the code?"
+
 ai_analyzer = AIAnalyzerService()
