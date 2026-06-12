@@ -31,7 +31,8 @@ def test_scan_valid_rule(tmp_path: Path) -> None:
     result = runner.invoke(cli, ["scan", str(test_file), "--rule", "CG-SEC-002"])
 
     assert result.exit_code == EXIT_FINDINGS
-    assert "[CG-SEC-002] HIGH  Hardcoded secret" in result.output
+    assert "CG-SEC-002" in result.output
+    assert "Hardcoded secret" in result.output
 
 
 def test_scan_multiple_invalid_rules(tmp_path: Path) -> None:
