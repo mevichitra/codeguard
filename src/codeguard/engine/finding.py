@@ -5,7 +5,8 @@ from __future__ import annotations
 
 import enum
 from dataclasses import dataclass, replace
-from typing import ClassVar
+
+_SEVERITY_ORDER = ["critical", "high", "medium", "low", "info"]
 
 
 class Severity(str, enum.Enum):
@@ -17,11 +18,8 @@ class Severity(str, enum.Enum):
     LOW = "low"
     INFO = "info"
 
-    # Ordering: CRITICAL > HIGH > MEDIUM > LOW > INFO
-    _order: ClassVar[list[str]] = ["critical", "high", "medium", "low", "info"]
-
     def __lt__(self, other: Severity) -> bool:  # type: ignore[override]
-        return self._order.index(self.value) > other._order.index(other.value)  # type: ignore[attr-defined]
+        return _SEVERITY_ORDER.index(self.value) > _SEVERITY_ORDER.index(other.value)
 
     def __le__(self, other: Severity) -> bool:  # type: ignore[override]
         return self == other or self < other
