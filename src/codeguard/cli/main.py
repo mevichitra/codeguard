@@ -96,6 +96,17 @@ def scan(
       codeguard scan src/ --format sarif -o results.sarif
       codeguard scan . --rule CG-SEC-001 --severity high
     """
+    if rule_ids:
+        from codeguard.engine.registry import REGISTRY
+
+        invalid_ids = [rid for rid in rule_ids if rid not in REGISTRY]
+        if invalid_ids:
+            console.print(
+                f"[bold red]Error:[/bold red] Invalid rule ID(s) specified: "
+                f"{', '.join(invalid_ids)}."
+            )
+            sys.exit(EXIT_ERROR)
+
     runner = AnalysisRunner(
         rule_ids=list(rule_ids) if rule_ids else None,
     )
