@@ -1,0 +1,125 @@
+[build-system]
+requires = ["setuptools>=70", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "codeguard"
+version = "0.1.0"
+description = "Static analysis for Python code, focused on security patterns in AI-generated code"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [{ name = "CodeGuard Contributors" }]
+requires-python = ">=3.10"
+keywords = ["static-analysis", "security", "linting", "ast", "sast"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: Software Development :: Quality Assurance",
+    "Typing :: Typed",
+]
+dependencies = [
+    "click>=8.1",
+    "rich>=13.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "mypy>=1.7",
+    "ruff>=0.4",
+    "pre-commit>=3.6",
+]
+
+[project.scripts]
+codeguard = "codeguard.cli.main:cli"
+
+[project.urls]
+Homepage = "https://github.com/codeguard-ai/codeguard"
+"Bug Tracker" = "https://github.com/codeguard-ai/codeguard/issues"
+"Security" = "https://github.com/codeguard-ai/codeguard/security"
+Documentation = "https://github.com/codeguard-ai/codeguard/tree/main/docs"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+codeguard = ["py.typed"]
+
+# ---------------------------------------------------------------------------
+# Ruff — linting + formatting
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "S",   # flake8-bandit (ironic: we use bandit rules to lint ourselves)
+    "RUF", # ruff-specific rules
+]
+ignore = [
+    "S101",   # assert in tests is fine
+    "S603",   # subprocess without shell — we're testing this explicitly in rules
+    "S607",   # partial executable path — same
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S", "N"]         # security and naming rules relaxed in tests
+"tests/fixtures/*" = ["ALL"]   # fixtures are intentionally vulnerable code
+
+[tool.ruff.lint.isort]
+known-first-party = ["codeguard"]
+
+# ---------------------------------------------------------------------------
+# Mypy — strict type checking
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+files = ["src/"]
+exclude = ["tests/fixtures/"]
+
+# ---------------------------------------------------------------------------
+# Pytest
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+filterwarnings = [
+    "error",
+    "ignore::SyntaxWarning",   # fixtures may have intentional syntax issues
+]
+
+# ---------------------------------------------------------------------------
+# Coverage
+# ---------------------------------------------------------------------------
+[tool.coverage.run]
+source = ["codeguard"]
+branch = true
+omit = ["src/codeguard/cli/main.py"]  # CLI tested via integration, not coverage
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 80
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]

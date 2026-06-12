@@ -1,0 +1,73 @@
+name: Bug Report
+description: Something is broken or produces incorrect output
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: check [existing issues](https://github.com/codeguard-ai/codeguard/issues) and run `codeguard --version` to confirm you're on the latest release.
+
+  - type: input
+    id: version
+    attributes:
+      label: CodeGuard version
+      placeholder: "0.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: "3.12.1"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: bug_type
+    attributes:
+      label: Type of bug
+      options:
+        - "False positive (rule fired when it shouldn't)"
+        - "False negative (rule didn't fire when it should)"
+        - "CLI crash or unexpected error"
+        - "Wrong line number / location reported"
+        - "Other"
+    validations:
+      required: true
+
+  - type: input
+    id: rule_id
+    attributes:
+      label: Rule ID (if applicable)
+      placeholder: "CG-SEC-001"
+
+  - type: textarea
+    id: code_snippet
+    attributes:
+      label: Minimal code snippet
+      description: The smallest Python snippet that reproduces the issue. Treat this as untrusted data — do not paste credentials or proprietary code.
+      render: python
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual output
+      description: Paste the full command and output
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected output
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context

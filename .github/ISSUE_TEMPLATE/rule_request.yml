@@ -1,0 +1,84 @@
+name: New Rule Request
+description: Propose a new security or quality rule
+labels: ["new-rule"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A good rule request has: a clear vulnerable pattern, a clear safe alternative, a CWE or OWASP reference, and a sense of how common this pattern is in AI-generated code.
+
+  - type: input
+    id: rule_title
+    attributes:
+      label: Proposed rule title
+      placeholder: "Insecure use of os.system() with user-controlled input"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - "Security (CG-SEC)"
+        - "Quality (CG-QUAL)"
+        - "Performance (CG-PERF)"
+        - "AI code smell (CG-AISM)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Suggested severity
+      options:
+        - "CRITICAL"
+        - "HIGH"
+        - "MEDIUM"
+        - "LOW"
+        - "INFO"
+    validations:
+      required: true
+
+  - type: input
+    id: cwe
+    attributes:
+      label: CWE reference
+      placeholder: "CWE-78"
+
+  - type: textarea
+    id: vulnerable
+    attributes:
+      label: Vulnerable example (should trigger)
+      render: python
+    validations:
+      required: true
+
+  - type: textarea
+    id: safe
+    attributes:
+      label: Safe example (should NOT trigger)
+      render: python
+    validations:
+      required: true
+
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Why this matters / why AI models produce this pattern
+    validations:
+      required: true
+
+  - type: textarea
+    id: false_positives
+    attributes:
+      label: Known false-positive scenarios
+      description: Code that looks like this but is actually safe
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Are you willing to implement this rule?
+      options:
+        - label: "Yes, I'll open a PR"
+        - label: "No, requesting someone else implement it"
