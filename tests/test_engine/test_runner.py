@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from codeguard.engine.registry import RuleRegistry
-from codeguard.engine.runner import AnalysisRunner, _parse_suppressions
+from codeguard.engine.runner import AnalysisRunner, _parse_file_disables, _parse_suppressions
 
 
 class TestParseSuppressions:
@@ -33,6 +33,28 @@ class TestParseSuppressions:
         result = _parse_suppressions(src)
         assert 2 in result
         assert "CG-SEC-003" in result[2]
+
+
+class TestParseFileDisables:
+    def test_single_disable(self) -> None:
+        src = "# codeguard: disable[CG-SEC-001]\nx = 1\n"
+        assert _parse_file_disables(src) == {"CG-SEC-001"}
+
+    def test_multiple_disables_in_one_line(self) -> None:
+        src = "# codeguard: disable[CG-SEC-001, CG-SEC-002]\nx = 1\n"
+        assert _parse_file_disables(src) == {"CG-SEC-001", "CG-SEC-002"}
+
+    def test_multiple_disable_lines(self) -> None:
+        src = textwrap.dedent("""\
+            # codeguard: disable[CG-SEC-001]
+            # codeguard: disable[CG-SEC-003]
+            x = 1
+        """)
+        assert _parse_file_disables(src) == {"CG-SEC-001", "CG-SEC-003"}
+
+    def test_no_disables(self) -> None:
+        src = "x = 1\n"
+        assert _parse_file_disables(src) == set()
 
 
 class TestAnalysisRunner:
@@ -84,6 +106,38 @@ class TestAnalysisRunner:
         runner = AnalysisRunner(registry=registry)
 
         src = "x = 1  # codeguard: ignore[CG-TEST-999]\n"
+        findings = runner.run(src, filename="test.py")
+        assert len(findings) == 1
+        assert findings[0].suppressed is True
+
+    def test_file_disable_suppresses_findings(self) -> None:
+        from codeguard.engine.finding import Category, Finding, Location, Severity
+        from codeguard.engine.rule import Rule
+
+        class AlwaysFires(Rule):
+            id = "CG-TEST-888"
+            title = "Always fires"
+            description = "Test rule"
+            severity = Severity.HIGH
+            category = Category.SECURITY
+
+            def check(self, tree, source, filename):  # type: ignore[override]
+                return [
+                    Finding(
+                        rule_id=self.id,
+                        title=self.title,
+                        description=self.description,
+                        severity=self.severity,
+                        category=self.category,
+                        location=Location(file=filename, line=2, col=0),
+                    )
+                ]
+
+        registry = RuleRegistry()
+        registry.register(AlwaysFires())
+        runner = AnalysisRunner(registry=registry)
+
+        src = "# codeguard: disable[CG-TEST-888]\nx = 1\n"
         findings = runner.run(src, filename="test.py")
         assert len(findings) == 1
         assert findings[0].suppressed is True

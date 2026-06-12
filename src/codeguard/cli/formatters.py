@@ -126,9 +126,9 @@ def format_sarif(findings: list[Finding], *, tool_version: str = "0.1.0") -> str
             },
         }
         if f.cwe:
-            rule["properties"]["cwe"] = f.cwe  # type: ignore[index]
+            rule["properties"]["cwe"] = f.cwe
         if f.owasp:
-            rule["properties"]["owasp"] = f.owasp  # type: ignore[index]
+            rule["properties"]["owasp"] = f.owasp
         if f.fix_suggestion:
             rule["help"] = {"text": f.fix_suggestion}
         rules.append(rule)

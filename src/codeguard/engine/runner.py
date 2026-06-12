@@ -20,6 +20,10 @@ from .registry import REGISTRY, RuleRegistry
 #           # codeguard: ignore[CG-SEC-001, CG-SEC-002]
 _SUPPRESS_RE = re.compile(r"#\s*codeguard:\s*ignore\[([^\]]+)\]")
 
+# Matches:  # codeguard: disable[CG-SEC-001]
+#           # codeguard: disable[CG-SEC-001, CG-SEC-002]
+_DISABLE_RE = re.compile(r"#\s*codeguard:\s*disable\[([^\]]+)\]")
+
 
 def _parse_suppressions(source: str) -> dict[int, set[str]]:
     """Scan *source* for inline suppression comments and return a map.
@@ -37,6 +41,17 @@ def _parse_suppressions(source: str) -> dict[int, set[str]]:
             rule_ids = {rid.strip() for rid in match.group(1).split(",")}
             suppressions[lineno] = rule_ids
     return suppressions
+
+
+def _parse_file_disables(source: str) -> set[str]:
+    """Scan *source* for file-level disable comments and return a set of rule IDs."""
+    disables: set[str] = set()
+    for line in source.splitlines():
+        match = _DISABLE_RE.search(line)
+        if match:
+            rule_ids = {rid.strip() for rid in match.group(1).split(",")}
+            disables.update(rule_ids)
+    return disables
 
 
 class AnalysisRunner:
@@ -93,11 +108,14 @@ class AnalysisRunner:
         """
         tree = ast.parse(source, filename=filename)
         suppressions = _parse_suppressions(source)
+        file_disables = _parse_file_disables(source)
         findings: list[Finding] = []
 
         for rule in self._active_rules:
             for finding in rule.check(tree, source, filename):
-                if finding.rule_id in suppressions.get(finding.location.line, set()):
+                if finding.rule_id in file_disables or finding.rule_id in suppressions.get(
+                    finding.location.line, set()
+                ):
                     finding = finding.as_suppressed()
                 findings.append(finding)
 
