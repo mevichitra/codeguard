@@ -10,6 +10,32 @@ import App from './App';
 import { useThemeStore } from './store/themeStore';
 import './index.css';
 
+// Suppress benign ResizeObserver error from Monaco Editor
+const originalError = console.error;
+console.error = (...args) => {
+  if (/ResizeObserver loop completed with undelivered notifications/.test(args[0])) {
+    return;
+  }
+  originalError.call(console, ...args);
+};
+
+window.addEventListener('error', (e) => {
+  if (e.message === 'ResizeObserver loop completed with undelivered notifications.') {
+    const resizeObserverErrDiv = document.getElementById(
+      'webpack-dev-server-client-overlay-div'
+    );
+    const resizeObserverErr = document.getElementById(
+      'webpack-dev-server-client-overlay'
+    );
+    if (resizeObserverErr) {
+      resizeObserverErr.setAttribute('style', 'display: none');
+    }
+    if (resizeObserverErrDiv) {
+      resizeObserverErrDiv.setAttribute('style', 'display: none');
+    }
+  }
+});
+
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {

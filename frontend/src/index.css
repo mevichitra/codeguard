@@ -10,124 +10,101 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f5f7fa;
+  background-color: #f8fafc;
 }
 
-code {
-  font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+.dark body {
+  background-color: #0f172a;
 }
 
-/* Custom scrollbar */
+/* Glassmorphism Utilities */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.dark .glass-panel {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+}
+
+.dark .glass-card {
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* Gradient Text */
+.text-gradient-primary {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-secondary {
+  background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Code syntax highlighting */
+.code-block {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', monospace;
+  font-size: 13.5px;
+  line-height: 1.6;
+  overflow-x: auto;
+}
+
+.dark .code-block {
+  background-color: #0f172a;
+  border-color: #1e293b;
+  color: #e2e8f0;
+}
+
+/* Modern Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
+  background: rgba(148, 163, 184, 0.3);
   border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
-/* Dark mode scrollbar */
-.dark ::-webkit-scrollbar-track {
-  background: #2d3748;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  transition: background-color 0.2s ease;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #4a5568;
+  background: rgba(148, 163, 184, 0.2);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #718096;
-}
-
-/* Loading animations */
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.spin {
-  animation: spin 1s linear infinite;
-}
-
-/* Code syntax highlighting */
-.code-block {
-  background-color: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  padding: 16px;
-  font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
-  font-size: 14px;
-  line-height: 1.5;
-  overflow-x: auto;
-}
-
-.dark .code-block {
-  background-color: #1a202c;
-  border-color: #2d3748;
-  color: #e2e8f0;
-}
-
-/* Utility classes */
-.text-gradient {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.shadow-soft {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-.shadow-medium {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-
-.shadow-large {
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-/* Transitions */
-.transition-all {
-  transition: all 0.2s ease-in-out;
-}
-
-.transition-colors {
-  transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
-}
-
-/* Focus styles */
-.focus-ring:focus {
-  outline: 2px solid #667eea;
-  outline-offset: 2px;
+  background: rgba(148, 163, 184, 0.4);
 }
 
 /* Print styles */
@@ -136,7 +113,7 @@ code {
     background: white !important;
     color: black !important;
   }
-  
+
   .no-print {
     display: none !important;
   }
@@ -213,6 +190,7 @@ code {
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
@@ -220,6 +198,7 @@ code {
 
 /* Accessibility improvements */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -234,10 +213,31 @@ code {
   .MuiCard-root {
     border: 2px solid currentColor !important;
   }
-  
+
   .MuiButton-root {
     border: 2px solid currentColor !important;
   }
+}
+
+/* Aurora Background */
+.aurora-bg {
+  background-color: #0f172a;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(14, 165, 233, 0.15) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
+  background-attachment: fixed;
+  background-size: 100% 100%;
+}
+
+.dark .aurora-bg {
+  background-color: #020617;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.1) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(14, 165, 233, 0.1) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(168, 85, 247, 0.1) 0px, transparent 50%);
 }
 
 /* Focus visible for better keyboard navigation */
@@ -246,6 +246,16 @@ code {
 }
 
 .focus-visible {
-  outline: 2px solid #667eea;
+  outline: 2px solid #6366f1;
   outline-offset: 2px;
+}
+
+/* Custom Scrollbar for Monaco Editor */
+.monaco-scrollable-element>.scrollbar>.slider {
+  background: rgba(148, 163, 184, 0.2) !important;
+  border-radius: 4px !important;
+}
+
+.monaco-scrollable-element>.scrollbar>.slider:hover {
+  background: rgba(148, 163, 184, 0.4) !important;
 }

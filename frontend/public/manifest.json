@@ -1,0 +1,94 @@
+{
+  "short_name": "CodeGuard AI",
+  "name": "CodeGuard AI - Advanced Code Analysis Platform",
+  "description": "Comprehensive code security analysis, quality assessment, and AI-generated code detection platform",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable any"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#667eea",
+  "background_color": "#f5f7fa",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en-US",
+  "categories": ["developer", "productivity", "security"],
+  "screenshots": [
+    {
+      "src": "screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "CodeGuard AI Dashboard"
+    },
+    {
+      "src": "screenshot-narrow.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "CodeGuard AI Mobile View"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Quick Analysis",
+      "short_name": "Analyze",
+      "description": "Start a quick code analysis",
+      "url": "/analysis",
+      "icons": [
+        {
+          "src": "icon-analysis.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Security Scan",
+      "short_name": "Security",
+      "description": "Run security vulnerability scan",
+      "url": "/security",
+      "icons": [
+        {
+          "src": "icon-security.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View security dashboard",
+      "url": "/",
+      "icons": [
+        {
+          "src": "icon-dashboard.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  }
+}

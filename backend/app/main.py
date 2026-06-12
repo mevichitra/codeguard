@@ -22,7 +22,8 @@ from fastapi.openapi.utils import get_openapi
 from .core.config import get_settings
 from .core.database import db_manager, init_db
 from .core.redis_client import init_redis, close_redis
-from .api import router
+from .api.v1 import analysis, history, health, stats
+from .api.v2 import endpoints as v2_endpoints
 from .api.llm import router as llm_router
 from .models import *  # Import all models to register with SQLAlchemy
 
@@ -194,7 +195,7 @@ app = FastAPI(
 # CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_origins=["*"] if settings.DEBUG else settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -254,7 +255,11 @@ async def log_requests(request: Request, call_next):
     return response
 
 # Include API routers
-app.include_router(router)
+app.include_router(analysis.router, prefix="/api/v1")
+app.include_router(history.router, prefix="/api/v1")
+app.include_router(health.router, prefix="/api/v1")
+app.include_router(stats.router, prefix="/api/v1")
+app.include_router(v2_endpoints.router, prefix="/api/v2")
 app.include_router(llm_router)
 
 # Health check endpoint (direct access)
