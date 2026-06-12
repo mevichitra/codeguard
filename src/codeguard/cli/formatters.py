@@ -40,11 +40,28 @@ def format_human(findings: list[Finding], *, show_suppressed: bool = False) -> s
         console.print("[bold green]✓ No findings.[/bold green]")
         return buf.getvalue()
 
+    # for f in active:
+    #     color = _SEVERITY_COLOR.get(f.severity.value, "white")
+    #     loc = f"{f.location.file}:{f.location.line}:{f.location.col}"
+    #     sev = f.severity.value.upper()
+    #     console.print(f"[dim]{loc}[/dim]  [{color}][{f.rule_id}] {sev}[/{color}]  {f.title}")
+    #     if f.fix_suggestion:
+    #         console.print(f"  [dim]→ {f.fix_suggestion}[/dim]")
+
     for f in active:
         color = _SEVERITY_COLOR.get(f.severity.value, "white")
         loc = f"{f.location.file}:{f.location.line}:{f.location.col}"
         sev = f.severity.value.upper()
         console.print(f"[dim]{loc}[/dim]  [{color}][{f.rule_id}] {sev}[/{color}]  {f.title}")
+
+        # Show the offending source line with a column marker
+        if f.location.source_line is not None:
+            line_no = f.location.line
+            source = f.location.source_line.rstrip()
+            console.print(f"  [dim]{line_no:>4} | {source}[/dim]")
+            pointer = " " * (7 + f.location.col) + "^"
+            console.print(f"  [dim]{pointer}[/dim]")
+
         if f.fix_suggestion:
             console.print(f"  [dim]→ {f.fix_suggestion}[/dim]")
 
