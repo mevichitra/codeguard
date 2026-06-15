@@ -58,9 +58,10 @@ def format_human(findings: list[Finding], *, show_suppressed: bool = False) -> s
             if 0 <= line_idx < len(lines):
                 source = lines[line_idx].rstrip()
                 line_no = f.location.line
-                console.print(f"  [dim]{line_no:>4} | {source}[/dim]")
-                pointer = " " * (9 + f.location.col) + "^"
-                console.print(f"  [dim]{pointer}[/dim]")
+                gutter = f"{line_no:>4}"
+                console.print(f"  {gutter} | {source}", style="dim", markup=False)
+                pointer = " " * (len(gutter) + 3 + f.location.col) + "^"
+                console.print(f"  {pointer}", style="dim", markup=False)
         except OSError:
             pass
 
