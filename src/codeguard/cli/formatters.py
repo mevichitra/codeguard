@@ -40,11 +40,31 @@ def format_human(findings: list[Finding], *, show_suppressed: bool = False) -> s
         console.print("[bold green]✓ No findings.[/bold green]")
         return buf.getvalue()
 
+    _file_cache: dict[str, list[str]] = {}
+
     for f in active:
         color = _SEVERITY_COLOR.get(f.severity.value, "white")
         loc = f"{f.location.file}:{f.location.line}:{f.location.col}"
         sev = f.severity.value.upper()
         console.print(f"[dim]{loc}[/dim]  [{color}][{f.rule_id}] {sev}[/{color}]  {f.title}")
+
+        # Show the offending source line with a column marker
+        try:
+            if f.location.file not in _file_cache:
+                with open(f.location.file, encoding="utf-8", errors="replace") as fh:
+                    _file_cache[f.location.file] = fh.readlines()
+            lines = _file_cache[f.location.file]
+            line_idx = f.location.line - 1
+            if 0 <= line_idx < len(lines):
+                source = lines[line_idx].rstrip()
+                line_no = f.location.line
+                gutter = f"{line_no:>4}"
+                console.print(f"  {gutter} | {source}", style="dim", markup=False)
+                pointer = " " * (len(gutter) + 3 + f.location.col) + "^"
+                console.print(f"  {pointer}", style="dim", markup=False)
+        except OSError:
+            pass
+
         if f.fix_suggestion:
             console.print(f"  [dim]→ {f.fix_suggestion}[/dim]")
 
