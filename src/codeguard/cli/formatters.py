@@ -40,11 +40,19 @@ def format_human(findings: list[Finding], *, show_suppressed: bool = False) -> s
         console.print("[bold green]✓ No findings.[/bold green]")
         return buf.getvalue()
 
+    file_cache: dict[str, list[str]] = {}
+
     for f in active:
         color = _SEVERITY_COLOR.get(f.severity.value, "white")
         loc = f"{f.location.file}:{f.location.line}:{f.location.col}"
         sev = f.severity.value.upper()
         console.print(f"[dim]{loc}[/dim]  [{color}][{f.rule_id}] {sev}[/{color}]  {f.title}")
+        source = _source_line(f.location.file, f.location.line, file_cache)
+        if source is not None:
+            gutter = f"{f.location.line:>4}"
+            console.print(f"  {gutter} | {source}", style="dim", markup=False)
+            pointer = " " * (len(gutter) + 3 + f.location.col) + "^"
+            console.print(f"  {pointer}", style="dim", markup=False)
         if f.fix_suggestion:
             console.print(f"  [dim]→ {f.fix_suggestion}[/dim]")
 
@@ -53,6 +61,21 @@ def format_human(findings: list[Finding], *, show_suppressed: bool = False) -> s
 
     _print_summary(console, active)
     return buf.getvalue()
+
+
+def _source_line(path: str, line: int, file_cache: dict[str, list[str]]) -> str | None:
+    try:
+        if path not in file_cache:
+            with open(path, encoding="utf-8", errors="replace") as f:
+                file_cache[path] = f.readlines()
+    except OSError:
+        return None
+
+    lines = file_cache[path]
+    idx = line - 1
+    if idx < 0 or idx >= len(lines):
+        return None
+    return lines[idx].rstrip("\r\n")
 
 
 def _print_summary(console: Any, findings: list[Finding]) -> None:
