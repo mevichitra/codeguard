@@ -11,6 +11,8 @@ from __future__ import annotations
 import ast
 import re
 import warnings
+from collections.abc import Sequence
+from fnmatch import fnmatch
 from pathlib import Path
 
 from .finding import Finding
@@ -71,9 +73,11 @@ class AnalysisRunner:
         self,
         registry: RuleRegistry | None = None,
         rule_ids: list[str] | None = None,
+        exclude: Sequence[str] | None = None,
     ) -> None:
         self._registry = registry if registry is not None else REGISTRY
         self._filter: set[str] | None = set(rule_ids) if rule_ids is not None else None
+        self._exclude_patterns = [p.strip() for p in exclude or () if p.strip()]
 
     @property
     def _active_rules(self) -> list:  # type: ignore[type-arg]
@@ -162,7 +166,31 @@ class AnalysisRunner:
 
         findings: list[Finding] = []
         for py_file in sorted(path.rglob("*.py")):
+            if self._is_excluded(path, py_file):
+                continue
             findings.extend(self.run_file(py_file))
 
         findings.sort(key=lambda f: (f.location.file, f.location.line, f.rule_id))
         return findings
+
+    def _is_excluded(self, root: Path, file_path: Path) -> bool:
+        """Return True when a file should be excluded by glob patterns."""
+        if not self._exclude_patterns:
+            return False
+
+        relative_path = file_path.relative_to(root).as_posix()
+
+        for pattern in self._exclude_patterns:
+            normalized_pattern = pattern.replace("\\", "/")
+            if fnmatch(relative_path, normalized_pattern):
+                return True
+            if fnmatch(file_path.name, normalized_pattern):
+                return True
+            # Directory shorthand (e.g. "tests") excludes any path under that dir.
+            if (
+                "/" not in normalized_pattern
+                and normalized_pattern in file_path.relative_to(root).parts
+            ):
+                return True
+
+        return False

@@ -73,6 +73,13 @@ def cli() -> None:
     default=None,
     help="Write output to a file instead of stdout.",
 )
+@click.option(
+    "--exclude",
+    "exclude_patterns",
+    multiple=True,
+    metavar="GLOB",
+    help="Exclude files or directories matching these glob patterns. Repeatable.",
+)
 def scan(
     path: Path,
     output_format: str,
@@ -80,6 +87,7 @@ def scan(
     min_severity: str | None,
     show_suppressed: bool,
     output: Path | None,
+    exclude_patterns: tuple[str, ...],
 ) -> None:
     """Scan PATH (file or directory) and report findings.
 
@@ -109,6 +117,7 @@ def scan(
 
     runner = AnalysisRunner(
         rule_ids=list(rule_ids) if rule_ids else None,
+        exclude=list(exclude_patterns) if exclude_patterns else None,
     )
 
     try:
