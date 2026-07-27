@@ -77,9 +77,7 @@ class HardcodedSecretsRule(Rule):
                 for target in node.targets:
                     # Handle tuple/list unpacking: user, password = "admin", "hunter2"
                     if isinstance(target, (ast.Tuple, ast.List)):
-                        findings.extend(
-                            self._check_unpacked(target, node.value, node, filename)
-                        )
+                        findings.extend(self._check_unpacked(target, node.value, node, filename))
                     else:
                         name = self._target_name(target)
                         if name and _SECRET_NAME_RE.search(name):
@@ -88,9 +86,7 @@ class HardcodedSecretsRule(Rule):
                                     self._make_finding(
                                         node=node,
                                         filename=filename,
-                                        description=(
-                                            f"{self.description} (variable: {name!r})"
-                                        ),
+                                        description=(f"{self.description} (variable: {name!r})"),
                                         fix_suggestion=_FIX,
                                         confidence=0.9,
                                     )
@@ -143,9 +139,7 @@ class HardcodedSecretsRule(Rule):
                             self._make_finding(
                                 node=node,
                                 filename=filename,
-                                description=(
-                                    f"{self.description} (variable: {name!r})"
-                                ),
+                                description=(f"{self.description} (variable: {name!r})"),
                                 fix_suggestion=_FIX,
                                 confidence=0.9,
                             )
@@ -160,9 +154,7 @@ class HardcodedSecretsRule(Rule):
                         self._make_finding(
                             node=node,
                             filename=filename,
-                            description=(
-                                f"{self.description} (variable: {name!r})"
-                            ),
+                            description=(f"{self.description} (variable: {name!r})"),
                             fix_suggestion=_FIX,
                             confidence=0.7,
                         )
