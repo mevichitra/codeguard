@@ -135,7 +135,7 @@ class HardcodedSecretsRule(Rule):
         # Only inspect element-by-element when the RHS is also a tuple/list
         # literal so we can match targets to values positionally.
         if isinstance(value, (ast.Tuple, ast.List)):
-            for tgt, val in zip(target.elts, value.elts):
+            for tgt, val in zip(target.elts, value.elts, strict=False):
                 name = self._target_name(tgt)
                 if name and _SECRET_NAME_RE.search(name):
                     if self._is_secret_literal(val):
