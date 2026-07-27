@@ -75,18 +75,26 @@ class HardcodedSecretsRule(Rule):
             # Simple assignment:  password = "hunter2"
             if isinstance(node, ast.Assign):
                 for target in node.targets:
-                    name = self._target_name(target)
-                    if name and _SECRET_NAME_RE.search(name):
-                        if self._is_secret_literal(node.value):
-                            findings.append(
-                                self._make_finding(
-                                    node=node,
-                                    filename=filename,
-                                    description=(f"{self.description} (variable: {name!r})"),
-                                    fix_suggestion=_FIX,
-                                    confidence=0.9,
+                    # Handle tuple/list unpacking: user, password = "admin", "hunter2"
+                    if isinstance(target, (ast.Tuple, ast.List)):
+                        findings.extend(
+                            self._check_unpacked(target, node.value, node, filename)
+                        )
+                    else:
+                        name = self._target_name(target)
+                        if name and _SECRET_NAME_RE.search(name):
+                            if self._is_secret_literal(node.value):
+                                findings.append(
+                                    self._make_finding(
+                                        node=node,
+                                        filename=filename,
+                                        description=(
+                                            f"{self.description} (variable: {name!r})"
+                                        ),
+                                        fix_suggestion=_FIX,
+                                        confidence=0.9,
+                                    )
                                 )
-                            )
 
             # Annotated assignment:  password: str = "hunter2"
             elif isinstance(node, ast.AnnAssign):
@@ -108,6 +116,59 @@ class HardcodedSecretsRule(Rule):
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
+
+    def _check_unpacked(
+        self,
+        target: ast.Tuple | ast.List,
+        value: ast.AST,
+        node: ast.AST,
+        filename: str,
+    ) -> list[Finding]:
+        """Check each element of a tuple/list unpacking assignment.
+
+        Handles patterns like:
+            user, password = "admin", "hunter2"
+            [username, api_key] = get_credentials()
+        """
+        findings: list[Finding] = []
+
+        # Only inspect element-by-element when the RHS is also a tuple/list
+        # literal so we can match targets to values positionally.
+        if isinstance(value, (ast.Tuple, ast.List)):
+            for tgt, val in zip(target.elts, value.elts):
+                name = self._target_name(tgt)
+                if name and _SECRET_NAME_RE.search(name):
+                    if self._is_secret_literal(val):
+                        findings.append(
+                            self._make_finding(
+                                node=node,
+                                filename=filename,
+                                description=(
+                                    f"{self.description} (variable: {name!r})"
+                                ),
+                                fix_suggestion=_FIX,
+                                confidence=0.9,
+                            )
+                        )
+        else:
+            # RHS is not a literal tuple — we can't match positionally,
+            # so flag any secret-named target in the unpacking.
+            for tgt in target.elts:
+                name = self._target_name(tgt)
+                if name and _SECRET_NAME_RE.search(name):
+                    findings.append(
+                        self._make_finding(
+                            node=node,
+                            filename=filename,
+                            description=(
+                                f"{self.description} (variable: {name!r})"
+                            ),
+                            fix_suggestion=_FIX,
+                            confidence=0.7,
+                        )
+                    )
+
+        return findings
 
     @staticmethod
     def _target_name(target: ast.AST) -> str | None:
