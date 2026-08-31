@@ -1,0 +1,1 @@
+New baseline support: `codeguard baseline create / update / prune` writes a fingerprint file of today's findings, and `scan --baseline PATH` (or `baseline = "..."` in config) marks those findings so they no longer fail the run. Baselined findings are hidden by default and revealed with `--show-suppressed`.

@@ -1,0 +1,32 @@
+# Consumer-facing pre-commit hooks. Add to your .pre-commit-config.yaml:
+#
+#   - repo: https://github.com/mevichitra/codeguard
+#     rev: v2.0.0
+#     hooks:
+#       - id: codeguard
+
+- id: codeguard
+  name: CodeGuard (changed files)
+  description: Scan staged Python / JavaScript / TypeScript files for security anti-patterns
+  entry: codeguard scan
+  language: python
+  types_or: [python, javascript, jsx, ts, tsx]
+  require_serial: false
+  args: ["--quiet"]
+
+- id: codeguard-full
+  name: CodeGuard (whole tree)
+  description: Scan the entire repository
+  entry: codeguard scan .
+  language: python
+  pass_filenames: false
+  stages: [pre-push]
+  args: ["--quiet"]
+
+- id: codeguard-ci
+  name: CodeGuard (diff-aware, SARIF)
+  description: Diff-aware scan; run manually or in CI
+  entry: codeguard ci
+  language: python
+  pass_filenames: false
+  stages: [manual]

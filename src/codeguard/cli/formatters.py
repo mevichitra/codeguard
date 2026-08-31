@@ -19,6 +19,11 @@ def finding_help_uri(rule_id: str) -> str:
     return f"{_HELP_URI_BASE}{rule_id.lower()}/"
 
 
+def _muted(f: Finding) -> bool:
+    """A finding hidden from the default view: suppressed or baselined."""
+    return f.suppressed or f.baselined
+
+
 # ---------------------------------------------------------------------------
 # Human-readable (default)
 # ---------------------------------------------------------------------------
@@ -35,7 +40,7 @@ _SEVERITY_COLOR = {
 def format_human(findings: list[Finding], *, show_suppressed: bool = False) -> str:
     """Return a human-readable string representation of *findings*.
 
-    Suppressed findings are omitted unless *show_suppressed* is True.
+    Suppressed and baselined findings are omitted unless *show_suppressed* is True.
     """
     from io import StringIO
 
@@ -44,12 +49,17 @@ def format_human(findings: list[Finding], *, show_suppressed: bool = False) -> s
     buf = StringIO()
     console = Console(file=buf, highlight=False, markup=True)
 
-    active = [f for f in findings if not f.suppressed]
-    suppressed = [f for f in findings if f.suppressed]
+    active = [f for f in findings if not _muted(f)]
+    muted = [f for f in findings if _muted(f)]
+    n_suppressed = sum(1 for f in muted if f.suppressed)
+    n_baselined = sum(1 for f in muted if f.baselined and not f.suppressed)
 
-    if not active and not (show_suppressed and suppressed):
+    if not active and not (show_suppressed and muted):
         console.print("[bold green]✓ No findings.[/bold green]")
         return buf.getvalue()
+
+    if show_suppressed:
+        active = list(findings)
 
     _file_cache: dict[str, list[str]] = {}
 
@@ -57,7 +67,12 @@ def format_human(findings: list[Finding], *, show_suppressed: bool = False) -> s
         color = _SEVERITY_COLOR.get(f.severity.value, "white")
         loc = f"{f.location.file}:{f.location.line}:{f.location.col}"
         sev = f.severity.value.upper()
-        console.print(f"[dim]{loc}[/dim]  [{color}][{f.rule_id}] {sev}[/{color}]  {f.title}")
+        tag = (
+            " [dim](suppressed)[/dim]"
+            if f.suppressed
+            else (" [dim](baselined)[/dim]" if f.baselined else "")
+        )
+        console.print(f"[dim]{loc}[/dim]  [{color}][{f.rule_id}] {sev}[/{color}]  {f.title}{tag}")
 
         # Show the offending source line with a column marker.
         try:
@@ -78,10 +93,15 @@ def format_human(findings: list[Finding], *, show_suppressed: bool = False) -> s
         if f.fix_suggestion:
             console.print(f"  [dim]→ {f.fix_suggestion}[/dim]")
 
-    if show_suppressed and suppressed:
-        console.print(f"\n[dim]{len(suppressed)} suppressed finding(s)[/dim]")
+    notes = []
+    if n_suppressed:
+        notes.append(f"{n_suppressed} suppressed")
+    if n_baselined:
+        notes.append(f"{n_baselined} baselined")
+    if notes:
+        console.print(f"\n[dim]({', '.join(notes)}, hidden — use --show-suppressed)[/dim]")
 
-    _print_summary(console, active)
+    _print_summary(console, [f for f in active if not _muted(f)])
     return buf.getvalue()
 
 
@@ -117,7 +137,7 @@ def format_json(
     a list of finding dicts (see :meth:`Finding.to_dict`).  For the pre-2.0 bare
     array, use :func:`format_json_legacy`.
     """
-    emitted = findings if show_suppressed else [f for f in findings if not f.suppressed]
+    emitted = findings if show_suppressed else [f for f in findings if not _muted(f)]
 
     rules: dict[str, dict[str, Any]] = {}
     for f in emitted:
@@ -154,7 +174,7 @@ def format_json_legacy(findings: list[Finding], *, show_suppressed: bool = False
 
     Deprecated: retained for one minor version.  Prefer :func:`format_json`.
     """
-    emitted = findings if show_suppressed else [f for f in findings if not f.suppressed]
+    emitted = findings if show_suppressed else [f for f in findings if not _muted(f)]
     return json.dumps([f.to_dict() for f in emitted], indent=2)
 
 
@@ -257,6 +277,8 @@ def format_sarif(findings: list[Finding], *, tool_version: str = "0.0.0") -> str
             result["partialFingerprints"] = {_FP_SCHEME: f.fingerprint}
         if f.suppressed:
             result["suppressions"] = [{"kind": "inSource", "justification": "inline ignore"}]
+        elif f.baselined:
+            result["suppressions"] = [{"kind": "external", "justification": "in baseline"}]
         results.append(result)
 
     sarif: dict[str, Any] = {
@@ -277,3 +299,124 @@ def format_sarif(findings: list[Finding], *, tool_version: str = "0.0.0") -> str
         ],
     }
     return json.dumps(sarif, indent=2)
+
+
+# ---------------------------------------------------------------------------
+# GitHub Actions workflow-command annotations
+# ---------------------------------------------------------------------------
+
+_GH_LEVEL = {
+    "critical": "error",
+    "high": "error",
+    "medium": "warning",
+    "low": "notice",
+    "info": "notice",
+}
+
+
+def _reportable(findings: list[Finding], *, show_suppressed: bool) -> list[Finding]:
+    if show_suppressed:
+        return list(findings)
+    return [f for f in findings if not _muted(f)]
+
+
+def format_github(findings: list[Finding], *, show_suppressed: bool = False) -> str:
+    """GitHub Actions ``::error`` / ``::warning`` annotations, one per finding.
+
+    Baselined findings are downgraded to ``::notice`` so they inform without
+    cluttering the PR.
+    """
+    lines: list[str] = []
+    for f in _reportable(findings, show_suppressed=show_suppressed):
+        level = "notice" if f.baselined else _GH_LEVEL.get(f.severity.value, "warning")
+        msg = f.description.replace("\n", " ").replace("::", ":")
+        title = f"{f.rule_id}: {f.title}"
+        lines.append(
+            f"::{level} file={f.location.file},line={f.location.line},"
+            f"col={f.location.col},title={title}::{msg}"
+        )
+    return "\n".join(lines) + ("\n" if lines else "")
+
+
+# ---------------------------------------------------------------------------
+# Reviewdog Diagnostic JSON (rdjson)
+# ---------------------------------------------------------------------------
+
+_RDJSON_SEVERITY = {
+    "critical": "ERROR",
+    "high": "ERROR",
+    "medium": "WARNING",
+    "low": "INFO",
+    "info": "INFO",
+}
+
+
+def format_rdjson(
+    findings: list[Finding], *, show_suppressed: bool = False, tool_version: str = "0.0.0"
+) -> str:
+    """Reviewdog Diagnostic Result Format -- for inline PR comments via reviewdog."""
+    diagnostics = []
+    for f in _reportable(findings, show_suppressed=show_suppressed):
+        rng: dict[str, Any] = {"start": {"line": f.location.line, "column": f.location.col}}
+        if f.location.end_line is not None and f.location.end_col is not None:
+            rng["end"] = {"line": f.location.end_line, "column": f.location.end_col}
+        diagnostics.append(
+            {
+                "message": f"{f.title}\n{f.description}"
+                + (f"\n\nFix: {f.fix_suggestion}" if f.fix_suggestion else ""),
+                "location": {"path": f.location.file, "range": rng},
+                "severity": "INFO"
+                if f.baselined
+                else _RDJSON_SEVERITY.get(f.severity.value, "WARNING"),
+                "code": {"value": f.rule_id, "url": finding_help_uri(f.rule_id)},
+            }
+        )
+    return json.dumps(
+        {
+            "source": {
+                "name": "codeguard",
+                "url": "https://github.com/mevichitra/codeguard",
+            },
+            "diagnostics": diagnostics,
+        },
+        indent=2,
+    )
+
+
+# ---------------------------------------------------------------------------
+# JUnit XML
+# ---------------------------------------------------------------------------
+
+
+def _xml_escape(text: str) -> str:
+    return (
+        text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+    )
+
+
+def format_junit(findings: list[Finding], *, show_suppressed: bool = False) -> str:
+    """JUnit XML -- one ``<testcase>`` per finding, so CI dashboards can chart them."""
+    active = _reportable(findings, show_suppressed=show_suppressed)
+    gating = [f for f in active if not f.baselined]
+    parts = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        f'<testsuites name="codeguard" tests="{len(active)}" failures="{len(gating)}">',
+        f'  <testsuite name="codeguard" tests="{len(active)}" failures="{len(gating)}">',
+    ]
+    for f in active:
+        loc = f"{f.location.file}:{f.location.line}:{f.location.col}"
+        name = _xml_escape(f"{f.rule_id} {loc}")
+        if f.baselined:
+            parts.append(f'    <testcase name="{name}" classname="{f.rule_id}">')
+            parts.append(f'      <skipped message="{_xml_escape(f.title)} (baselined)"/>')
+            parts.append("    </testcase>")
+        else:
+            parts.append(f'    <testcase name="{name}" classname="{f.rule_id}">')
+            parts.append(
+                f'      <failure message="{_xml_escape(f.title)}" '
+                f'type="{f.severity.value}">{_xml_escape(f.description)}</failure>'
+            )
+            parts.append("    </testcase>")
+    parts.append("  </testsuite>")
+    parts.append("</testsuites>")
+    return "\n".join(parts) + "\n"

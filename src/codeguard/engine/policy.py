@@ -65,11 +65,10 @@ def apply_config(
 
 
 def gating_findings(findings: list[Finding], fail_on: str) -> list[Finding]:
-    """The active findings at or above the ``fail_on`` threshold.
-
-    ``fail_on == "never"`` -> always empty (report-only).
+    """The findings that should fail the run: active, not baselined, and at or
+    above the ``fail_on`` threshold.  ``fail_on == "never"`` -> always empty.
     """
     if fail_on == "never":
         return []
     threshold = _SEV[fail_on]
-    return [f for f in findings if not f.suppressed and f.severity >= threshold]
+    return [f for f in findings if not f.suppressed and not f.baselined and f.severity >= threshold]
