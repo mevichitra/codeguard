@@ -1,0 +1,1 @@
+Added the tree-sitter language backends for JavaScript (`.js/.jsx/.mjs/.cjs`) and TypeScript (`.ts/.tsx/.mts/.cts`). `SourceNode` now wraps tree-sitter nodes as well as Python `ast` nodes, with `child_by_field` for named children. Grammars load lazily, so a Python-only scan never imports tree-sitter.
