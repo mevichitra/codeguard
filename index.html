@@ -805,10 +805,10 @@ built to sit at every gate of your workflow (editor, pre-commit, pre-push, PR/CI
 scheduled audit) from a single config file.</p>
 <div class="admonition warning">
 <p class="admonition-title">Status: alpha, heading to v2.0</p>
-<p>Today CodeGuard scans <strong>Python</strong> with five security rules. The <strong>v2.0</strong> line adds
-JavaScript and TypeScript, a config file, baseline/diff scanning, a CI-native command,
-and packaged distribution (pre-commit hook, GitHub Action, Docker image, standalone
-binaries). Public interfaces are not yet stable — see <a href="migration-v2/">Migrating to v2</a>.</p>
+<p>CodeGuard scans <strong>Python, JavaScript, and TypeScript</strong>. Still on the <strong>v2.0</strong>
+road: baseline/diff scanning, a CI-native command, and packaged distribution
+(pre-commit hook, GitHub Action, Docker image, standalone binaries). Public
+interfaces are not yet stable — see <a href="migration-v2/">Migrating to v2</a>.</p>
 </div>
 <h2 id="what-it-produces">What it produces<a class="headerlink" href="#what-it-produces" title="Permanent link">&para;</a></h2>
 <p>Each finding carries a stable rule ID, a severity, a CWE/OWASP mapping, a precise
@@ -822,49 +822,14 @@ location, and a plain-English fix suggestion. Output is human-readable text, JSO
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>1 finding(s)  (1 high)
 </code></pre></div>
 <h2 id="rules-today">Rules today<a class="headerlink" href="#rules-today" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>ID</th>
-<th>Catches</th>
-<th>Severity</th>
-<th>CWE</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>CG-SEC-001</td>
-<td>SQL built with f-strings / <code>%</code> / <code>.format()</code> / concat</td>
-<td>HIGH</td>
-<td>CWE-89</td>
-</tr>
-<tr>
-<td>CG-SEC-002</td>
-<td>Hardcoded passwords, API keys, tokens</td>
-<td>HIGH</td>
-<td>CWE-798</td>
-</tr>
-<tr>
-<td>CG-SEC-003</td>
-<td><code>eval()</code> / <code>exec()</code> / <code>compile()</code> on non-literal input</td>
-<td>HIGH</td>
-<td>CWE-95</td>
-</tr>
-<tr>
-<td>CG-SEC-004</td>
-<td><code>pickle</code> / <code>marshal</code> / <code>yaml.load</code> without a safe loader</td>
-<td>HIGH</td>
-<td>CWE-502</td>
-</tr>
-<tr>
-<td>CG-SEC-005</td>
-<td><code>subprocess(..., shell=True)</code> with a dynamic command</td>
-<td>HIGH</td>
-<td>CWE-78</td>
-</tr>
-</tbody>
-</table>
-<p>See <a href="rules/">Rules overview</a>.</p>
+<p><strong>Python</strong> (<code>0xx</code>): SQL string-formatting (CWE-89), hardcoded secrets (CWE-798),
+<code>eval</code>/<code>exec</code> on dynamic input (CWE-95), unsafe deserialization (CWE-502),
+<code>subprocess</code> shell injection (CWE-78).</p>
+<p><strong>JavaScript / TypeScript</strong> (<code>1xx</code>): dynamic code execution (CWE-95),
+<code>child_process</code> shell injection (CWE-78), DOM XSS sinks (CWE-79),
+<code>dangerouslySetInnerHTML</code> (CWE-79), hardcoded secrets (CWE-798),
+<code>Math.random()</code> for security values (CWE-338).</p>
+<p>See <a href="rules/">Rules overview</a> or run <code>codeguard list-rules</code>.</p>
 <h2 id="next-steps">Next steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="install/">Install</a></li>

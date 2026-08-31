@@ -739,10 +739,32 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#multi-language-javascript-and-typescript" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-language: JavaScript and TypeScript
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rule-authoring-api-custom-rules-only" class="md-nav__link">
     <span class="md-ellipsis">
       
         Rule authoring API (custom rules only)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-fixtures-moved-contributors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test fixtures moved (contributors)
       
     </span>
   </a>
@@ -916,10 +938,32 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#multi-language-javascript-and-typescript" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-language: JavaScript and TypeScript
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rule-authoring-api-custom-rules-only" class="md-nav__link">
     <span class="md-ellipsis">
       
         Rule authoring API (custom rules only)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-fixtures-moved-contributors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test fixtures moved (contributors)
       
     </span>
   </a>
@@ -997,10 +1041,19 @@ unchanged — only broaden handling if you special-cased <code>2</code>.</p>
 file is always scanned.</p>
 <h3 id="sarif-partialfingerprints">SARIF <code>partialFingerprints</code><a class="headerlink" href="#sarif-partialfingerprints" title="Permanent link">&para;</a></h3>
 <p>GitHub code scanning re-keys existing alerts once on upgrade, then stays stable.</p>
+<h3 id="multi-language-javascript-and-typescript">Multi-language: JavaScript and TypeScript<a class="headerlink" href="#multi-language-javascript-and-typescript" title="Permanent link">&para;</a></h3>
+<p>CodeGuard now scans <code>.js</code> / <code>.jsx</code> / <code>.mjs</code> / <code>.cjs</code> and <code>.ts</code> / <code>.tsx</code> / <code>.mts</code> /
+<code>.cts</code> (tree-sitter). Six rules ship in the <code>CG-SEC-1xx</code> block. <code>pip install
+codeguard-cli</code> pulls the tree-sitter grammar packages automatically; nothing to
+configure.</p>
 <h3 id="rule-authoring-api-custom-rules-only">Rule authoring API (custom rules only)<a class="headerlink" href="#rule-authoring-api-custom-rules-only" title="Permanent link">&para;</a></h3>
 <p><code>Rule.check(tree, source, filename)</code> → <code>Rule.analyze(ctx)</code>; a <code>languages</code>
-attribute is required. Built-in Python rules subclass <code>AstRule</code> and keep
-<code>check_ast(tree, source, filename)</code> unchanged.</p>
+attribute is required. Python rules subclass <code>AstRule</code> and keep
+<code>check_ast(tree, source, filename)</code>; JavaScript / TypeScript rules subclass
+<code>TreeSitterRule</code> and implement <code>check_tree(root, ctx)</code> over a <code>SourceNode</code>.</p>
+<h3 id="test-fixtures-moved-contributors">Test fixtures moved (contributors)<a class="headerlink" href="#test-fixtures-moved-contributors" title="Permanent link">&para;</a></h3>
+<p><code>tests/fixtures/&lt;category&gt;/&lt;rule_id&gt;/</code> → <code>tests/fixtures/&lt;language&gt;/&lt;category&gt;/&lt;rule_id&gt;/</code>,
+and <code>conftest.load_fixture</code> gained a leading <code>language</code> argument.</p>
 <h2 id="planned-not-yet-on-main">Planned (not yet on <code>main</code>)<a class="headerlink" href="#planned-not-yet-on-main" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

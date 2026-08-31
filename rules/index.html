@@ -695,13 +695,13 @@
 <h1 id="rules">Rules<a class="headerlink" href="#rules" title="Permanent link">&para;</a></h1>
 <p>Every rule has a stable ID (<code>CG-&lt;CATEGORY&gt;-&lt;NNN&gt;</code>), a severity, a CWE/OWASP mapping, and
 a fix suggestion. IDs are permanent — never renumbered or reused.</p>
+<p>The <code>1xx</code> block covers JavaScript / TypeScript; <code>0xx</code> covers Python.</p>
 <table>
 <thead>
 <tr>
 <th>ID</th>
 <th>Title</th>
 <th>Severity</th>
-<th>Category</th>
 <th>CWE</th>
 <th>Languages</th>
 </tr>
@@ -711,7 +711,6 @@ a fix suggestion. IDs are permanent — never renumbered or reused.</p>
 <td>CG-SEC-001</td>
 <td>SQL query built with string formatting</td>
 <td>HIGH</td>
-<td>security</td>
 <td>CWE-89</td>
 <td>Python</td>
 </tr>
@@ -719,7 +718,6 @@ a fix suggestion. IDs are permanent — never renumbered or reused.</p>
 <td>CG-SEC-002</td>
 <td>Hardcoded secret</td>
 <td>HIGH</td>
-<td>security</td>
 <td>CWE-798</td>
 <td>Python</td>
 </tr>
@@ -727,7 +725,6 @@ a fix suggestion. IDs are permanent — never renumbered or reused.</p>
 <td>CG-SEC-003</td>
 <td><code>eval()</code> / <code>exec()</code> on dynamic input</td>
 <td>HIGH</td>
-<td>security</td>
 <td>CWE-95</td>
 <td>Python</td>
 </tr>
@@ -735,7 +732,6 @@ a fix suggestion. IDs are permanent — never renumbered or reused.</p>
 <td>CG-SEC-004</td>
 <td>Unsafe deserialization</td>
 <td>HIGH</td>
-<td>security</td>
 <td>CWE-502</td>
 <td>Python</td>
 </tr>
@@ -743,22 +739,62 @@ a fix suggestion. IDs are permanent — never renumbered or reused.</p>
 <td>CG-SEC-005</td>
 <td><code>subprocess</code> with <code>shell=True</code> and a dynamic command</td>
 <td>HIGH</td>
-<td>security</td>
 <td>CWE-78</td>
 <td>Python</td>
 </tr>
+<tr>
+<td>CG-SEC-101</td>
+<td>Dynamic code execution (<code>eval</code> / <code>Function</code> / string timer)</td>
+<td>HIGH</td>
+<td>CWE-95</td>
+<td>JS, TS</td>
+</tr>
+<tr>
+<td>CG-SEC-102</td>
+<td><code>child_process.exec</code> with a dynamic command</td>
+<td>HIGH</td>
+<td>CWE-78</td>
+<td>JS, TS</td>
+</tr>
+<tr>
+<td>CG-SEC-103</td>
+<td>DOM XSS sink assigned a non-literal (<code>innerHTML</code>, <code>document.write</code>, …)</td>
+<td>HIGH</td>
+<td>CWE-79</td>
+<td>JS, TS</td>
+</tr>
+<tr>
+<td>CG-SEC-104</td>
+<td><code>dangerouslySetInnerHTML</code> with a non-literal value</td>
+<td>HIGH</td>
+<td>CWE-79</td>
+<td>JS, TS</td>
+</tr>
+<tr>
+<td>CG-SEC-105</td>
+<td>Hardcoded secret</td>
+<td>HIGH</td>
+<td>CWE-798</td>
+<td>JS, TS</td>
+</tr>
+<tr>
+<td>CG-SEC-106</td>
+<td><code>Math.random()</code> used for a security value</td>
+<td>MEDIUM</td>
+<td>CWE-338</td>
+<td>JS, TS</td>
+</tr>
 </tbody>
 </table>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>codeguard<span class="w"> </span>list-rules
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>codeguard<span class="w"> </span>list-rules<span class="w"> </span>--language<span class="w"> </span>javascript
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>codeguard<span class="w"> </span>explain<span class="w"> </span>CG-SEC-101
+</code></pre></div>
 <div class="admonition note">
 <p class="admonition-title">v2.0</p>
-<p>This table will be <strong>generated</strong> from rule metadata (the same source <code>codeguard
-explain &lt;ID&gt;</code> reads), with a page per rule covering rationale, examples, false
-positives, and suppression. JavaScript and TypeScript rules join the list.</p>
+<p>This table will be <strong>generated</strong> from rule metadata (the same source
+<code>codeguard explain</code> reads), with a page per rule.</p>
 </div>
-<p>List rules from the CLI:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>codeguard<span class="w"> </span>--version<span class="w">   </span><span class="c1"># today</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>codeguard<span class="w"> </span>list-rules<span class="w">  </span><span class="c1"># v2.0</span>
-</code></pre></div>
 
 
 
