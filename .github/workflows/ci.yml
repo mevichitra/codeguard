@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     name: Lint (ruff)
@@ -18,12 +22,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install ruff
-        run: pip install ruff
-      - name: Lint
-        run: ruff check src/ tests/
-      - name: Format check
-        run: ruff format --check src/ tests/
+          cache: pip
+      - run: pip install ruff
+      - run: ruff check src/ tests/
+      - run: ruff format --check src/ tests/
 
   typecheck:
     name: Type check (mypy)
@@ -33,49 +35,128 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install package + mypy
-        run: pip install -e ".[dev]"
-      - name: mypy
-        run: mypy src/
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - run: mypy src/
 
   test:
-    name: Tests (Python ${{ matrix.python-version }})
-    runs-on: ubuntu-latest
+    name: Tests (${{ matrix.os }}, py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        os: [ubuntu-latest]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        include:
+          - os: macos-latest
+            python-version: "3.13"
+          - os: windows-latest
+            python-version: "3.13"
+          - os: windows-latest
+            python-version: "3.10"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install package
-        run: pip install -e ".[dev]"
-      - name: Run tests
-        run: pytest --cov=codeguard --cov-report=term-missing
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - run: pytest --cov=codeguard --cov-report=term-missing
       - name: Upload coverage
-        if: matrix.python-version == '3.12'
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
         uses: codecov/codecov-action@v4
         with:
           fail_ci_if_error: false
 
-  # Self-scan: CodeGuard scans its own source on every PR
-  self-scan:
-    name: CodeGuard self-scan
+  build-smoke:
+    name: Build & install smoke test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install CodeGuard
-        run: pip install -e .
-      - name: Scan src/
+          cache: pip
+      - run: pip install build
+      - run: python -m build
+      - name: Install the wheel into a clean venv and run it
         run: |
-          codeguard scan src/ --format sarif -o codeguard.sarif || true
-      - name: Upload SARIF to GitHub code scanning
-        uses: github/codeql-action/upload-sarif@v3
+          python -m venv /tmp/smoke
+          /tmp/smoke/bin/pip install dist/*.whl
+          /tmp/smoke/bin/codeguard --version
+          /tmp/smoke/bin/codeguard scan tests/fixtures/security/cg_sec_001/vulnerable.py && exit 1 || test $? -eq 1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  docs:
+    name: Docs (mkdocs --strict)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[docs]"
+      - run: mkdocs build --strict
+
+  changelog:
+    name: News fragment present
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Require a changelog.d fragment when src/ changes
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          changed=$(git diff --name-only "$base" HEAD)
+          if echo "$changed" | grep -qE '^src/codeguard/'; then
+            if ! echo "$changed" | grep -qE '^changelog\.d/.+\.(breaking|feature|bugfix|doc|internal)\.md$'; then
+              echo "::error::This PR changes src/ but adds no changelog.d/ fragment. See changelog.d/README.md."
+              exit 1
+            fi
+          fi
+
+  hygiene:
+    name: Repo hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: No references to the old GitHub org
+        run: |
+          if grep -rn "codeguard-ai/codeguard" --include='*.py' --include='*.toml' \
+               --include='*.md' --include='*.yml' --include='*.yaml' . \
+               | grep -v '^\./archive/'; then
+            echo "::error::Found codeguard-ai/codeguard outside archive/. Use mevichitra/codeguard."
+            exit 1
+          fi
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --upgrade pip
+      - run: pip install -e . pip-audit
+      - name: Audit runtime dependencies
+        run: pip-audit --progress-spinner off --skip-editable
+
+  self-scan:
+    name: CodeGuard self-scan
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e .
+      - run: codeguard scan src/ --format sarif -o codeguard.sarif || true
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
         with:
           sarif_file: codeguard.sarif
-        if: always()

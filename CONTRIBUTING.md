@@ -55,6 +55,15 @@ git commit -s -m "feat(rules): add CG-SEC-006 open-redirect detection"
 This adds a `Signed-off-by: Your Name <your@email.com>` trailer.  
 PRs without DCO sign-off will not be merged.
 
+## Changelog fragments
+
+Any PR that touches `src/codeguard/` and has a user-visible effect must add a news
+fragment under `changelog.d/` — CI enforces this. The filename is
+`<id>.<type>.md` (`<id>` = issue/PR number or a short slug prefixed with `+`;
+`<type>` = `breaking`, `feature`, `bugfix`, `doc`, or `internal`). One or two
+past-tense sentences describing the change for a user. See `changelog.d/README.md`.
+Preview with `towncrier build --draft`.
+
 ## Adding a rule
 
 This is the most common contribution. A rule requires exactly:

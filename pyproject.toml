@@ -37,6 +37,13 @@ dev = [
     "mypy>=1.7",
     "ruff>=0.4",
     "pre-commit>=3.6",
+    "build>=1.2",
+    "towncrier>=24.8",
+    "pip-audit>=2.7",
+]
+docs = [
+    "mkdocs-material>=9.5",
+    "mkdocs-gen-files>=0.5",
 ]
 
 [project.scripts]
@@ -110,6 +117,46 @@ filterwarnings = [
     "error",
     "ignore::SyntaxWarning",   # fixtures may have intentional syntax issues
 ]
+
+# ---------------------------------------------------------------------------
+# Towncrier — changelog assembled from news fragments in changelog.d/
+# ---------------------------------------------------------------------------
+[tool.towncrier]
+name = "CodeGuard"
+package = "codeguard"
+package_dir = "src"
+directory = "changelog.d"
+filename = "CHANGELOG.md"
+start_string = "<!-- towncrier release notes start -->\n"
+underlines = ["", "", ""]
+ignore = ["README.md"]
+title_format = "## [{version}] - {project_date}"
+issue_format = "[#{issue}](https://github.com/mevichitra/codeguard/issues/{issue})"
+
+[[tool.towncrier.type]]
+directory = "breaking"
+name = "Breaking changes"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "feature"
+name = "Added"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "bugfix"
+name = "Fixed"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "doc"
+name = "Documentation"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "internal"
+name = "Internal"
+showcontent = true
 
 # ---------------------------------------------------------------------------
 # Coverage

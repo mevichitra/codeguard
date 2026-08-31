@@ -20,7 +20,7 @@
 - [ ] If adding a rule: vulnerable fixture triggers, safe fixture does NOT trigger
 - [ ] If adding a rule: docs page added in `docs/rules/`
 - [ ] If adding a rule: rule registered in category `__init__.py`
-- [ ] CHANGELOG updated (if user-visible change)
+- [ ] News fragment added in `changelog.d/` (if user-visible change)
 
 ## Rule ID (if applicable)
 
