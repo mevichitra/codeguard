@@ -54,7 +54,7 @@ class TestCGSEC004Vulnerable:
         assert len(active_findings(src)) >= 1
 
     def test_vulnerable_fixture(self) -> None:
-        src = load_fixture("security", "cg_sec_004", "vulnerable")
+        src = load_fixture("python", "security", "cg_sec_004", "vulnerable")
         findings = active_findings(src)
         assert len(findings) >= 1, "Vulnerable fixture produced no findings"
         assert all(f.rule_id == RULE_ID for f in findings)
@@ -83,6 +83,6 @@ class TestCGSEC004Safe:
         assert active_findings(src) == []
 
     def test_safe_fixture(self) -> None:
-        src = load_fixture("security", "cg_sec_004", "safe")
+        src = load_fixture("python", "security", "cg_sec_004", "safe")
         findings = active_findings(src)
         assert findings == [], f"Safe fixture produced unexpected findings: {findings}"

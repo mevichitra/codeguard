@@ -149,37 +149,38 @@ are covered (see CG-SEC-004/005).
 #### 3. Write fixtures
 
 ```
-tests/fixtures/security/cg_sec_NNN/
-├── vulnerable.py   # MUST trigger — code that the rule should flag
-└── safe.py         # MUST NOT trigger — correct code that looks similar
+tests/fixtures/<language>/security/cg_sec_NNN/
+├── vulnerable.<ext>   # MUST trigger — code that the rule should flag
+└── safe.<ext>         # MUST NOT trigger — correct code that looks similar
 ```
 
-Fixtures are real Python files. Keep them minimal: the smallest snippet that demonstrates the point. Add a comment explaining what each fixture tests.
+`<language>` is `python` / `javascript` / `typescript`; `<ext>` is `py` / `js` / `ts`.
+Keep fixtures minimal: the smallest snippet that demonstrates the point, with a
+comment explaining what it tests.
 
 #### 4. Write the test
 
 ```python
 # tests/test_rules/security/test_cg_sec_NNN.py
 from codeguard.engine.runner import AnalysisRunner
+from tests.conftest import load_fixture
 
 RUNNER = AnalysisRunner(rule_ids=["CG-SEC-NNN"])
 
 
-def _findings_for(fixture: str) -> list:
-    from pathlib import Path
-    src = (Path(__file__).parent.parent.parent / "fixtures" / "security" / "cg_sec_NNN" / fixture).read_text()
-    return [f for f in RUNNER.run(src, filename=fixture) if not f.suppressed]
+def _findings_for(name: str) -> list:
+    src = load_fixture("python", "security", "cg_sec_NNN", name)
+    return [f for f in RUNNER.run(src, filename=f"{name}.py") if not f.suppressed]
 
 
 def test_vulnerable_triggers():
-    findings = _findings_for("vulnerable.py")
+    findings = _findings_for("vulnerable")
     assert len(findings) >= 1
     assert all(f.rule_id == "CG-SEC-NNN" for f in findings)
 
 
 def test_safe_does_not_trigger():
-    findings = _findings_for("safe.py")
-    assert findings == []
+    assert _findings_for("safe") == []
 ```
 
 The existing per-rule test files (`tests/test_rules/security/test_cg_sec_00*.py`)
