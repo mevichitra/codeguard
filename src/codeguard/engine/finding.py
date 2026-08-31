@@ -157,6 +157,7 @@ class Finding:
     fix_suggestion: str | None = None
     confidence: float = 1.0
     suppressed: bool = False
+    baselined: bool = False
     fingerprint: str = ""
     fix: Fix | None = field(default=None)
     triage: Triage | None = field(default=None)
@@ -174,6 +175,10 @@ class Finding:
     def with_fingerprint(self, fingerprint: str) -> Finding:
         """Return a copy of this finding with ``fingerprint`` set."""
         return replace(self, fingerprint=fingerprint)
+
+    def as_baselined(self) -> Finding:
+        """Return a copy of this finding marked as present in the baseline."""
+        return replace(self, baselined=True)
 
     def to_dict(self) -> dict:  # type: ignore[type-arg]
         """Serialise to a plain dict suitable for JSON output."""
@@ -195,5 +200,6 @@ class Finding:
             "fix_suggestion": self.fix_suggestion,
             "confidence": self.confidence,
             "suppressed": self.suppressed,
+            "baselined": self.baselined,
             "fingerprint": self.fingerprint,
         }

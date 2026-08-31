@@ -31,6 +31,7 @@ nav:
   - Usage: usage.md
   - Configuration: configuration.md
   - CI integration: ci.md
+  - Baseline: baseline.md
   - Suppressions: suppressions.md
   - Exit codes: exit-codes.md
   - Output formats: output-formats.md

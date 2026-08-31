@@ -1,0 +1,66 @@
+name: "CodeGuard"
+description: "Scan a pull request for security anti-patterns (Python, JavaScript, TypeScript)."
+author: "CodeGuard Contributors"
+branding:
+  icon: "shield"
+  color: "blue"
+
+inputs:
+  path:
+    description: "Path to scan."
+    default: "."
+  config:
+    description: "Path to codeguard.toml (default: discovered)."
+    required: false
+  fail-on:
+    description: "Minimum severity that fails the check (critical|high|medium|low|info|never)."
+    required: false
+  baseline:
+    description: "Baseline file; findings in it do not fail the check."
+    required: false
+  diff:
+    description: "Base ref to diff against (default: auto-detect the PR base branch)."
+    required: false
+  sarif-file:
+    description: "Where to write the SARIF report."
+    default: "codeguard.sarif"
+  upload-sarif:
+    description: "Upload the SARIF report to GitHub code scanning."
+    default: "true"
+  version:
+    description: "codeguard-cli version to install (default: latest)."
+    default: ""
+  args:
+    description: "Extra arguments passed through to `codeguard ci`."
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install CodeGuard
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.version }}" ]; then
+          pipx install "codeguard-cli==${{ inputs.version }}"
+        else
+          pipx install codeguard-cli
+        fi
+
+    - name: Run CodeGuard
+      shell: bash
+      run: |
+        set -o pipefail
+        codeguard ci "${{ inputs.path }}" \
+          --sarif "${{ inputs.sarif-file }}" \
+          ${{ inputs.config && format('--config {0}', inputs.config) }} \
+          ${{ inputs.fail-on && format('--fail-on {0}', inputs.fail-on) }} \
+          ${{ inputs.baseline && format('--baseline {0}', inputs.baseline) }} \
+          ${{ inputs.diff && format('--diff {0}', inputs.diff) }} \
+          ${{ inputs.args }}
+
+    - name: Upload SARIF
+      if: ${{ always() && inputs.upload-sarif == 'true' }}
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: ${{ inputs.sarif-file }}
+        category: codeguard

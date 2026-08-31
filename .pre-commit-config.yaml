@@ -20,6 +20,9 @@ repos:
           - rich
           - pathspec
           - platformdirs
+          - tree-sitter
+          - tree-sitter-javascript
+          - tree-sitter-typescript
         files: ^src/
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -45,3 +48,14 @@ repos:
           - .license-header.txt
           - --comment-style
           - "#"
+
+  # Dogfood our own consumer hooks.
+  - repo: local
+    hooks:
+      - id: codeguard
+        name: CodeGuard (self)
+        entry: codeguard scan
+        language: system
+        types_or: [python, javascript, jsx, ts, tsx]
+        exclude: ^(tests/fixtures/|benchmarks/corpus/|examples/|archive/)
+        args: ["--quiet"]

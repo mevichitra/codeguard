@@ -10,8 +10,10 @@ from pathlib import Path
 import click
 
 import codeguard.rules  # noqa: F401  -- register built-in rules
+from codeguard import __version__
 from codeguard.cli.formatters import finding_help_uri
 from codeguard.config import ConfigError, find_config, load_config
+from codeguard.engine.finding import Finding
 from codeguard.engine.registry import REGISTRY
 
 _STARTER_TOML = """\
@@ -33,6 +35,7 @@ def register(group: click.Group) -> None:
     group.add_command(_explain)
     group.add_command(_validate)
     group.add_command(_init)
+    group.add_command(_baseline)
 
 
 @click.command("list-rules")
@@ -145,3 +148,124 @@ def _init(force: bool) -> None:
         sys.exit(2)
     target.write_text(_STARTER_TOML, encoding="utf-8")
     click.echo(f"Wrote {target}")
+
+
+# ---------------------------------------------------------------------------
+# baseline
+# ---------------------------------------------------------------------------
+
+
+def _scan_for_baseline(paths: tuple[Path, ...], config_path: Path | None) -> list[Finding]:
+    """Full scan (all rules, config applied) used to build/refresh a baseline."""
+    from codeguard.config import load_config
+    from codeguard.engine.discovery import DiscoveryConfig, discover
+    from codeguard.engine.policy import apply_config
+    from codeguard.engine.runner import AnalysisRunner
+
+    targets = [Path(p) for p in paths] or [Path(".")]
+    first = targets[0]
+    root = first if first.is_dir() else first.parent
+
+    cfg_file = config_path or find_config(root)
+    config = load_config(cfg_file)
+    cfg_root = Path(config.source_dir) if config.source_dir else root
+
+    disc = DiscoveryConfig(
+        include=list(config.include),
+        exclude=list(config.exclude),
+        respect_gitignore=config.gitignore,
+    )
+    findings = AnalysisRunner().run_files(discover(targets, disc, root=cfg_root))
+    findings = apply_config(findings, config, root=str(cfg_root))
+    return [f for f in findings if not f.suppressed]
+
+
+@click.group("baseline")
+def _baseline() -> None:
+    """Create and maintain a baseline file (findings that must not fail CI)."""
+
+
+@_baseline.command("create")
+@click.argument("paths", nargs=-1, type=click.Path(path_type=Path))
+@click.option(
+    "--config",
+    "config_path",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    default=None,
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(dir_okay=False, path_type=Path),
+    default=Path(".codeguard-baseline.json"),
+    show_default=True,
+)
+def _baseline_create(paths: tuple[Path, ...], config_path: Path | None, output: Path) -> None:
+    """Snapshot every current finding into a new baseline file."""
+    from codeguard.engine.baseline import Baseline
+
+    findings = _scan_for_baseline(paths, config_path)
+    Baseline.from_findings(findings, tool_version=__version__).save(output)
+    click.echo(f"Wrote {output} ({len(findings)} finding(s) baselined)")
+
+
+@_baseline.command("update")
+@click.argument("paths", nargs=-1, type=click.Path(path_type=Path))
+@click.option(
+    "--config",
+    "config_path",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    default=None,
+)
+@click.option(
+    "--baseline",
+    "-b",
+    "baseline_file",
+    type=click.Path(dir_okay=False, path_type=Path),
+    default=Path(".codeguard-baseline.json"),
+    show_default=True,
+)
+def _baseline_update(
+    paths: tuple[Path, ...], config_path: Path | None, baseline_file: Path
+) -> None:
+    """Add newly-appeared findings to the baseline (keeps existing entries)."""
+    from codeguard.engine.baseline import Baseline
+
+    if not baseline_file.exists():
+        click.echo(f"No baseline at {baseline_file}; run `baseline create` first.", err=True)
+        sys.exit(2)
+    findings = _scan_for_baseline(paths, config_path)
+    before = len(Baseline.load(baseline_file))
+    updated = Baseline.load(baseline_file).updated_with(findings)
+    updated.save(baseline_file)
+    click.echo(f"Updated {baseline_file} (+{len(updated) - before} new entry/entries)")
+
+
+@_baseline.command("prune")
+@click.argument("paths", nargs=-1, type=click.Path(path_type=Path))
+@click.option(
+    "--config",
+    "config_path",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    default=None,
+)
+@click.option(
+    "--baseline",
+    "-b",
+    "baseline_file",
+    type=click.Path(dir_okay=False, path_type=Path),
+    default=Path(".codeguard-baseline.json"),
+    show_default=True,
+)
+def _baseline_prune(paths: tuple[Path, ...], config_path: Path | None, baseline_file: Path) -> None:
+    """Drop baseline entries whose finding no longer occurs."""
+    from codeguard.engine.baseline import Baseline
+
+    if not baseline_file.exists():
+        click.echo(f"No baseline at {baseline_file}.", err=True)
+        sys.exit(2)
+    live = {f.fingerprint for f in _scan_for_baseline(paths, config_path) if f.fingerprint}
+    before = len(Baseline.load(baseline_file))
+    pruned = Baseline.load(baseline_file).pruned(live)
+    pruned.save(baseline_file)
+    click.echo(f"Pruned {baseline_file} (-{before - len(pruned)} stale entry/entries)")
