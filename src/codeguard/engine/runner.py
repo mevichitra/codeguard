@@ -10,8 +10,7 @@ from __future__ import annotations
 
 import re
 import warnings
-from collections.abc import Sequence
-from fnmatch import fnmatch
+from collections.abc import Iterable
 from pathlib import Path
 
 from codeguard.lang.base import Language
@@ -67,11 +66,9 @@ class AnalysisRunner:
         self,
         registry: RuleRegistry | None = None,
         rule_ids: list[str] | None = None,
-        exclude: Sequence[str] | None = None,
     ) -> None:
         self._registry = registry if registry is not None else REGISTRY
         self._filter: set[str] | None = set(rule_ids) if rule_ids is not None else None
-        self._exclude_patterns = [p.strip() for p in exclude or () if p.strip()]
 
     @property
     def _active_rules(self) -> list[Rule]:
@@ -183,44 +180,59 @@ class AnalysisRunner:
             )
             return []
 
-    def run_path(self, path: Path) -> list[Finding]:
-        """Analyse a file, or a directory recursively.
+    def run_files(self, paths: Iterable[Path], *, jobs: int = 1) -> list[Finding]:
+        """Analyse an explicit list of files, optionally in parallel.
 
-        Directory scanning currently walks every file with a supported
-        extension; ``.gitignore`` and exclude handling arrive in a later
-        milestone.
+        *jobs* > 1 fans the files out across a process pool; the output is
+        identical to a sequential run (findings are re-sorted after the join).
         """
-        if path.is_file():
-            return self.run_file(path)
-
+        files = list(paths)
         findings: list[Finding] = []
-        for child in sorted(path.rglob("*")):
-            if child.is_file() and language_for_path(child) is not None:
-                if self._is_excluded(path, child):
-                    continue
-                findings.extend(self.run_file(child))
+
+        if jobs and jobs > 1 and len(files) > 1:
+            from concurrent.futures import ProcessPoolExecutor
+
+            filter_ids = sorted(self._filter) if self._filter is not None else None
+            with ProcessPoolExecutor(
+                max_workers=jobs,
+                initializer=_init_worker,
+                initargs=(filter_ids,),
+            ) as pool:
+                for result in pool.map(_scan_one, (str(p) for p in files)):
+                    findings.extend(result)
+        else:
+            for fp in files:
+                findings.extend(self.run_file(fp))
 
         findings.sort(key=lambda f: (f.location.file, f.location.line, f.location.col, f.rule_id))
         return findings
 
-    def _is_excluded(self, root: Path, file_path: Path) -> bool:
-        """Return True when a file should be excluded by glob patterns."""
-        if not self._exclude_patterns:
-            return False
+    def run_path(self, path: Path, *, jobs: int = 1) -> list[Finding]:
+        """Analyse a file, or a directory (discovery defaults, recursive)."""
+        if path.is_file():
+            return self.run_file(path)
 
-        relative_path = file_path.relative_to(root).as_posix()
+        from .discovery import discover
 
-        for pattern in self._exclude_patterns:
-            normalized_pattern = pattern.replace("\\", "/")
-            if fnmatch(relative_path, normalized_pattern):
-                return True
-            if fnmatch(file_path.name, normalized_pattern):
-                return True
-            # Directory shorthand (e.g. "tests") excludes any path under that dir.
-            if (
-                "/" not in normalized_pattern
-                and normalized_pattern in file_path.relative_to(root).parts
-            ):
-                return True
+        return self.run_files(discover([path]), jobs=jobs)
 
-        return False
+
+# ---------------------------------------------------------------------------
+# Process-pool workers (module level so they pickle)
+# ---------------------------------------------------------------------------
+
+_WORKER_RUNNER: AnalysisRunner | None = None
+
+
+def _init_worker(rule_ids: list[str] | None) -> None:
+    global _WORKER_RUNNER
+    import codeguard.rules  # noqa: F401  -- register built-in rules in the child
+
+    _WORKER_RUNNER = AnalysisRunner(rule_ids=rule_ids)
+
+
+def _scan_one(path_str: str) -> list[Finding]:
+    assert _WORKER_RUNNER is not None  # set by _init_worker
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        return _WORKER_RUNNER.run_file(Path(path_str))
