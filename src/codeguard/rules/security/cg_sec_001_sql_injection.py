@@ -91,13 +91,20 @@ class SQLStringFormattingRule(AstRule):
             and node.func.attr == "format"
         ):
             return True
-        # "SELECT " + var  or  var + " FROM ..."
+        # "SELECT " + var  or  var + " FROM ..."  -- dynamic unless the whole
+        # concatenation tree is string literals (left-associative, so walk it).
         if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
-            # Only flag if at least one operand is not a literal
-            left_literal = isinstance(node.left, ast.Constant)
-            right_literal = isinstance(node.right, ast.Constant)
-            return not (left_literal and right_literal)
+            return not _is_constant_concat(node)
         return False
+
+
+def _is_constant_concat(node: ast.AST) -> bool:
+    """True if *node* is a string literal or an ``+`` tree of string literals."""
+    if isinstance(node, ast.Constant):
+        return isinstance(node.value, str)
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+        return _is_constant_concat(node.left) and _is_constant_concat(node.right)
+    return False
 
 
 REGISTRY.register(SQLStringFormattingRule())

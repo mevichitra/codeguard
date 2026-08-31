@@ -35,6 +35,7 @@ import ast
 from codeguard.engine.finding import Category, Finding, Severity
 from codeguard.engine.registry import REGISTRY
 from codeguard.engine.rule import AstRule
+from codeguard.rules._pyimports import ImportMap
 
 # (module, method) pairs that are always unsafe
 _UNSAFE_CALLS: frozenset[tuple[str, str]] = frozenset(
@@ -78,12 +79,13 @@ class UnsafeDeserializationRule(AstRule):
     def check_ast(self, tree: ast.AST, source: str, filename: str) -> list[Finding]:
         """Find unsafe deserialization calls."""
         findings: list[Finding] = []
+        imports = ImportMap.from_tree(tree)
 
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):
                 continue
 
-            module, method = self._call_parts(node)
+            module, method = imports.resolve_call(node.func)
             if not module or not method:
                 continue
 
@@ -121,15 +123,6 @@ class UnsafeDeserializationRule(AstRule):
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
-
-    @staticmethod
-    def _call_parts(node: ast.Call) -> tuple[str, str]:
-        """Return (module, method) for ``module.method(...)`` calls, else ('', '')."""
-        if isinstance(node.func, ast.Attribute):
-            attr = node.func.attr
-            if isinstance(node.func.value, ast.Name):
-                return node.func.value.id, attr
-        return "", ""
 
     @staticmethod
     def _has_safe_loader(node: ast.Call) -> bool:

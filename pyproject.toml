@@ -90,8 +90,9 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S", "N"]         # security and naming rules relaxed in tests
-"tests/fixtures/*" = ["ALL"]   # fixtures are intentionally vulnerable code
+"tests/*" = ["S", "N"]              # security and naming rules relaxed in tests
+"tests/fixtures/*" = ["ALL"]        # fixtures are intentionally vulnerable code
+"benchmarks/corpus/*" = ["ALL"]     # corpus samples are intentionally vulnerable code
 
 [tool.ruff.lint.isort]
 known-first-party = ["codeguard"]
