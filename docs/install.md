@@ -28,6 +28,15 @@ pip install -e ".[dev]"
 pre-commit install
 ```
 
+## Docker
+
+```bash
+docker run --rm -v "$PWD:/src:ro" ghcr.io/mevichitra/codeguard:2 scan .
+```
+
+Tags: `:2`, `:2.0`, `:2.0.0`, `:latest`. The image runs as a non-root user with
+the working directory mounted at `/src`.
+
 ## Verify
 
 ```bash
@@ -35,7 +44,9 @@ codeguard --version
 codeguard scan .
 ```
 
-## Other channels (v2.0)
+## Other channels
 
-Docker image, standalone binaries, a Homebrew tap, a GitHub Action, and a
-`.pre-commit-hooks.yaml` land with v2.0. See [CI integration](ci.md).
+- **GitHub Action**: `uses: mevichitra/codeguard/action@v2` — see [CI integration](ci.md).
+- **pre-commit**: the repo ships a `.pre-commit-hooks.yaml` (ids `codeguard`,
+  `codeguard-full`, `codeguard-ci`).
+- Standalone single-file binaries and a Homebrew tap are planned for a follow-up release.
