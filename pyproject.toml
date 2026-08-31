@@ -1,25 +1,26 @@
 [build-system]
-requires = ["setuptools>=70", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
 
 [project]
-name = "codeguard"
-version = "0.1.0"
-description = "Static analysis for Python code, focused on security patterns in AI-generated code"
+name = "codeguard-cli"
+dynamic = ["version"]
+description = "Fast, offline multi-language static analysis for security anti-patterns (Python, JS, TS)"
 readme = "README.md"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 authors = [{ name = "CodeGuard Contributors" }]
 requires-python = ">=3.10"
-keywords = ["static-analysis", "security", "linting", "ast", "sast"]
+keywords = ["static-analysis", "security", "linting", "ast", "sast", "sarif"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Security",
     "Topic :: Software Development :: Quality Assurance",
     "Typing :: Typed",
@@ -47,11 +48,14 @@ Homepage = "https://github.com/mevichitra/codeguard"
 "Security" = "https://github.com/mevichitra/codeguard/security"
 Documentation = "https://github.com/mevichitra/codeguard/tree/main/docs"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.hatch.version]
+path = "src/codeguard/__init__.py"
 
-[tool.setuptools.package-data]
-codeguard = ["py.typed"]
+[tool.hatch.build.targets.wheel]
+packages = ["src/codeguard"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/", "tests/", "benchmarks/", "docs/", "README.md", "LICENSE", "CHANGELOG.md"]
 
 # ---------------------------------------------------------------------------
 # Ruff — linting + formatting

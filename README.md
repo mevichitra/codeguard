@@ -35,12 +35,16 @@ Current rules (see [docs/rules/](docs/rules/) for detail):
 ## Install
 
 ```bash
-pip install codeguard          # once published to PyPI
+pipx install codeguard-cli      # or: uv tool install codeguard-cli
+pip install codeguard-cli       # into the current environment
+
 # or from source:
 git clone https://github.com/mevichitra/codeguard
 cd codeguard
 pip install -e ".[dev]"
 ```
+
+The PyPI project is `codeguard-cli`; the installed command is `codeguard`.
 
 Requires Python 3.10+. No database, no Redis, no Docker needed.
 
@@ -111,7 +115,7 @@ _(Config file support is on the roadmap; not yet implemented.)_
 ```yaml
 - name: Run CodeGuard
   run: |
-    pip install codeguard
+    pip install codeguard-cli
     codeguard scan src/ --format sarif > codeguard.sarif
 
 - name: Upload SARIF
