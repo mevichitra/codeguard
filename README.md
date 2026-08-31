@@ -6,7 +6,7 @@ Static analysis for Python code, with a focus on security patterns common in AI-
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://python.org)
-[![CI](https://github.com/codeguard-ai/codeguard/actions/workflows/ci.yml/badge.svg)](https://github.com/codeguard-ai/codeguard/actions)
+[![CI](https://github.com/mevichitra/codeguard/actions/workflows/ci.yml/badge.svg)](https://github.com/mevichitra/codeguard/actions)
 
 ---
 
@@ -37,7 +37,7 @@ Current rules (see [docs/rules/](docs/rules/) for detail):
 ```bash
 pip install codeguard          # once published to PyPI
 # or from source:
-git clone https://github.com/codeguard-ai/codeguard
+git clone https://github.com/mevichitra/codeguard
 cd codeguard
 pip install -e ".[dev]"
 ```

@@ -42,10 +42,10 @@ dev = [
 codeguard = "codeguard.cli.main:cli"
 
 [project.urls]
-Homepage = "https://github.com/codeguard-ai/codeguard"
-"Bug Tracker" = "https://github.com/codeguard-ai/codeguard/issues"
-"Security" = "https://github.com/codeguard-ai/codeguard/security"
-Documentation = "https://github.com/codeguard-ai/codeguard/tree/main/docs"
+Homepage = "https://github.com/mevichitra/codeguard"
+"Bug Tracker" = "https://github.com/mevichitra/codeguard/issues"
+"Security" = "https://github.com/mevichitra/codeguard/security"
+Documentation = "https://github.com/mevichitra/codeguard/tree/main/docs"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -15,7 +15,7 @@ Each rule is self-contained: one file, independently testable, zero knowledge of
 ## Developer setup
 
 ```bash
-git clone https://github.com/codeguard-ai/codeguard
+git clone https://github.com/mevichitra/codeguard
 cd codeguard
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"

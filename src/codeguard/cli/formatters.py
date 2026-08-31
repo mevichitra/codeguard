@@ -193,7 +193,7 @@ def format_sarif(findings: list[Finding], *, tool_version: str = "0.1.0") -> str
                     "driver": {
                         "name": "CodeGuard",
                         "version": tool_version,
-                        "informationUri": "https://github.com/codeguard-ai/codeguard",
+                        "informationUri": "https://github.com/mevichitra/codeguard",
                         "rules": rules,
                     }
                 },
