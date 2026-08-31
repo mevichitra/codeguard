@@ -13,12 +13,16 @@ Python is backed by the standard library :mod:`ast`.  JavaScript and TypeScript
 from __future__ import annotations
 
 from .base import Language, LanguageSupport, ParseResult, Position, SyntaxErrorInfo
+from .javascript import JavaScriptSupport
 from .node import SourceNode
 from .python_ast import PythonAstSupport
 from .registry import LANGUAGES, language_for_path, support_for
+from .treesitter import TreeSitterSupport
+from .typescript import TypeScriptSupport
 
 __all__ = [
     "LANGUAGES",
+    "JavaScriptSupport",
     "Language",
     "LanguageSupport",
     "ParseResult",
@@ -26,6 +30,8 @@ __all__ = [
     "PythonAstSupport",
     "SourceNode",
     "SyntaxErrorInfo",
+    "TreeSitterSupport",
+    "TypeScriptSupport",
     "language_for_path",
     "support_for",
 ]

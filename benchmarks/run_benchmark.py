@@ -91,40 +91,46 @@ def run_benchmark(rule_id: str | None = None, verbose: bool = False) -> list[Rul
         stats = RuleStats(rule_id=rid)
 
         # True positive files — rule MUST fire
-        tp_dir = rule_dir / "tp"
-        if tp_dir.exists():
-            for py_file in sorted(tp_dir.glob("*.py")):
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-                    findings = [f for f in runner.run_file(py_file) if not f.suppressed]
-                fired = len(findings) > 0
-                if fired:
-                    stats.tp += 1
-                else:
-                    stats.fn += 1
-                    if verbose:
-                        print(f"  MISS  {py_file.relative_to(REPO_ROOT)}")
+        for sample in _samples(rule_dir / "tp"):
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                findings = [f for f in runner.run_file(sample) if not f.suppressed]
+            if findings:
+                stats.tp += 1
+            else:
+                stats.fn += 1
+                if verbose:
+                    print(f"  MISS  {sample.relative_to(REPO_ROOT)}")
 
         # True negative files — rule MUST NOT fire
-        tn_dir = rule_dir / "tn"
-        if tn_dir.exists():
-            for py_file in sorted(tn_dir.glob("*.py")):
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-                    findings = [f for f in runner.run_file(py_file) if not f.suppressed]
-                fired = len(findings) > 0
-                if not fired:
-                    stats.tn += 1
-                else:
-                    stats.fp += 1
-                    if verbose:
-                        print(f"  FALSE POSITIVE  {py_file.relative_to(REPO_ROOT)}")
-                        for f in findings:
-                            print(f"    {f.rule_id} @ line {f.location.line}")
+        for sample in _samples(rule_dir / "tn"):
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                findings = [f for f in runner.run_file(sample) if not f.suppressed]
+            if not findings:
+                stats.tn += 1
+            else:
+                stats.fp += 1
+                if verbose:
+                    print(f"  FALSE POSITIVE  {sample.relative_to(REPO_ROOT)}")
+                    for f in findings:
+                        print(f"    {f.rule_id} @ line {f.location.line}")
 
         results.append(stats)
 
     return results
+
+
+_SAMPLE_GLOBS = ("*.py", "*.pyi", "*.js", "*.jsx", "*.mjs", "*.cjs", "*.ts", "*.tsx")
+
+
+def _samples(directory: Path) -> list[Path]:
+    if not directory.exists():
+        return []
+    files: list[Path] = []
+    for pattern in _SAMPLE_GLOBS:
+        files.extend(directory.glob(pattern))
+    return sorted(files)
 
 
 def print_table(results: list[RuleStats]) -> None:

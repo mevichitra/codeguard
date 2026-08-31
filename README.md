@@ -12,23 +12,29 @@ Static analysis for Python code, with a focus on security patterns common in AI-
 
 ## What it does
 
-CodeGuard scans Python source files and reports security and quality findings. Each finding has a stable rule ID, severity, CWE/OWASP mapping, and a plain-English fix suggestion.
+CodeGuard scans **Python, JavaScript, and TypeScript** and reports security findings. Each finding has a stable rule ID, severity, CWE/OWASP mapping, and a plain-English fix suggestion.
 
 Current rules (see [docs/rules/](docs/rules/) for detail):
 
-| ID | What it catches | Severity | CWE |
-|---|---|---|---|
-| CG-SEC-001 | SQL built with f-strings / `%` / `.format()` | HIGH | CWE-89 |
-| CG-SEC-002 | Hardcoded passwords, API keys, tokens | HIGH | CWE-798 |
-| CG-SEC-003 | `eval()` / `exec()` on non-literal input | HIGH | CWE-95 |
-| CG-SEC-004 | `pickle.loads` / `yaml.load` without SafeLoader | HIGH | CWE-502 |
-| CG-SEC-005 | `subprocess(..., shell=True)` with non-literal args | HIGH | CWE-78 |
+| ID | What it catches | Severity | CWE | Languages |
+|---|---|---|---|---|
+| CG-SEC-001 | SQL built with f-strings / `%` / `.format()` | HIGH | CWE-89 | Python |
+| CG-SEC-002 | Hardcoded passwords, API keys, tokens | HIGH | CWE-798 | Python |
+| CG-SEC-003 | `eval()` / `exec()` on non-literal input | HIGH | CWE-95 | Python |
+| CG-SEC-004 | `pickle.loads` / `yaml.load` without SafeLoader | HIGH | CWE-502 | Python |
+| CG-SEC-005 | `subprocess(..., shell=True)` with non-literal args | HIGH | CWE-78 | Python |
+| CG-SEC-101 | `eval` / `new Function` / string timers on dynamic input | HIGH | CWE-95 | JS, TS |
+| CG-SEC-102 | `child_process.exec` with a dynamic command | HIGH | CWE-78 | JS, TS |
+| CG-SEC-103 | `innerHTML` / `document.write` assigned a non-literal | HIGH | CWE-79 | JS, TS |
+| CG-SEC-104 | `dangerouslySetInnerHTML` with a non-literal value | HIGH | CWE-79 | JS, TS |
+| CG-SEC-105 | Hardcoded passwords, API keys, tokens | HIGH | CWE-798 | JS, TS |
+| CG-SEC-106 | `Math.random()` used for a token / secret / id | MEDIUM | CWE-338 | JS, TS |
 
 ### What it does not do (yet)
 
-- Multi-language support (Python only)
-- AI-generated-code detection (planned as an experimental, isolated module)
-- Web dashboard or REST API (planned for later layers)
+- Baseline / diff scanning, a CI-native command, packaged distribution (planned for v2.0)
+- AI-generated-code detection (deferred to a post-2.0 experimental module)
+- Web dashboard or REST API
 
 ---
 

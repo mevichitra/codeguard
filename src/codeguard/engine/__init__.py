@@ -4,7 +4,7 @@
 from .context import RuleContext
 from .finding import Category, Finding, Fix, Location, Severity, TextEdit, Triage
 from .registry import REGISTRY, RuleRegistry
-from .rule import AstRule, Rule
+from .rule import AstRule, Rule, TreeSitterRule
 from .runner import AnalysisRunner
 
 __all__ = [
@@ -20,5 +20,6 @@ __all__ = [
     "RuleRegistry",
     "Severity",
     "TextEdit",
+    "TreeSitterRule",
     "Triage",
 ]

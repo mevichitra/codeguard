@@ -6,11 +6,15 @@ from __future__ import annotations
 from pathlib import Path
 
 from .base import Language, LanguageSupport
+from .javascript import JavaScriptSupport
 from .python_ast import PythonAstSupport
+from .typescript import TypeScriptSupport
 
 #: All registered language backends, keyed by :class:`Language`.
 LANGUAGES: dict[Language, LanguageSupport] = {
     Language.PYTHON: PythonAstSupport(),
+    Language.JAVASCRIPT: JavaScriptSupport(),
+    Language.TYPESCRIPT: TypeScriptSupport(),
 }
 
 _EXTENSION_INDEX: dict[str, Language] = {

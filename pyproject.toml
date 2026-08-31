@@ -31,6 +31,9 @@ dependencies = [
     "pathspec>=0.12",
     "platformdirs>=4.0",
     "tomli>=2.0; python_version < '3.11'",
+    "tree-sitter>=0.23",
+    "tree-sitter-javascript>=0.23",
+    "tree-sitter-typescript>=0.23",
 ]
 
 [project.optional-dependencies]
@@ -63,6 +66,7 @@ path = "src/codeguard/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/codeguard"]
+artifacts = ["*.scm"]
 
 [tool.hatch.build.targets.sdist]
 include = ["src/", "tests/", "benchmarks/", "docs/", "README.md", "LICENSE", "CHANGELOG.md"]

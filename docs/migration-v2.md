@@ -45,11 +45,24 @@ file is always scanned.
 
 GitHub code scanning re-keys existing alerts once on upgrade, then stays stable.
 
+### Multi-language: JavaScript and TypeScript
+
+CodeGuard now scans `.js` / `.jsx` / `.mjs` / `.cjs` and `.ts` / `.tsx` / `.mts` /
+`.cts` (tree-sitter). Six rules ship in the `CG-SEC-1xx` block. `pip install
+codeguard-cli` pulls the tree-sitter grammar packages automatically; nothing to
+configure.
+
 ### Rule authoring API (custom rules only)
 
 `Rule.check(tree, source, filename)` → `Rule.analyze(ctx)`; a `languages`
-attribute is required. Built-in Python rules subclass `AstRule` and keep
-`check_ast(tree, source, filename)` unchanged.
+attribute is required. Python rules subclass `AstRule` and keep
+`check_ast(tree, source, filename)`; JavaScript / TypeScript rules subclass
+`TreeSitterRule` and implement `check_tree(root, ctx)` over a `SourceNode`.
+
+### Test fixtures moved (contributors)
+
+`tests/fixtures/<category>/<rule_id>/` → `tests/fixtures/<language>/<category>/<rule_id>/`,
+and `conftest.load_fixture` gained a leading `language` argument.
 
 ## Planned (not yet on `main`)
 
