@@ -672,6 +672,83 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#locationcol-is-1-indexed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Location.col is 1-indexed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-format-json-is-an-envelope-object" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --format json is an envelope object
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-fail-on-replaces-severity-for-gating" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --fail-on replaces --severity for gating
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exit-codes-3-and-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exit codes 3 and 4
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scan-respects-gitignore-and-skips-vendor-directories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        scan respects .gitignore and skips vendor directories
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sarif-partialfingerprints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SARIF partialFingerprints
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rule-authoring-api-custom-rules-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rule authoring API (custom rules only)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -772,6 +849,83 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#locationcol-is-1-indexed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Location.col is 1-indexed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-format-json-is-an-envelope-object" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --format json is an envelope object
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-fail-on-replaces-severity-for-gating" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --fail-on replaces --severity for gating
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exit-codes-3-and-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exit codes 3 and 4
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scan-respects-gitignore-and-skips-vendor-directories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        scan respects .gitignore and skips vendor directories
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sarif-partialfingerprints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SARIF partialFingerprints
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rule-authoring-api-custom-rules-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rule authoring API (custom rules only)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -820,12 +974,33 @@ change lands on <code>main</code>; see <code>changelog.d/</code> for the in-flig
 <h2 id="already-on-main">Already on <code>main</code><a class="headerlink" href="#already-on-main" title="Permanent link">&para;</a></h2>
 <h3 id="package-renamed-codeguard-codeguard-cli">Package renamed: <code>codeguard</code> → <code>codeguard-cli</code><a class="headerlink" href="#package-renamed-codeguard-codeguard-cli" title="Permanent link">&para;</a></h3>
 <p>The bare <code>codeguard</code> name on PyPI belongs to an unrelated project. Install
-<code>codeguard-cli</code> instead:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pipx<span class="w"> </span>install<span class="w"> </span>codeguard-cli<span class="w">      </span><span class="c1"># was: pipx install codeguard</span>
-</code></pre></div>
-<p>The <strong>command</strong> (<code>codeguard</code>) and the <strong>import package</strong> (<code>import codeguard</code>) are
-unchanged. If you pinned <code>codeguard</code> in a requirements file, switch it to
-<code>codeguard-cli</code>.</p>
+<code>codeguard-cli</code> instead (<code>pipx install codeguard-cli</code>). The <strong>command</strong>
+(<code>codeguard</code>) and the <strong>import package</strong> (<code>import codeguard</code>) are unchanged. If
+you pinned <code>codeguard</code> in a requirements file, switch it to <code>codeguard-cli</code>.</p>
+<h3 id="locationcol-is-1-indexed"><code>Location.col</code> is 1-indexed<a class="headerlink" href="#locationcol-is-1-indexed" title="Permanent link">&para;</a></h3>
+<p>Was 0-indexed. Adjust tooling that reads <code>col</code> from JSON output; SARIF column
+values are unchanged in effect (the formatter no longer adds its own <code>+1</code>).</p>
+<h3 id="-format-json-is-an-envelope-object"><code>--format json</code> is an envelope object<a class="headerlink" href="#-format-json-is-an-envelope-object" title="Permanent link">&para;</a></h3>
+<p><code>{ schema_version, tool, rules, results, summary }</code>. Parse <code>.results</code> instead of
+the top-level array, or pass <code>--format json-legacy</code> (deprecated, one more minor
+version) for the old bare array.</p>
+<h3 id="-fail-on-replaces-severity-for-gating"><code>--fail-on</code> replaces <code>--severity</code> for gating<a class="headerlink" href="#-fail-on-replaces-severity-for-gating" title="Permanent link">&para;</a></h3>
+<p><code>--fail-on {severity|never}</code> controls the exit code (default <code>info</code>, so any
+finding still fails by default). <code>--severity</code> is a deprecated alias.</p>
+<h3 id="exit-codes-3-and-4">Exit codes 3 and 4<a class="headerlink" href="#exit-codes-3-and-4" title="Permanent link">&para;</a></h3>
+<p>Config errors now exit <code>3</code>, unexpected internal errors exit <code>4</code>. <code>0</code>/<code>1</code>/<code>2</code> are
+unchanged — only broaden handling if you special-cased <code>2</code>.</p>
+<h3 id="scan-respects-gitignore-and-skips-vendor-directories"><code>scan</code> respects <code>.gitignore</code> and skips vendor directories<a class="headerlink" href="#scan-respects-gitignore-and-skips-vendor-directories" title="Permanent link">&para;</a></h3>
+<p>Directory scans skip <code>.gitignore</code>d paths, <code>.venv</code> / <code>node_modules</code> /
+<code>__pycache__</code> / <code>dist</code> / <code>build</code> / …, and generated files (<code>*.min.js</code>,
+<code>*.d.ts</code>). Pass <code>--no-gitignore</code> to restore the old breadth; an explicitly named
+file is always scanned.</p>
+<h3 id="sarif-partialfingerprints">SARIF <code>partialFingerprints</code><a class="headerlink" href="#sarif-partialfingerprints" title="Permanent link">&para;</a></h3>
+<p>GitHub code scanning re-keys existing alerts once on upgrade, then stays stable.</p>
+<h3 id="rule-authoring-api-custom-rules-only">Rule authoring API (custom rules only)<a class="headerlink" href="#rule-authoring-api-custom-rules-only" title="Permanent link">&para;</a></h3>
+<p><code>Rule.check(tree, source, filename)</code> → <code>Rule.analyze(ctx)</code>; a <code>languages</code>
+attribute is required. Built-in Python rules subclass <code>AstRule</code> and keep
+<code>check_ast(tree, source, filename)</code> unchanged.</p>
 <h2 id="planned-not-yet-on-main">Planned (not yet on <code>main</code>)<a class="headerlink" href="#planned-not-yet-on-main" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -836,40 +1011,12 @@ unchanged. If you pinned <code>codeguard</code> in a requirements file, switch i
 </thead>
 <tbody>
 <tr>
-<td>Rule API <code>check(tree, …)</code> → <code>analyze(ctx)</code>; <code>languages</code> attribute required</td>
-<td>Only affects custom rules. Built-in rules are cushioned by an <code>AstRule</code> base.</td>
-</tr>
-<tr>
-<td><code>Location.col</code> becomes 1-indexed (was 0-indexed)</td>
-<td>Adjust any tooling that reads <code>col</code> from JSON output. SARIF column values are unaffected.</td>
-</tr>
-<tr>
-<td><code>--format json</code> becomes an envelope object</td>
-<td>Parse <code>.results</code> instead of the top-level array, or use <code>--format json-legacy</code> for one more minor version.</td>
-</tr>
-<tr>
-<td><code>scan --severity</code> splits into <code>--fail-on</code> (exit code) + display filter</td>
-<td>Use <code>--fail-on</code> in CI gates. <code>--severity</code> keeps working as a deprecated alias.</td>
-</tr>
-<tr>
-<td>Exit codes <code>3</code> (config) and <code>4</code> (internal) added</td>
-<td><code>0</code> and <code>1</code> are unchanged; only broaden handling if you special-cased <code>2</code>.</td>
-</tr>
-<tr>
 <td>Inline suppressions require <code>reason:</code></td>
 <td>Add <code>reason: …</code> to each <code># codeguard: ignore[…]</code>. Bare ones still suppress but raise <code>CG-META-001</code>.</td>
 </tr>
 <tr>
 <td><code>disable[…]</code> → <code>ignore-file[…]</code></td>
 <td>Rename at leisure; the old spelling stays as a deprecated alias.</td>
-</tr>
-<tr>
-<td><code>scan</code> respects <code>.gitignore</code> + a built-in skip list by default</td>
-<td>Pass <code>--no-gitignore</code> to restore the previous breadth.</td>
-</tr>
-<tr>
-<td>SARIF <code>partialFingerprints</code> added</td>
-<td>GitHub code scanning re-keys existing alerts once on upgrade, then stays stable.</td>
 </tr>
 </tbody>
 </table>

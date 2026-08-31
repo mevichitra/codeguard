@@ -401,10 +401,21 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#file" class="md-nav__link">
+  <a href="#example" class="md-nav__link">
     <span class="md-ellipsis">
       
-        File
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keys
       
     </span>
   </a>
@@ -722,10 +733,21 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#file" class="md-nav__link">
+  <a href="#example" class="md-nav__link">
     <span class="md-ellipsis">
       
-        File
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keys
       
     </span>
   </a>
@@ -758,35 +780,132 @@
 
 
 <h1 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h1>
-<div class="admonition warning">
-<p class="admonition-title">Arrives in v2.0</p>
-<p>Config-file support is not yet implemented. Today, configure a run with CLI flags
-(see <a href="../usage/">Usage</a>). This page describes the planned v2.0 model.</p>
-</div>
-<h2 id="file">File<a class="headerlink" href="#file" title="Permanent link">&para;</a></h2>
-<p>CodeGuard reads <strong><code>codeguard.toml</code></strong> from the project root, or a <code>[tool.codeguard]</code>
-table in <code>pyproject.toml</code>. In a monorepo the nearest config to each scanned file wins,
-merged with configs above it.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">[tool.codeguard]</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">include</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"src/**"</span><span class="p">,</span><span class="w"> </span><span class="s2">"lib/**"</span><span class="p">]</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">exclude</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"**/*.min.js"</span><span class="p">,</span><span class="w"> </span><span class="s2">"tests/fixtures/**"</span><span class="p">]</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">languages</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"python"</span><span class="p">,</span><span class="w"> </span><span class="s2">"javascript"</span><span class="p">,</span><span class="w"> </span><span class="s2">"typescript"</span><span class="p">]</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">fail_on</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">"high"</span><span class="w">        </span><span class="c1"># minimum severity that yields exit 1</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">gitignore</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">baseline</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="s2">".codeguard-baseline.json"</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">[tool.codeguard.rules]</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">disable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"CG-SEC-002"</span><span class="p">]</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">[tool.codeguard.rules.CG-SEC-002]</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="n">severity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"medium"</span>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">[[tool.codeguard.overrides]]</span>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="n">path</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">"migrations/**"</span>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="n">disable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"CG-SEC-001"</span><span class="p">]</span>
+<p>CodeGuard reads <strong><code>codeguard.toml</code></strong> (or <code>.codeguard.toml</code>) from your project,
+falling back to a <code>[tool.codeguard]</code> table in <code>pyproject.toml</code>. Discovery walks
+up from the working directory and stops at the repository root.</p>
+<p>Generate a starter file:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>codeguard<span class="w"> </span>init
 </code></pre></div>
-<p>Validate it with <code>codeguard validate</code>. A JSON Schema is published for editor
-autocompletion.</p>
+<p>Check a file:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>codeguard<span class="w"> </span>validate
+</code></pre></div>
+<h2 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">[codeguard]</span><span class="w">                       </span><span class="c1"># in pyproject.toml this is [tool.codeguard]</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">include</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"src/**"</span><span class="p">,</span><span class="w"> </span><span class="s2">"lib/**"</span><span class="p">]</span><span class="w">  </span><span class="c1"># empty = every supported file</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">exclude</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"**/*.min.js"</span><span class="p">,</span><span class="w"> </span><span class="s2">"tests/fixtures/**"</span><span class="p">]</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">languages</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"python"</span><span class="p">]</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">gitignore</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">                  </span><span class="c1"># honour .gitignore (default true)</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">fail_on</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="s2">"high"</span><span class="w">                </span><span class="c1"># min severity that makes the run exit 1</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="n">output</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">"human"</span><span class="w">               </span><span class="c1"># default --format</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="n">jobs</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w">                     </span><span class="c1"># 0 = one worker per CPU</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="k">[codeguard.rules]</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="n">disable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"CG-SEC-002"</span><span class="p">]</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="n">enable</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span><span class="w">                      </span><span class="c1"># empty = all (minus `disable`)</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="k">[codeguard.rules.CG-SEC-001]</span>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="n">severity</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="s2">"medium"</span><span class="w">         </span><span class="c1"># remap this rule's severity</span>
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="n">confidence_min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.8</span><span class="w">              </span><span class="c1"># drop findings below this confidence</span>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="k">[codeguard.severity_remap]</span>
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="n">CG-SEC-005</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"critical"</span>
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="k">[[codeguard.overrides]]</span>
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="n">path</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">"migrations/**"</span><span class="w">         </span><span class="c1"># gitignore-style glob, repo-relative</span>
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a><span class="n">disable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"CG-SEC-001"</span><span class="p">]</span><span class="w">          </span><span class="c1"># or ["ALL"]</span>
+</code></pre></div>
+<p>CLI flags win over the config file. <code>--config PATH</code> forces a specific file.</p>
+<h2 id="keys">Keys<a class="headerlink" href="#keys" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Type</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>include</code> / <code>exclude</code></td>
+<td>list of globs</td>
+<td><code>[]</code></td>
+<td>Gitignore-style path filters.</td>
+</tr>
+<tr>
+<td><code>languages</code></td>
+<td>list</td>
+<td>all</td>
+<td>Restrict to these languages.</td>
+</tr>
+<tr>
+<td><code>gitignore</code></td>
+<td>bool</td>
+<td><code>true</code></td>
+<td>Honour the repo <code>.gitignore</code>.</td>
+</tr>
+<tr>
+<td><code>fail_on</code></td>
+<td>severity or <code>"never"</code></td>
+<td><code>"info"</code></td>
+<td>Exit-code threshold.</td>
+</tr>
+<tr>
+<td><code>output</code></td>
+<td>format</td>
+<td><code>"human"</code></td>
+<td>Default <code>--format</code>.</td>
+</tr>
+<tr>
+<td><code>jobs</code></td>
+<td>int</td>
+<td><code>0</code></td>
+<td>Worker processes (<code>0</code> = auto).</td>
+</tr>
+<tr>
+<td><code>baseline</code></td>
+<td>path</td>
+<td>—</td>
+<td>Baseline file <em>(used from a later release)</em>.</td>
+</tr>
+<tr>
+<td><code>[rules] disable</code> / <code>enable</code></td>
+<td>list of IDs</td>
+<td><code>[]</code></td>
+<td>Turn rules off / restrict to a set.</td>
+</tr>
+<tr>
+<td><code>[rules.&lt;ID&gt;] severity</code></td>
+<td>severity</td>
+<td>—</td>
+<td>Per-rule severity remap.</td>
+</tr>
+<tr>
+<td><code>[rules.&lt;ID&gt;] confidence_min</code></td>
+<td>float</td>
+<td>—</td>
+<td>Drop that rule's low-confidence findings.</td>
+</tr>
+<tr>
+<td><code>[severity_remap]</code></td>
+<td>table</td>
+<td><code>{}</code></td>
+<td><code>RULE-ID = "severity"</code>.</td>
+</tr>
+<tr>
+<td><code>[[overrides]]</code></td>
+<td>array of tables</td>
+<td><code>[]</code></td>
+<td><code>path</code> glob + <code>disable</code> / <code>enable</code>.</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Monorepo nearest-wins</p>
+<p>Per-directory config resolution (a nested <code>codeguard.toml</code> overriding the one
+above it, per scanned file) is planned. Today one effective config applies to
+the whole run; <code>[[overrides]]</code> with path globs covers most monorepo needs.</p>
+</div>
 
 
 

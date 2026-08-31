@@ -374,10 +374,21 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#options" class="md-nav__link">
+  <a href="#commands" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Options
+        Commands
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scan-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        scan options
       
     </span>
   </a>
@@ -389,17 +400,6 @@
     <span class="md-ellipsis">
       
         Examples
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#exit-codes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Exit codes
       
     </span>
   </a>
@@ -744,10 +744,21 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#options" class="md-nav__link">
+  <a href="#commands" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Options
+        Commands
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scan-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        scan options
       
     </span>
   </a>
@@ -759,17 +770,6 @@
     <span class="md-ellipsis">
       
         Examples
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#exit-codes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Exit codes
       
     </span>
   </a>
@@ -802,10 +802,43 @@
 
 
 <h1 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h1>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>codeguard<span class="w"> </span>scan<span class="w"> </span>PATH
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>codeguard<span class="w"> </span>scan<span class="w"> </span><span class="o">[</span>PATHS<span class="o">]</span>...
 </code></pre></div>
-<p><code>PATH</code> is a file or a directory (scanned recursively for <code>*.py</code>).</p>
-<h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">&para;</a></h2>
+<p><code>PATHS</code> are files or directories (default <code>.</code>). Directories are scanned
+recursively, honouring <code>.gitignore</code> and skipping vendor/build directories. Read
+from stdin with <code>-</code>.</p>
+<h2 id="commands">Commands<a class="headerlink" href="#commands" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scan</code></td>
+<td>Scan paths and report findings.</td>
+</tr>
+<tr>
+<td><code>list-rules</code></td>
+<td>List every registered rule (<code>--format json</code>, <code>--language</code>, <code>--category</code>, <code>--severity</code>).</td>
+</tr>
+<tr>
+<td><code>explain &lt;RULE_ID&gt;</code></td>
+<td>Full description, CWE/OWASP, and docs link for a rule.</td>
+</tr>
+<tr>
+<td><code>validate</code></td>
+<td>Validate <code>codeguard.toml</code>.</td>
+</tr>
+<tr>
+<td><code>init</code></td>
+<td>Write a starter <code>codeguard.toml</code>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="scan-options"><code>scan</code> options<a class="headerlink" href="#scan-options" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -815,43 +848,71 @@
 </thead>
 <tbody>
 <tr>
-<td><code>--format {human,json,sarif}</code></td>
-<td>Output format. Default <code>human</code>.</td>
+<td><code>--config PATH</code></td>
+<td>Use a specific config file.</td>
+</tr>
+<tr>
+<td><code>--format {human,json,json-legacy,sarif}</code></td>
+<td>Output format. <code>json-legacy</code> is the deprecated bare array.</td>
 </tr>
 <tr>
 <td><code>--rule RULE_ID</code></td>
-<td>Only run the named rule(s). Repeatable. Validated against the registry.</td>
+<td>Only run the named rule(s). Repeatable.</td>
 </tr>
 <tr>
-<td><code>--severity {critical,high,medium,low,info}</code></td>
-<td>Only report findings at or above this level.</td>
+<td><code>--exclude GLOB</code> / <code>--include GLOB</code></td>
+<td>Path filters. Repeatable.</td>
+</tr>
+<tr>
+<td><code>--fail-on {critical,high,medium,low,info,never}</code></td>
+<td>Minimum severity that makes the run exit <code>1</code> (default <code>info</code>).</td>
+</tr>
+<tr>
+<td><code>--exit-zero</code></td>
+<td>Always exit <code>0</code> (report-only).</td>
+</tr>
+<tr>
+<td><code>--no-gitignore</code></td>
+<td>Do not read <code>.gitignore</code>.</td>
+</tr>
+<tr>
+<td><code>-j, --jobs N</code></td>
+<td>Parallel worker processes (<code>0</code> = one per CPU).</td>
 </tr>
 <tr>
 <td><code>--show-suppressed</code></td>
 <td>Include suppressed findings in the output.</td>
 </tr>
 <tr>
+<td><code>-q, --quiet</code></td>
+<td>Only print findings.</td>
+</tr>
+<tr>
+<td><code>--no-color</code></td>
+<td>Disable colour (also honours <code>NO_COLOR</code>).</td>
+</tr>
+<tr>
+<td><code>--stdin-filename NAME</code></td>
+<td>Filename to assume for <code>-</code>.</td>
+</tr>
+<tr>
 <td><code>-o, --output PATH</code></td>
-<td>Write output to a file instead of stdout.</td>
+<td>Write output to a file.</td>
+</tr>
+<tr>
+<td><code>--severity LEVEL</code></td>
+<td><strong>Deprecated</strong> alias of <code>--fail-on</code>.</td>
 </tr>
 </tbody>
 </table>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>codeguard<span class="w"> </span>scan<span class="w"> </span>src/
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>codeguard<span class="w"> </span>scan<span class="w"> </span>auth.py<span class="w"> </span>--format<span class="w"> </span>json
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>codeguard<span class="w"> </span>scan<span class="w"> </span>src/<span class="w"> </span>--format<span class="w"> </span>sarif<span class="w"> </span>-o<span class="w"> </span>results.sarif
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>codeguard<span class="w"> </span>scan<span class="w"> </span>.<span class="w"> </span>--rule<span class="w"> </span>CG-SEC-001<span class="w"> </span>--rule<span class="w"> </span>CG-SEC-002
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>codeguard<span class="w"> </span>scan<span class="w"> </span>.<span class="w"> </span>--severity<span class="w"> </span>high
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>codeguard<span class="w"> </span>scan<span class="w"> </span>.<span class="w"> </span>--fail-on<span class="w"> </span>high<span class="w"> </span>--format<span class="w"> </span>sarif<span class="w"> </span>-o<span class="w"> </span>results.sarif
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>codeguard<span class="w"> </span>scan<span class="w"> </span>.<span class="w"> </span>--exclude<span class="w"> </span><span class="s2">"migrations/**"</span><span class="w"> </span>-j<span class="w"> </span><span class="m">0</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>git<span class="w"> </span>diff<span class="w"> </span>--name-only<span class="w"> </span>--diff-filter<span class="o">=</span>d<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>codeguard<span class="w"> </span>scan
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>codeguard<span class="w"> </span>explain<span class="w"> </span>CG-SEC-001
 </code></pre></div>
-<h2 id="exit-codes">Exit codes<a class="headerlink" href="#exit-codes" title="Permanent link">&para;</a></h2>
-<p><code>0</code> no findings · <code>1</code> findings · <code>2</code> error. Full contract in <a href="../exit-codes/">Exit codes</a>.</p>
-<div class="admonition note">
-<p class="admonition-title">Changing in v2.0</p>
-<p>v2.0 adds <code>codeguard ci</code>, <code>baseline</code>, <code>list-rules</code>, <code>explain</code>, <code>validate</code>, and <code>init</code>
-commands, a <a href="../configuration/">config file</a>, <code>--fail-on</code> / <code>--diff</code> / <code>--baseline</code> /
-<code>--jobs</code> / <code>--exclude</code> flags, stdin input, and <code>.gitignore</code>-aware discovery. <code>--severity</code>
-becomes a display filter and <code>--fail-on</code> controls the exit code.</p>
-</div>
+<p>See <a href="../exit-codes/">Exit codes</a> and <a href="../configuration/">Configuration</a>.</p>
 
 
 

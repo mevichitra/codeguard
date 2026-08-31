@@ -702,28 +702,30 @@
 <tbody>
 <tr>
 <td><code>0</code></td>
-<td>Completed; no findings (in v2.0: none at or above <code>--fail-on</code>, or <code>--exit-zero</code> was set).</td>
+<td>Completed; no findings at or above <code>--fail-on</code> (or <code>--exit-zero</code> was set).</td>
 </tr>
 <tr>
 <td><code>1</code></td>
-<td>Completed; one or more findings (in v2.0: at or above <code>--fail-on</code>).</td>
+<td>Completed; one or more findings at or above <code>--fail-on</code>.</td>
 </tr>
 <tr>
 <td><code>2</code></td>
-<td>Usage error — bad flag, unknown rule ID, unreadable path.</td>
+<td>Usage error — bad flag, unknown rule ID, missing path.</td>
 </tr>
 <tr>
 <td><code>3</code></td>
-<td>Config error — invalid <code>codeguard.toml</code> <em>(v2.0)</em>.</td>
+<td>Config error — invalid <code>codeguard.toml</code>.</td>
 </tr>
 <tr>
 <td><code>4</code></td>
-<td>Internal error — an unexpected exception <em>(v2.0)</em>.</td>
+<td>Internal error — an unexpected exception.</td>
 </tr>
 </tbody>
 </table>
-<p>Today codes <code>3</code> and <code>4</code> are folded into <code>2</code>. <code>0</code> and <code>1</code> are unchanged.</p>
-<p>Suppressed findings never affect the exit code.</p>
+<p><code>--fail-on</code> defaults to <code>info</code>, so by default any finding yields <code>1</code>. Use
+<code>--fail-on high</code> to gate only on high/critical, or <code>--exit-zero</code> for a
+report-only run.</p>
+<p>Suppressed and baselined findings never affect the exit code.</p>
 
 
 
