@@ -654,6 +654,146 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="rules/CG-SEC-001/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-001 SQL injection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="rules/CG-SEC-002/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-002 Hardcoded secrets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="rules/CG-SEC-003/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-003 eval / exec
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="rules/CG-SEC-004/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-004 Unsafe deserialization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="rules/CG-SEC-005/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-005 Shell injection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -830,12 +970,13 @@
 <p>Static analysis that finds security anti-patterns in source code — fast, offline, and
 built to sit at every gate of your workflow (editor, pre-commit, pre-push, PR/CI, merge,
 scheduled audit) from a single config file.</p>
-<div class="admonition warning">
-<p class="admonition-title">Status: alpha, heading to v2.0</p>
-<p>CodeGuard scans <strong>Python, JavaScript, and TypeScript</strong>. Still on the <strong>v2.0</strong>
-road: baseline/diff scanning, a CI-native command, and packaged distribution
-(pre-commit hook, GitHub Action, Docker image, standalone binaries). Public
-interfaces are not yet stable — see <a href="migration-v2/">Migrating to v2</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Version 2.0 (beta)</p>
+<p>CodeGuard scans <strong>Python, JavaScript, and TypeScript</strong>, with a config file,
+diff-aware CI, baselines, governed suppressions, and packaged distribution
+(pre-commit hook, GitHub Action, Docker image). Rule IDs, the <code>Finding</code> /
+JSON schema, config keys, and exit codes are a stable contract from 2.0 —
+see <a href="migration-v2/">Migrating to v2</a> if you used the 0.1 alpha.</p>
 </div>
 <h2 id="what-it-produces">What it produces<a class="headerlink" href="#what-it-produces" title="Permanent link">&para;</a></h2>
 <p>Each finding carries a stable rule ID, a severity, a CWE/OWASP mapping, a precise
