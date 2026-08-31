@@ -9,8 +9,35 @@ from pathlib import Path
 
 import pytest
 
+from codeguard.engine.finding import Category, Finding, Location, Severity
 from codeguard.engine.registry import RuleRegistry
+from codeguard.engine.rule import Rule
 from codeguard.engine.runner import AnalysisRunner, _parse_file_disables, _parse_suppressions
+
+
+def _build_per_file_runner(exclude: list[str] | None = None) -> AnalysisRunner:
+    class PerFileRule(Rule):
+        id = "CG-TEST-100"
+        title = "Per-file marker"
+        description = "Emits one finding for each scanned file."
+        severity = Severity.LOW
+        category = Category.SECURITY
+
+        def check(self, tree, source, filename):  # type: ignore[override]
+            return [
+                Finding(
+                    rule_id=self.id,
+                    title=self.title,
+                    description=self.description,
+                    severity=self.severity,
+                    category=self.category,
+                    location=Location(file=filename, line=1, col=0),
+                )
+            ]
+
+    registry = RuleRegistry()
+    registry.register(PerFileRule())
+    return AnalysisRunner(registry=registry, exclude=exclude)
 
 
 class TestParseSuppressions:
@@ -156,6 +183,34 @@ class TestAnalysisRunner:
         runner = AnalysisRunner()
         findings = runner.run_path(tmp_path)
         assert isinstance(findings, list)
+
+    def test_run_path_excludes_single_file_pattern(self, tmp_path: Path) -> None:
+        a_file = tmp_path / "a.py"
+        b_file = tmp_path / "b.py"
+        a_file.write_text("x = 1\n", encoding="utf-8")
+        b_file.write_text("x = 2\n", encoding="utf-8")
+
+        runner = _build_per_file_runner(exclude=["b.py"])
+        findings = runner.run_path(tmp_path)
+        scanned_files = sorted({Path(f.location.file).name for f in findings})
+
+        assert scanned_files == ["a.py"]
+
+    def test_run_path_excludes_directory_name_pattern(self, tmp_path: Path) -> None:
+        kept_file = tmp_path / "app.py"
+        ignored_dir = tmp_path / "ignored"
+        ignored_file = ignored_dir / "skip.py"
+        ignored_dir.mkdir()
+        kept_file.write_text("x = 1\n", encoding="utf-8")
+        ignored_file.write_text("x = 2\n", encoding="utf-8")
+
+        runner = _build_per_file_runner(exclude=["ignored"])
+        findings = runner.run_path(tmp_path)
+        scanned_files = sorted(
+            Path(f.location.file).relative_to(tmp_path).as_posix() for f in findings
+        )
+
+        assert scanned_files == ["app.py"]
 
     def test_findings_sorted_by_line(self) -> None:
         """Runner must return findings sorted by (file, line, rule_id)."""
