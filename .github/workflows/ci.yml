@@ -154,10 +154,17 @@ jobs:
       - uses: actions/checkout@v4
       - name: No references to the old GitHub org
         run: |
-          if grep -rn "codeguard-ai/codeguard" --include='*.py' --include='*.toml' \
-               --include='*.md' --include='*.yml' --include='*.yaml' . \
-               | grep -v '^\./archive/'; then
-            echo "::error::Found codeguard-ai/codeguard outside archive/. Use mevichitra/codeguard."
+          # Needle assembled from parts so this file doesn't match itself.
+          needle="codeguard-ai""/codeguard"
+          # archive/ is unmaintained; CHANGELOG and the migration guide mention the
+          # old org only to document the rename that removed it.
+          hits=$(grep -rn "$needle" \
+                   --include='*.py' --include='*.toml' --include='*.md' \
+                   --include='*.yml' --include='*.yaml' . \
+                 | grep -vE '(^|/)(archive/|CHANGELOG\.md:|migration-v2\.md:)' || true)
+          if [ -n "$hits" ]; then
+            echo "$hits"
+            echo "::error::Found a reference to the old GitHub org; use mevichitra/codeguard."
             exit 1
           fi
       - uses: actions/setup-python@v5
