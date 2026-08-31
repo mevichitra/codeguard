@@ -811,8 +811,24 @@ a fix suggestion. IDs are permanent — never renumbered or reused.</p>
 <td>CWE-338</td>
 <td>JS, TS</td>
 </tr>
+<tr>
+<td>CG-META-001</td>
+<td>Suppression comment has no <code>reason:</code></td>
+<td>LOW</td>
+<td>—</td>
+<td>all</td>
+</tr>
+<tr>
+<td>CG-META-002</td>
+<td>Suppression <code>until=</code> date has passed</td>
+<td>MEDIUM</td>
+<td>—</td>
+<td>all</td>
+</tr>
 </tbody>
 </table>
+<p><code>CG-META-*</code> are raised by the suppression engine, not by code analysis — see
+<a href="../suppressions/">Suppressions</a>.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>codeguard<span class="w"> </span>list-rules
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>codeguard<span class="w"> </span>list-rules<span class="w"> </span>--language<span class="w"> </span>javascript
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>codeguard<span class="w"> </span>explain<span class="w"> </span>CG-SEC-101

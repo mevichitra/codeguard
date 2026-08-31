@@ -380,6 +380,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#docker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Docker
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#verify" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -391,10 +402,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#other-channels-v20" class="md-nav__link">
+  <a href="#other-channels" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Other channels (v2.0)
+        Other channels
       
     </span>
   </a>
@@ -826,6 +837,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#docker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Docker
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#verify" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -837,10 +859,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#other-channels-v20" class="md-nav__link">
+  <a href="#other-channels" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Other channels (v2.0)
+        Other channels
       
     </span>
   </a>
@@ -890,13 +912,22 @@
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">".[dev]"</span>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>pre-commit<span class="w"> </span>install
 </code></pre></div>
-<h2 id="verify">Verify<a class="headerlink" href="#verify" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>codeguard<span class="w"> </span>--version
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>codeguard<span class="w"> </span>scan<span class="w"> </span>.
+<h2 id="docker">Docker<a class="headerlink" href="#docker" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">:/src:ro"</span><span class="w"> </span>ghcr.io/mevichitra/codeguard:2<span class="w"> </span>scan<span class="w"> </span>.
 </code></pre></div>
-<h2 id="other-channels-v20">Other channels (v2.0)<a class="headerlink" href="#other-channels-v20" title="Permanent link">&para;</a></h2>
-<p>Docker image, standalone binaries, a Homebrew tap, a GitHub Action, and a
-<code>.pre-commit-hooks.yaml</code> land with v2.0. See <a href="../ci/">CI integration</a>.</p>
+<p>Tags: <code>:2</code>, <code>:2.0</code>, <code>:2.0.0</code>, <code>:latest</code>. The image runs as a non-root user with
+the working directory mounted at <code>/src</code>.</p>
+<h2 id="verify">Verify<a class="headerlink" href="#verify" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>codeguard<span class="w"> </span>--version
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>codeguard<span class="w"> </span>scan<span class="w"> </span>.
+</code></pre></div>
+<h2 id="other-channels">Other channels<a class="headerlink" href="#other-channels" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>GitHub Action</strong>: <code>uses: mevichitra/codeguard/action@v2</code> — see <a href="../ci/">CI integration</a>.</li>
+<li><strong>pre-commit</strong>: the repo ships a <code>.pre-commit-hooks.yaml</code> (ids <code>codeguard</code>,
+  <code>codeguard-full</code>, <code>codeguard-ci</code>).</li>
+<li>Standalone single-file binaries and a Homebrew tap are planned for a follow-up release.</li>
+</ul>
 
 
 

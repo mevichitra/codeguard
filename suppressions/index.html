@@ -504,6 +504,39 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#reasons-are-required" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reasons are required
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#expiry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Expiry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audit-them" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audit them
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#visibility" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -793,6 +826,39 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#reasons-are-required" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reasons are required
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#expiry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Expiry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audit-them" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audit them
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#visibility" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -829,28 +895,42 @@
 
 
 <h1 id="suppressions">Suppressions<a class="headerlink" href="#suppressions" title="Permanent link">&para;</a></h1>
+<p>Waive a finding with a comment. The leader is <code>#</code> for Python, <code>//</code> for
+JavaScript / TypeScript.</p>
 <h2 id="inline-one-line">Inline (one line)<a class="headerlink" href="#inline-one-line" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"SELECT * FROM users WHERE id = </span><span class="si">{</span><span class="n">uid</span><span class="si">}</span><span class="s2">"</span>  <span class="c1"># codeguard: ignore[CG-SEC-001]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"SELECT * FROM users WHERE id = </span><span class="si">{</span><span class="n">uid</span><span class="si">}</span><span class="s2">"</span>  <span class="c1"># codeguard: ignore[CG-SEC-001] reason: uid is an int</span>
 </code></pre></div>
-<p>Multiple rules on one line:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">risky</span><span class="p">()</span>  <span class="c1"># codeguard: ignore[CG-SEC-001, CG-SEC-003]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">build</span><span class="p">(</span><span class="nx">input</span><span class="p">);</span><span class="w"> </span><span class="c1">// codeguard: ignore[CG-SEC-103] reason: input is sanitized above</span>
 </code></pre></div>
+<p>Multiple rules: <code># codeguard: ignore[CG-SEC-001, CG-SEC-003] reason: …</code>.</p>
 <h2 id="file-level">File-level<a class="headerlink" href="#file-level" title="Permanent link">&para;</a></h2>
 <p>Anywhere in the file:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># codeguard: disable[CG-SEC-002]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># codeguard: ignore-file[CG-SEC-002] reason: this module generates test fixtures</span>
 </code></pre></div>
+<p>(<code># codeguard: disable[…]</code> is a deprecated spelling of <code>ignore-file</code>.)</p>
+<h2 id="reasons-are-required">Reasons are required<a class="headerlink" href="#reasons-are-required" title="Permanent link">&para;</a></h2>
+<p>Every suppression should carry <code>reason: &lt;short explanation&gt;</code>. One without a
+reason still suppresses, but CodeGuard also raises <strong><code>CG-META-001</code></strong> (severity
+<code>low</code>) at the comment — so unexplained waivers show up in review.</p>
+<h2 id="expiry">Expiry<a class="headerlink" href="#expiry" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">risky</span><span class="p">()</span>  <span class="c1"># codeguard: ignore[CG-SEC-005] reason: pending refactor  until=2026-12-31</span>
+</code></pre></div>
+<p>After the date the suppression stops working — the finding is active again — and
+CodeGuard raises <strong><code>CG-META-002</code></strong> (severity <code>medium</code>). The expiry is evaluated
+against today's date; pass <code>--now YYYY-MM-DD</code> to <code>scan</code> / <code>ci</code> /
+<code>suppressions list</code> to pin it for reproducible CI.</p>
+<h2 id="audit-them">Audit them<a class="headerlink" href="#audit-them" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>codeguard<span class="w"> </span>suppressions<span class="w"> </span>list<span class="w">              </span><span class="c1"># every suppression, with status</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>codeguard<span class="w"> </span>suppressions<span class="w"> </span>list<span class="w"> </span>--expired<span class="w">    </span><span class="c1"># only expired ones (exit 1 if any)</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>codeguard<span class="w"> </span>suppressions<span class="w"> </span>list<span class="w"> </span>--unused<span class="w">     </span><span class="c1"># ones that no longer suppress anything</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>codeguard<span class="w"> </span>suppressions<span class="w"> </span>list<span class="w"> </span>--format<span class="w"> </span>json
+</code></pre></div>
+<p>Status is <code>active</code> (currently suppressing a finding), <code>expired</code>, or <code>unused</code>
+(the named rule doesn't fire there any more — safe to delete).</p>
 <h2 id="visibility">Visibility<a class="headerlink" href="#visibility" title="Permanent link">&para;</a></h2>
-<p>Suppressed findings are not lost. They appear with <code>--show-suppressed</code>, as
-<code>"suppressed": true</code> in JSON, and as <code>suppressions[]</code> entries in SARIF, so suppression
-usage can be audited.</p>
-<div class="admonition note">
-<p class="admonition-title">Changing in v2.0</p>
-<p>Suppressions gain a <strong>mandatory <code>reason:</code></strong> (a bare suppression still works but raises
-<code>CG-META-001</code>), an optional <code>until=YYYY-MM-DD</code> expiry (<code>CG-META-002</code> once expired),
-per-language comment syntax (<code>//</code> for JS/TS), and a <code>codeguard suppressions list
---expired</code> command. <code>disable[…]</code> is renamed to <code>ignore-file[…]</code> (old spelling kept as
-a deprecated alias).</p>
-</div>
+<p>Suppressed findings are hidden by default. <code>--show-suppressed</code> reveals them
+(tagged <code>(suppressed)</code>); JSON keeps <code>"suppressed": true</code>, and SARIF emits a
+<code>suppressions[]</code> entry with the reason as the justification.</p>
 
 
 

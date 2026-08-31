@@ -788,6 +788,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#suppressions-require-a-reason-disable-renamed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Suppressions require a reason; disable renamed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#test-fixtures-moved-contributors" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -987,6 +998,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#suppressions-require-a-reason-disable-renamed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Suppressions require a reason; disable renamed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#test-fixtures-moved-contributors" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1078,28 +1100,17 @@ configure.</p>
 attribute is required. Python rules subclass <code>AstRule</code> and keep
 <code>check_ast(tree, source, filename)</code>; JavaScript / TypeScript rules subclass
 <code>TreeSitterRule</code> and implement <code>check_tree(root, ctx)</code> over a <code>SourceNode</code>.</p>
+<h3 id="suppressions-require-a-reason-disable-renamed">Suppressions require a reason; <code>disable</code> renamed<a class="headerlink" href="#suppressions-require-a-reason-disable-renamed" title="Permanent link">&para;</a></h3>
+<p>Add <code>reason: …</code> to every <code># codeguard: ignore[…]</code> — bare ones still suppress but
+raise the new low-severity <code>CG-META-001</code>. <code># codeguard: disable[…]</code> is now a
+deprecated spelling of <code># codeguard: ignore-file[…]</code> (still works). An
+<code>until=YYYY-MM-DD</code> that has passed reactivates the finding and raises
+<code>CG-META-002</code>. Audit with <code>codeguard suppressions list</code>.</p>
 <h3 id="test-fixtures-moved-contributors">Test fixtures moved (contributors)<a class="headerlink" href="#test-fixtures-moved-contributors" title="Permanent link">&para;</a></h3>
 <p><code>tests/fixtures/&lt;category&gt;/&lt;rule_id&gt;/</code> → <code>tests/fixtures/&lt;language&gt;/&lt;category&gt;/&lt;rule_id&gt;/</code>,
 and <code>conftest.load_fixture</code> gained a leading <code>language</code> argument.</p>
 <h2 id="planned-not-yet-on-main">Planned (not yet on <code>main</code>)<a class="headerlink" href="#planned-not-yet-on-main" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Change</th>
-<th>What to do</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Inline suppressions require <code>reason:</code></td>
-<td>Add <code>reason: …</code> to each <code># codeguard: ignore[…]</code>. Bare ones still suppress but raise <code>CG-META-001</code>.</td>
-</tr>
-<tr>
-<td><code>disable[…]</code> → <code>ignore-file[…]</code></td>
-<td>Rename at leisure; the old spelling stays as a deprecated alias.</td>
-</tr>
-</tbody>
-</table>
+<p>Nothing outstanding — v2.0 is feature-complete pending release packaging.</p>
 
 
 
