@@ -1,0 +1,54 @@
+site_name: CodeGuard
+site_description: Fast, offline multi-language static analysis for security anti-patterns
+site_url: https://mevichitra.github.io/codeguard/
+repo_url: https://github.com/mevichitra/codeguard
+repo_name: mevichitra/codeguard
+edit_uri: edit/main/docs/
+copyright: Apache-2.0
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - content.action.edit
+
+nav:
+  - Home: index.md
+  - Install: install.md
+  - Usage: usage.md
+  - Configuration: configuration.md
+  - CI integration: ci.md
+  - Suppressions: suppressions.md
+  - Exit codes: exit-codes.md
+  - Output formats: output-formats.md
+  - Rules:
+      - Overview: rules/index.md
+  - Architecture: architecture.md
+  - Migrating to v2: migration-v2.md
+  - Contributing: contributing.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - toc:
+      permalink: true
+  - tables
+
+plugins:
+  - search

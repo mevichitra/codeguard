@@ -1,0 +1,1 @@
+Added a documentation site (`docs/`, MkDocs + Material) covering install, usage, exit codes, suppressions, output formats, CI, architecture, and a v2 migration guide; published to GitHub Pages on release.

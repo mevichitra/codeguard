@@ -1,3 +1,6 @@
+# Legacy prototypes under archive/ are unmaintained and excluded from all hooks.
+exclude: ^archive/
+
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.4.4

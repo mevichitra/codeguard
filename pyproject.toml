@@ -1,25 +1,26 @@
 [build-system]
-requires = ["setuptools>=70", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
 
 [project]
-name = "codeguard"
-version = "0.1.0"
-description = "Static analysis for Python code, focused on security patterns in AI-generated code"
+name = "codeguard-cli"
+dynamic = ["version"]
+description = "Fast, offline multi-language static analysis for security anti-patterns (Python, JS, TS)"
 readme = "README.md"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 authors = [{ name = "CodeGuard Contributors" }]
 requires-python = ">=3.10"
-keywords = ["static-analysis", "security", "linting", "ast", "sast"]
+keywords = ["static-analysis", "security", "linting", "ast", "sast", "sarif"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Security",
     "Topic :: Software Development :: Quality Assurance",
     "Typing :: Typed",
@@ -36,22 +37,32 @@ dev = [
     "mypy>=1.7",
     "ruff>=0.4",
     "pre-commit>=3.6",
+    "build>=1.2",
+    "towncrier>=24.8",
+    "pip-audit>=2.7",
+]
+docs = [
+    "mkdocs-material>=9.5",
+    "mkdocs-gen-files>=0.5",
 ]
 
 [project.scripts]
 codeguard = "codeguard.cli.main:cli"
 
 [project.urls]
-Homepage = "https://github.com/codeguard-ai/codeguard"
-"Bug Tracker" = "https://github.com/codeguard-ai/codeguard/issues"
-"Security" = "https://github.com/codeguard-ai/codeguard/security"
-Documentation = "https://github.com/codeguard-ai/codeguard/tree/main/docs"
+Homepage = "https://github.com/mevichitra/codeguard"
+"Bug Tracker" = "https://github.com/mevichitra/codeguard/issues"
+"Security" = "https://github.com/mevichitra/codeguard/security"
+Documentation = "https://github.com/mevichitra/codeguard/tree/main/docs"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.hatch.version]
+path = "src/codeguard/__init__.py"
 
-[tool.setuptools.package-data]
-codeguard = ["py.typed"]
+[tool.hatch.build.targets.wheel]
+packages = ["src/codeguard"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/", "tests/", "benchmarks/", "docs/", "README.md", "LICENSE", "CHANGELOG.md"]
 
 # ---------------------------------------------------------------------------
 # Ruff — linting + formatting
@@ -106,6 +117,46 @@ filterwarnings = [
     "error",
     "ignore::SyntaxWarning",   # fixtures may have intentional syntax issues
 ]
+
+# ---------------------------------------------------------------------------
+# Towncrier — changelog assembled from news fragments in changelog.d/
+# ---------------------------------------------------------------------------
+[tool.towncrier]
+name = "CodeGuard"
+package = "codeguard"
+package_dir = "src"
+directory = "changelog.d"
+filename = "CHANGELOG.md"
+start_string = "<!-- towncrier release notes start -->\n"
+underlines = ["", "", ""]
+ignore = ["README.md"]
+title_format = "## [{version}] - {project_date}"
+issue_format = "[#{issue}](https://github.com/mevichitra/codeguard/issues/{issue})"
+
+[[tool.towncrier.type]]
+directory = "breaking"
+name = "Breaking changes"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "feature"
+name = "Added"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "bugfix"
+name = "Fixed"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "doc"
+name = "Documentation"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "internal"
+name = "Internal"
+showcontent = true
 
 # ---------------------------------------------------------------------------
 # Coverage
