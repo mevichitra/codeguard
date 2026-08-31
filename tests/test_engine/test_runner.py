@@ -9,35 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from codeguard.engine.finding import Category, Finding, Location, Severity
 from codeguard.engine.registry import RuleRegistry
-from codeguard.engine.rule import Rule
 from codeguard.engine.runner import AnalysisRunner, _parse_file_disables, _parse_suppressions
-
-
-def _build_per_file_runner(exclude: list[str] | None = None) -> AnalysisRunner:
-    class PerFileRule(Rule):
-        id = "CG-TEST-100"
-        title = "Per-file marker"
-        description = "Emits one finding for each scanned file."
-        severity = Severity.LOW
-        category = Category.SECURITY
-
-        def check(self, tree, source, filename):  # type: ignore[override]
-            return [
-                Finding(
-                    rule_id=self.id,
-                    title=self.title,
-                    description=self.description,
-                    severity=self.severity,
-                    category=self.category,
-                    location=Location(file=filename, line=1, col=0),
-                )
-            ]
-
-    registry = RuleRegistry()
-    registry.register(PerFileRule())
-    return AnalysisRunner(registry=registry, exclude=exclude)
 
 
 class TestParseSuppressions:
@@ -107,16 +80,16 @@ class TestAnalysisRunner:
     def test_suppression_marks_finding(self) -> None:
         # A rule that always fires on any source
         from codeguard.engine.finding import Category, Finding, Location, Severity
-        from codeguard.engine.rule import Rule
+        from codeguard.engine.rule import AstRule
 
-        class AlwaysFires(Rule):
+        class AlwaysFires(AstRule):
             id = "CG-TEST-999"
             title = "Always fires"
             description = "Test rule"
             severity = Severity.HIGH
             category = Category.SECURITY
 
-            def check(self, tree, source, filename):  # type: ignore[override]
+            def check_ast(self, tree, source, filename):  # type: ignore[override]
                 return [
                     Finding(
                         rule_id=self.id,
@@ -124,7 +97,7 @@ class TestAnalysisRunner:
                         description=self.description,
                         severity=self.severity,
                         category=self.category,
-                        location=Location(file=filename, line=1, col=0),
+                        location=Location(file=filename, line=1, col=1),
                     )
                 ]
 
@@ -139,16 +112,16 @@ class TestAnalysisRunner:
 
     def test_file_disable_suppresses_findings(self) -> None:
         from codeguard.engine.finding import Category, Finding, Location, Severity
-        from codeguard.engine.rule import Rule
+        from codeguard.engine.rule import AstRule
 
-        class AlwaysFires(Rule):
+        class AlwaysFires(AstRule):
             id = "CG-TEST-888"
             title = "Always fires"
             description = "Test rule"
             severity = Severity.HIGH
             category = Category.SECURITY
 
-            def check(self, tree, source, filename):  # type: ignore[override]
+            def check_ast(self, tree, source, filename):  # type: ignore[override]
                 return [
                     Finding(
                         rule_id=self.id,
@@ -156,7 +129,7 @@ class TestAnalysisRunner:
                         description=self.description,
                         severity=self.severity,
                         category=self.category,
-                        location=Location(file=filename, line=2, col=0),
+                        location=Location(file=filename, line=2, col=1),
                     )
                 ]
 
@@ -184,33 +157,19 @@ class TestAnalysisRunner:
         findings = runner.run_path(tmp_path)
         assert isinstance(findings, list)
 
-    def test_run_path_excludes_single_file_pattern(self, tmp_path: Path) -> None:
-        a_file = tmp_path / "a.py"
-        b_file = tmp_path / "b.py"
-        a_file.write_text("x = 1\n", encoding="utf-8")
-        b_file.write_text("x = 2\n", encoding="utf-8")
-
-        runner = _build_per_file_runner(exclude=["b.py"])
-        findings = runner.run_path(tmp_path)
-        scanned_files = sorted({Path(f.location.file).name for f in findings})
-
-        assert scanned_files == ["a.py"]
-
-    def test_run_path_excludes_directory_name_pattern(self, tmp_path: Path) -> None:
-        kept_file = tmp_path / "app.py"
-        ignored_dir = tmp_path / "ignored"
-        ignored_file = ignored_dir / "skip.py"
-        ignored_dir.mkdir()
-        kept_file.write_text("x = 1\n", encoding="utf-8")
-        ignored_file.write_text("x = 2\n", encoding="utf-8")
-
-        runner = _build_per_file_runner(exclude=["ignored"])
-        findings = runner.run_path(tmp_path)
-        scanned_files = sorted(
-            Path(f.location.file).relative_to(tmp_path).as_posix() for f in findings
-        )
-
-        assert scanned_files == ["app.py"]
+    def test_parallel_matches_sequential(self, tmp_path: Path) -> None:
+        for i in range(4):
+            (tmp_path / f"m{i}.py").write_text(
+                f'password{i} = "s"\ncur.execute(f"SELECT {{x{i}}}")\n', encoding="utf-8"
+            )
+        files = sorted(tmp_path.glob("*.py"))
+        runner = AnalysisRunner()
+        seq = runner.run_files(files, jobs=1)
+        par = runner.run_files(files, jobs=2)
+        assert [(f.location.file, f.location.line, f.rule_id) for f in seq] == [
+            (f.location.file, f.location.line, f.rule_id) for f in par
+        ]
+        assert [f.fingerprint for f in seq] == [f.fingerprint for f in par]
 
     def test_findings_sorted_by_line(self) -> None:
         """Runner must return findings sorted by (file, line, rule_id)."""

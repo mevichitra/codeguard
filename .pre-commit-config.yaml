@@ -1,5 +1,6 @@
-# Legacy prototypes under archive/ are unmaintained and excluded from all hooks.
-exclude: ^archive/
+# archive/ holds unmaintained prototypes; tests/fixtures/ and benchmarks/corpus/
+# hold intentionally vulnerable sample code. All are excluded from every hook.
+exclude: ^(archive/|tests/fixtures/|benchmarks/corpus/)
 
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
@@ -17,6 +18,8 @@ repos:
         additional_dependencies:
           - click
           - rich
+          - pathspec
+          - platformdirs
         files: ^src/
 
   - repo: https://github.com/pre-commit/pre-commit-hooks

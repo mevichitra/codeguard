@@ -9,26 +9,51 @@ change lands on `main`; see `changelog.d/` for the in-flight set.
 ### Package renamed: `codeguard` → `codeguard-cli`
 
 The bare `codeguard` name on PyPI belongs to an unrelated project. Install
-`codeguard-cli` instead:
+`codeguard-cli` instead (`pipx install codeguard-cli`). The **command**
+(`codeguard`) and the **import package** (`import codeguard`) are unchanged. If
+you pinned `codeguard` in a requirements file, switch it to `codeguard-cli`.
 
-```bash
-pipx install codeguard-cli      # was: pipx install codeguard
-```
+### `Location.col` is 1-indexed
 
-The **command** (`codeguard`) and the **import package** (`import codeguard`) are
-unchanged. If you pinned `codeguard` in a requirements file, switch it to
-`codeguard-cli`.
+Was 0-indexed. Adjust tooling that reads `col` from JSON output; SARIF column
+values are unchanged in effect (the formatter no longer adds its own `+1`).
+
+### `--format json` is an envelope object
+
+`{ schema_version, tool, rules, results, summary }`. Parse `.results` instead of
+the top-level array, or pass `--format json-legacy` (deprecated, one more minor
+version) for the old bare array.
+
+### `--fail-on` replaces `--severity` for gating
+
+`--fail-on {severity|never}` controls the exit code (default `info`, so any
+finding still fails by default). `--severity` is a deprecated alias.
+
+### Exit codes 3 and 4
+
+Config errors now exit `3`, unexpected internal errors exit `4`. `0`/`1`/`2` are
+unchanged — only broaden handling if you special-cased `2`.
+
+### `scan` respects `.gitignore` and skips vendor directories
+
+Directory scans skip `.gitignore`d paths, `.venv` / `node_modules` /
+`__pycache__` / `dist` / `build` / …, and generated files (`*.min.js`,
+`*.d.ts`). Pass `--no-gitignore` to restore the old breadth; an explicitly named
+file is always scanned.
+
+### SARIF `partialFingerprints`
+
+GitHub code scanning re-keys existing alerts once on upgrade, then stays stable.
+
+### Rule authoring API (custom rules only)
+
+`Rule.check(tree, source, filename)` → `Rule.analyze(ctx)`; a `languages`
+attribute is required. Built-in Python rules subclass `AstRule` and keep
+`check_ast(tree, source, filename)` unchanged.
 
 ## Planned (not yet on `main`)
 
 | Change | What to do |
 |---|---|
-| Rule API `check(tree, …)` → `analyze(ctx)`; `languages` attribute required | Only affects custom rules. Built-in rules are cushioned by an `AstRule` base. |
-| `Location.col` becomes 1-indexed (was 0-indexed) | Adjust any tooling that reads `col` from JSON output. SARIF column values are unaffected. |
-| `--format json` becomes an envelope object | Parse `.results` instead of the top-level array, or use `--format json-legacy` for one more minor version. |
-| `scan --severity` splits into `--fail-on` (exit code) + display filter | Use `--fail-on` in CI gates. `--severity` keeps working as a deprecated alias. |
-| Exit codes `3` (config) and `4` (internal) added | `0` and `1` are unchanged; only broaden handling if you special-cased `2`. |
 | Inline suppressions require `reason:` | Add `reason: …` to each `# codeguard: ignore[…]`. Bare ones still suppress but raise `CG-META-001`. |
 | `disable[…]` → `ignore-file[…]` | Rename at leisure; the old spelling stays as a deprecated alias. |
-| `scan` respects `.gitignore` + a built-in skip list by default | Pass `--no-gitignore` to restore the previous breadth. |
-| SARIF `partialFingerprints` added | GitHub code scanning re-keys existing alerts once on upgrade, then stays stable. |

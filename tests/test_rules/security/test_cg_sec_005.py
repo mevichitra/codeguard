@@ -31,6 +31,27 @@ class TestCGSEC005Vulnerable:
         src = "import subprocess\nsubprocess.check_output(cmd, shell=True)\n"
         assert len(active_findings(src)) >= 1
 
+    def test_os_system_concat(self) -> None:
+        # os.system always uses a shell -- no shell= keyword to check (issue #3)
+        src = 'import os\nos.system("git checkout " + branch)\n'
+        assert len(active_findings(src)) >= 1
+
+    def test_os_popen_fstring(self) -> None:
+        src = 'import os\nos.popen(f"cat {path}")\n'
+        assert len(active_findings(src)) >= 1
+
+    def test_subprocess_getoutput_variable(self) -> None:
+        src = "import subprocess\nsubprocess.getoutput(cmd)\n"
+        assert len(active_findings(src)) >= 1
+
+    def test_from_import_alias(self) -> None:
+        src = 'from os import system as sh\nsh("rm -rf " + target)\n'
+        assert len(active_findings(src)) >= 1
+
+    def test_module_alias(self) -> None:
+        src = 'import subprocess as sp\nsp.run(f"echo {x}", shell=True)\n'
+        assert len(active_findings(src)) >= 1
+
     def test_vulnerable_fixture(self) -> None:
         src = load_fixture("security", "cg_sec_005", "vulnerable")
         findings = active_findings(src)
@@ -55,6 +76,16 @@ class TestCGSEC005Safe:
     def test_variable_shell_false(self) -> None:
         # shell=False with a variable is not a shell injection
         src = "import subprocess\nsubprocess.run(cmd, shell=False)\n"
+        assert active_findings(src) == []
+
+    def test_os_system_literal(self) -> None:
+        # Literal command -- no injection vector (issue #3)
+        src = 'import os\nos.system("ls -la")\n'
+        assert active_findings(src) == []
+
+    def test_unrelated_bare_run(self) -> None:
+        # A local function named run(), not imported from subprocess
+        src = 'def run(x): ...\nrun(cmd + " here")\n'
         assert active_findings(src) == []
 
     def test_safe_fixture(self) -> None:

@@ -28,7 +28,7 @@ import ast
 
 from codeguard.engine.finding import Category, Finding, Severity
 from codeguard.engine.registry import REGISTRY
-from codeguard.engine.rule import Rule
+from codeguard.engine.rule import AstRule
 
 _DANGEROUS_BUILTINS = frozenset({"eval", "exec", "compile"})
 
@@ -38,7 +38,7 @@ _FIX = (
 )
 
 
-class EvalExecRule(Rule):
+class EvalExecRule(AstRule):
     """Detect eval/exec/compile called with a non-literal argument."""
 
     id = "CG-SEC-003"
@@ -53,7 +53,7 @@ class EvalExecRule(Rule):
     cwe = "CWE-95"
     owasp = "A03:2021 - Injection"
 
-    def check(self, tree: ast.AST, source: str, filename: str) -> list[Finding]:
+    def check_ast(self, tree: ast.AST, source: str, filename: str) -> list[Finding]:
         """Find eval/exec/compile calls with dynamic first arguments."""
         findings: list[Finding] = []
 

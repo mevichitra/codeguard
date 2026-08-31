@@ -1,15 +1,21 @@
 # SPDX-License-Identifier: Apache-2.0
-"""CG-SEC-005 — subprocess called with shell=True and a non-literal command.
+"""CG-SEC-005 — a non-literal command run through a shell.
 
-Detects calls to subprocess.run / Popen / call / check_output / check_call
-(and os.system) with ``shell=True`` where the command argument is not a
-string literal.
+Two cases, both CWE-78 / OWASP A03:2021:
+
+- ``subprocess.run`` / ``call`` / ``Popen`` / ``check_output`` / ``check_call``
+  with ``shell=True`` and a non-literal command.
+- ``os.system`` / ``os.popen`` / ``subprocess.getoutput`` /
+  ``subprocess.getstatusoutput`` with a non-literal command — these always use
+  a shell, there is no ``shell=`` keyword to check.
+
+Import aliases are resolved, so ``from os import system`` and
+``import subprocess as sp`` are covered.
 
 Why this matters
 ----------------
-When ``shell=True`` is passed to subprocess, the command string is interpreted
-by the OS shell.  If any part of that string is attacker-controlled, the
-attacker can inject arbitrary shell commands (CWE-78, OWASP A03:2021).
+When a command string is interpreted by the OS shell and any part of it is
+attacker-controlled, the attacker can inject arbitrary shell commands.
 
 AI models routinely generate ``subprocess.run(f"git {user_arg}", shell=True)``
 because it looks clean and concise.  It is not.
@@ -34,21 +40,38 @@ import ast
 
 from codeguard.engine.finding import Category, Finding, Severity
 from codeguard.engine.registry import REGISTRY
-from codeguard.engine.rule import Rule
+from codeguard.engine.rule import AstRule
+from codeguard.rules._pyimports import ImportMap
 
-_SUBPROCESS_FUNCS = frozenset(
-    {"run", "call", "Popen", "check_output", "check_call", "getoutput", "getstatusoutput"}
+# subprocess entry points where a shell is only used when shell=True is passed.
+_SHELL_OPTIONAL: frozenset[tuple[str, str]] = frozenset(
+    {
+        ("subprocess", "run"),
+        ("subprocess", "call"),
+        ("subprocess", "Popen"),
+        ("subprocess", "check_output"),
+        ("subprocess", "check_call"),
+    }
 )
-_SUBPROCESS_MODULES = frozenset({"subprocess"})
+
+# Calls that ALWAYS run their argument through a shell -- no shell= keyword.
+_ALWAYS_SHELL: frozenset[tuple[str, str]] = frozenset(
+    {
+        ("os", "system"),
+        ("os", "popen"),
+        ("subprocess", "getoutput"),
+        ("subprocess", "getstatusoutput"),
+    }
+)
 
 _FIX = (
     "Pass the command as a list with shell=False: "
     "subprocess.run(['git', 'status'], shell=False). "
-    "If shell=True is required, validate and sanitize every interpolated value with shlex.quote()."
+    "If a shell is required, validate and sanitize every interpolated value with shlex.quote()."
 )
 
 
-class ShellInjectionRule(Rule):
+class ShellInjectionRule(AstRule):
     """Detect subprocess calls with shell=True and a non-literal command."""
 
     id = "CG-SEC-005"
@@ -63,24 +86,36 @@ class ShellInjectionRule(Rule):
     cwe = "CWE-78"
     owasp = "A03:2021 - Injection"
 
-    def check(self, tree: ast.AST, source: str, filename: str) -> list[Finding]:
-        """Find subprocess calls with shell=True and dynamic commands."""
+    def check_ast(self, tree: ast.AST, source: str, filename: str) -> list[Finding]:
+        """Find shell command injection via subprocess / os.system."""
         findings: list[Finding] = []
+        imports = ImportMap.from_tree(tree)
 
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):
                 continue
-            if not self._is_subprocess_call(node):
+
+            target = imports.resolve_call(node.func)
+            always_shell = target in _ALWAYS_SHELL
+            shell_optional = target in _SHELL_OPTIONAL
+
+            if not always_shell and not shell_optional:
                 continue
-            if not self._has_shell_true(node):
+            if shell_optional and not self._has_shell_true(node):
                 continue
             if self._command_is_literal(node):
                 continue
 
+            module, method = target
             findings.append(
                 self._make_finding(
                     node=node,
                     filename=filename,
+                    description=(
+                        f"{module}.{method}() runs a non-literal command through a shell. "
+                        "If any part of the command is attacker-controlled, this enables "
+                        "shell command injection."
+                    ),
                     fix_suggestion=_FIX,
                 )
             )
@@ -90,23 +125,6 @@ class ShellInjectionRule(Rule):
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
-
-    @staticmethod
-    def _is_subprocess_call(node: ast.Call) -> bool:
-        """Return True for subprocess.{run,Popen,...} or os.system."""
-        func = node.func
-        if isinstance(func, ast.Attribute):
-            if isinstance(func.value, ast.Name):
-                module = func.value.id
-                method = func.attr
-                if module in _SUBPROCESS_MODULES and method in _SUBPROCESS_FUNCS:
-                    return True
-                if module == "os" and method == "system":
-                    return True
-        # Direct name: Popen(...) after from subprocess import Popen
-        if isinstance(func, ast.Name) and func.id in _SUBPROCESS_FUNCS:
-            return True
-        return False
 
     @staticmethod
     def _has_shell_true(node: ast.Call) -> bool:

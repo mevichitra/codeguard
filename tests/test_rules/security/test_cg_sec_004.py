@@ -36,6 +36,23 @@ class TestCGSEC004Vulnerable:
         src = "import yaml\nresult = yaml.load(data, Loader=yaml.FullLoader)\n"
         assert len(active_findings(src)) >= 1
 
+    def test_from_import_loads(self) -> None:
+        # Direct function import bypassed detection before (issue #4)
+        src = "from pickle import loads\nresult = loads(data)\n"
+        assert len(active_findings(src)) >= 1
+
+    def test_from_import_marshal_load(self) -> None:
+        src = "from marshal import load\nresult = load(fp)\n"
+        assert len(active_findings(src)) >= 1
+
+    def test_module_alias(self) -> None:
+        src = "import pickle as p\nresult = p.loads(data)\n"
+        assert len(active_findings(src)) >= 1
+
+    def test_from_import_yaml_load(self) -> None:
+        src = "from yaml import load\nresult = load(data)\n"
+        assert len(active_findings(src)) >= 1
+
     def test_vulnerable_fixture(self) -> None:
         src = load_fixture("security", "cg_sec_004", "vulnerable")
         findings = active_findings(src)
@@ -59,6 +76,10 @@ class TestCGSEC004Safe:
 
     def test_json_loads(self) -> None:
         src = "import json\nresult = json.loads(data)\n"
+        assert active_findings(src) == []
+
+    def test_from_import_json_loads(self) -> None:
+        src = "from json import loads\nresult = loads(data)\n"
         assert active_findings(src) == []
 
     def test_safe_fixture(self) -> None:

@@ -1,0 +1,1 @@
+`Location.col` (and `end_col`) is now 1-indexed to match editors and SARIF. JSON `location.col` values shift by one; SARIF column values are unchanged in effect (the formatter no longer adds its own offset).

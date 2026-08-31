@@ -27,7 +27,7 @@ import re
 
 from codeguard.engine.finding import Category, Finding, Severity
 from codeguard.engine.registry import REGISTRY
-from codeguard.engine.rule import Rule
+from codeguard.engine.rule import AstRule
 
 # Variable names that suggest secret storage.
 # Deliberately conservative — only clear semantic markers.
@@ -52,7 +52,7 @@ _FIX = (
 _MIN_SECRET_LEN = 1
 
 
-class HardcodedSecretsRule(Rule):
+class HardcodedSecretsRule(AstRule):
     """Detect string literals assigned to secret-named variables."""
 
     id = "CG-SEC-002"
@@ -67,7 +67,7 @@ class HardcodedSecretsRule(Rule):
     cwe = "CWE-798"
     owasp = "A07:2021 - Identification and Authentication Failures"
 
-    def check(self, tree: ast.AST, source: str, filename: str) -> list[Finding]:
+    def check_ast(self, tree: ast.AST, source: str, filename: str) -> list[Finding]:
         """Scan assignments for secret-named variables with string literals."""
         findings: list[Finding] = []
 

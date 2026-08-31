@@ -1,0 +1,1 @@
+Directory scans now honour the repository `.gitignore`, skip vendor/tooling directories (`.venv`, `node_modules`, `__pycache__`, `dist`, ...) and generated files (`*.min.js`, `*.d.ts`) by default, and never follow directory symlinks. `AnalysisRunner.run_files(..., jobs=N)` fans a scan across a process pool with output identical to a sequential run.

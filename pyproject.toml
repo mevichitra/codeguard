@@ -28,6 +28,9 @@ classifiers = [
 dependencies = [
     "click>=8.1",
     "rich>=13.0",
+    "pathspec>=0.12",
+    "platformdirs>=4.0",
+    "tomli>=2.0; python_version < '3.11'",
 ]
 
 [project.optional-dependencies]
@@ -90,8 +93,9 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S", "N"]         # security and naming rules relaxed in tests
-"tests/fixtures/*" = ["ALL"]   # fixtures are intentionally vulnerable code
+"tests/*" = ["S", "N"]              # security and naming rules relaxed in tests
+"tests/fixtures/*" = ["ALL"]        # fixtures are intentionally vulnerable code
+"benchmarks/corpus/*" = ["ALL"]     # corpus samples are intentionally vulnerable code
 
 [tool.ruff.lint.isort]
 known-first-party = ["codeguard"]

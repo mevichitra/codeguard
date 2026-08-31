@@ -61,6 +61,11 @@ class TestCGSEC001Safe:
         src = 'cursor.execute("SELECT * FROM users WHERE active = 1")\n'
         assert active_findings(src) == []
 
+    def test_multipart_literal_concat(self) -> None:
+        # Left-associative concat of string literals is static, not dynamic (issue #5)
+        src = 'cursor.execute("SELECT " + " * " + " FROM users")\n'
+        assert active_findings(src) == []
+
     def test_safe_fixture(self) -> None:
         src = load_fixture("security", "cg_sec_001", "safe")
         findings = active_findings(src)

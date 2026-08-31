@@ -99,12 +99,12 @@ import ast
 
 from codeguard.engine.finding import Category, Finding, Severity
 from codeguard.engine.registry import REGISTRY
-from codeguard.engine.rule import Rule
+from codeguard.engine.rule import AstRule
 
 
-class MyRule(Rule):
+class MyRule(AstRule):
     id = "CG-SEC-NNN"
-    title = "Short title (≤80 chars)"
+    title = "Short title (<= 80 chars)"
     description = (
         "What this rule detects and why it is a problem. "
         "Be specific enough that a developer who's never heard of this can understand."
@@ -112,9 +112,9 @@ class MyRule(Rule):
     severity = Severity.HIGH
     category = Category.SECURITY
     cwe = "CWE-NNN"
-    owasp = "ANNN:YYYY – Category Name"
+    owasp = "ANNN:YYYY - Category Name"
 
-    def check(self, tree: ast.AST, source: str, filename: str) -> list[Finding]:
+    def check_ast(self, tree: ast.AST, source: str, filename: str) -> list[Finding]:
         """Scan the AST and return findings."""
         findings: list[Finding] = []
         for node in ast.walk(tree):
@@ -135,6 +135,16 @@ class MyRule(Rule):
 
 REGISTRY.register(MyRule())
 ```
+
+**Python rules subclass `AstRule`** and implement `check_ast(tree, source, filename)`.
+`AstRule` sets `languages = {Language.PYTHON}` and adapts your method to the
+language-aware engine. A rule for another language subclasses `Rule` directly,
+sets `languages` itself, and implements `analyze(ctx)` using `ctx.root`
+(a `SourceNode`) — see `src/codeguard/lang/`.
+
+If your rule matches `module.function(...)` calls, resolve import aliases with
+`codeguard.rules._pyimports.ImportMap` so `from x import y` and `import x as z`
+are covered (see CG-SEC-004/005).
 
 #### 3. Write fixtures
 
@@ -171,6 +181,14 @@ def test_safe_does_not_trigger():
     findings = _findings_for("safe.py")
     assert findings == []
 ```
+
+The existing per-rule test files (`tests/test_rules/security/test_cg_sec_00*.py`)
+are the template: a `Vulnerable` class, a `Safe` class, and — if the rule is
+suppressible in an interesting way — a `Suppression` class, plus
+`test_vulnerable_fixture` / `test_safe_fixture` using `load_fixture`.
+
+For rules where precision matters, add true/false-positive samples under
+`benchmarks/corpus/<RULE-ID>/{tp,tn}/` and check `python benchmarks/run_benchmark.py`.
 
 #### 5. Write the docs page
 

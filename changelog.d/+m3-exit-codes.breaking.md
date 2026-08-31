@@ -1,0 +1,1 @@
+Exit codes `3` (config error) and `4` (internal error) are now distinct from `2` (usage error); `0` and `1` are unchanged. The `scan --severity` flag is a deprecated alias of the new `--fail-on` (which controls the exit code); `--fail-on` defaults to `info`.

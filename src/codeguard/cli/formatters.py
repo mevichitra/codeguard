@@ -4,9 +4,20 @@
 from __future__ import annotations
 
 import json
+from collections import Counter
 from typing import Any
 
 from codeguard.engine.finding import Finding
+from codeguard.engine.fingerprint import SCHEME as _FP_SCHEME
+
+_SEVERITY_ORDER = ("critical", "high", "medium", "low", "info")
+
+_HELP_URI_BASE = "https://mevichitra.github.io/codeguard/rules/"
+
+
+def finding_help_uri(rule_id: str) -> str:
+    return f"{_HELP_URI_BASE}{rule_id.lower()}/"
+
 
 # ---------------------------------------------------------------------------
 # Human-readable (default)
@@ -48,7 +59,7 @@ def format_human(findings: list[Finding], *, show_suppressed: bool = False) -> s
         sev = f.severity.value.upper()
         console.print(f"[dim]{loc}[/dim]  [{color}][{f.rule_id}] {sev}[/{color}]  {f.title}")
 
-        # Show the offending source line with a column marker
+        # Show the offending source line with a column marker.
         try:
             if f.location.file not in _file_cache:
                 with open(f.location.file, encoding="utf-8", errors="replace") as fh:
@@ -57,10 +68,9 @@ def format_human(findings: list[Finding], *, show_suppressed: bool = False) -> s
             line_idx = f.location.line - 1
             if 0 <= line_idx < len(lines):
                 source = lines[line_idx].rstrip()
-                line_no = f.location.line
-                gutter = f"{line_no:>4}"
+                gutter = f"{f.location.line:>4}"
                 console.print(f"  {gutter} | {source}", style="dim", markup=False)
-                pointer = " " * (len(gutter) + 3 + f.location.col) + "^"
+                pointer = " " * (len(gutter) + 3 + (f.location.col - 1)) + "^"
                 console.print(f"  {pointer}", style="dim", markup=False)
         except OSError:
             pass
@@ -76,16 +86,13 @@ def format_human(findings: list[Finding], *, show_suppressed: bool = False) -> s
 
 
 def _print_summary(console: Any, findings: list[Finding]) -> None:
-    from collections import Counter
-
     counts = Counter(f.severity.value for f in findings)
     total = len(findings)
     parts = []
-    for sev in ("critical", "high", "medium", "low", "info"):
+    for sev in _SEVERITY_ORDER:
         n = counts.get(sev, 0)
         if n:
-            color = _SEVERITY_COLOR[sev]
-            parts.append(f"[{color}]{n} {sev}[/{color}]")
+            parts.append(f"[{_SEVERITY_COLOR[sev]}]{n} {sev}[/{_SEVERITY_COLOR[sev]}]")
     summary = ", ".join(parts) if parts else "0"
     console.print(f"\n[bold]{total} finding(s)[/bold]  ({summary})")
 
@@ -94,15 +101,61 @@ def _print_summary(console: Any, findings: list[Finding]) -> None:
 # JSON
 # ---------------------------------------------------------------------------
 
+#: Bump when the envelope shape changes in a backward-incompatible way.
+JSON_SCHEMA_VERSION = "1"
 
-def format_json(findings: list[Finding], *, show_suppressed: bool = False) -> str:
-    """Return findings serialised as a JSON array.
 
-    Suppressed findings are included with ``"suppressed": true`` when
-    *show_suppressed* is True; otherwise they are omitted.
+def format_json(
+    findings: list[Finding],
+    *,
+    show_suppressed: bool = False,
+    tool_version: str = "0.0.0",
+) -> str:
+    """Return findings as a JSON envelope object.
+
+    Shape: ``{ schema_version, tool, rules, results, summary }``.  ``results`` is
+    a list of finding dicts (see :meth:`Finding.to_dict`).  For the pre-2.0 bare
+    array, use :func:`format_json_legacy`.
     """
-    to_emit = findings if show_suppressed else [f for f in findings if not f.suppressed]
-    return json.dumps([f.to_dict() for f in to_emit], indent=2)
+    emitted = findings if show_suppressed else [f for f in findings if not f.suppressed]
+
+    rules: dict[str, dict[str, Any]] = {}
+    for f in emitted:
+        rules.setdefault(
+            f.rule_id,
+            {
+                "id": f.rule_id,
+                "title": f.title,
+                "severity": f.severity.value,
+                "category": f.category.value,
+                "cwe": f.cwe,
+                "owasp": f.owasp,
+                "help_uri": finding_help_uri(f.rule_id),
+            },
+        )
+
+    counts = Counter(f.severity.value for f in emitted)
+    envelope = {
+        "schema_version": JSON_SCHEMA_VERSION,
+        "tool": {"name": "CodeGuard", "version": tool_version},
+        "rules": [rules[k] for k in sorted(rules)],
+        "results": [f.to_dict() for f in emitted],
+        "summary": {
+            "findings": len(emitted),
+            "by_severity": {s: counts[s] for s in _SEVERITY_ORDER if counts.get(s)},
+            "suppressed": sum(1 for f in findings if f.suppressed),
+        },
+    }
+    return json.dumps(envelope, indent=2)
+
+
+def format_json_legacy(findings: list[Finding], *, show_suppressed: bool = False) -> str:
+    """Return findings as a bare JSON array (the pre-2.0 ``--format json`` output).
+
+    Deprecated: retained for one minor version.  Prefer :func:`format_json`.
+    """
+    emitted = findings if show_suppressed else [f for f in findings if not f.suppressed]
+    return json.dumps([f.to_dict() for f in emitted], indent=2)
 
 
 # ---------------------------------------------------------------------------
@@ -117,32 +170,51 @@ _SARIF_SEVERITY = {
     "info": "none",
 }
 
+_SECURITY_SEVERITY = {
+    "critical": "9.5",
+    "high": "8.0",
+    "medium": "5.0",
+    "low": "3.0",
+    "info": "0.0",
+}
 
-def format_sarif(findings: list[Finding], *, tool_version: str = "0.1.0") -> str:
+
+def _cwe_number(cwe: str) -> str | None:
+    if cwe and cwe.upper().startswith("CWE-"):
+        return cwe[4:]
+    return None
+
+
+def format_sarif(findings: list[Finding], *, tool_version: str = "0.0.0") -> str:
     """Return findings as a SARIF 2.1.0 JSON string.
 
     SARIF is the standard format for static analysis results understood by
-    GitHub code scanning and other tools.  See:
-    https://docs.oasis-open.org/sarif/sarif/v2.1.0/
+    GitHub code scanning.  https://docs.oasis-open.org/sarif/sarif/v2.1.0/
 
-    Suppressed findings are included as ``"suppressions"`` entries per the spec.
+    Suppressed findings are included as ``suppressions`` entries per the spec.
+    Every result carries ``partialFingerprints`` so alerts stay stable across
+    reformatting and line moves.
     """
-    # Build the set of rules referenced by these findings
     rule_map: dict[str, Finding] = {}
     for f in findings:
-        if f.rule_id not in rule_map:
-            rule_map[f.rule_id] = f
+        rule_map.setdefault(f.rule_id, f)
 
     rules = []
     for rule_id, f in sorted(rule_map.items()):
+        tags = [f.category.value]
+        cwe_n = _cwe_number(f.cwe or "")
+        if cwe_n:
+            tags.append(f"external/cwe/cwe-{cwe_n}")
         rule: dict[str, Any] = {
             "id": rule_id,
             "name": f.title,
             "shortDescription": {"text": f.title},
             "fullDescription": {"text": f.description},
+            "helpUri": finding_help_uri(rule_id),
             "defaultConfiguration": {"level": _SARIF_SEVERITY.get(f.severity.value, "warning")},
             "properties": {
-                "tags": [f.category.value],
+                "tags": tags,
+                "security-severity": _SECURITY_SEVERITY.get(f.severity.value, "0.0"),
             },
         }
         if f.cwe:
@@ -155,6 +227,15 @@ def format_sarif(findings: list[Finding], *, tool_version: str = "0.1.0") -> str
 
     results = []
     for f in findings:
+        region: dict[str, Any] = {
+            "startLine": f.location.line,
+            "startColumn": f.location.col,
+        }
+        if f.location.end_line is not None:
+            region["endLine"] = f.location.end_line
+        if f.location.end_col is not None:
+            region["endColumn"] = f.location.end_col
+
         result: dict[str, Any] = {
             "ruleId": f.rule_id,
             "level": _SARIF_SEVERITY.get(f.severity.value, "warning"),
@@ -163,15 +244,7 @@ def format_sarif(findings: list[Finding], *, tool_version: str = "0.1.0") -> str
                 {
                     "physicalLocation": {
                         "artifactLocation": {"uri": f.location.file, "uriBaseId": "%SRCROOT%"},
-                        "region": {
-                            "startLine": f.location.line,
-                            "startColumn": f.location.col + 1,  # SARIF is 1-indexed
-                            **(
-                                {"endLine": f.location.end_line}
-                                if f.location.end_line is not None
-                                else {}
-                            ),
-                        },
+                        "region": region,
                     }
                 }
             ],
@@ -180,6 +253,8 @@ def format_sarif(findings: list[Finding], *, tool_version: str = "0.1.0") -> str
                 "severity": f.severity.value,
             },
         }
+        if f.fingerprint:
+            result["partialFingerprints"] = {_FP_SCHEME: f.fingerprint}
         if f.suppressed:
             result["suppressions"] = [{"kind": "inSource", "justification": "inline ignore"}]
         results.append(result)
@@ -201,5 +276,4 @@ def format_sarif(findings: list[Finding], *, tool_version: str = "0.1.0") -> str
             }
         ],
     }
-
     return json.dumps(sarif, indent=2)

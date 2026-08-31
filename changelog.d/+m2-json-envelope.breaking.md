@@ -1,0 +1,1 @@
+`--format json` now emits an envelope object — `{ schema_version, tool, rules, results, summary }` — with a per-finding `fingerprint`. The previous bare-array output is available as `--format json-legacy` for one minor version and prints a deprecation warning.

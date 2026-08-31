@@ -20,7 +20,7 @@ Current rules (see [docs/rules/](docs/rules/) for detail):
 |---|---|---|---|
 | CG-SEC-001 | SQL built with f-strings / `%` / `.format()` | HIGH | CWE-89 |
 | CG-SEC-002 | Hardcoded passwords, API keys, tokens | HIGH | CWE-798 |
-| CG-SEC-003 | `eval()` / `exec()` on non-literal input | HIGH | CWE-78 |
+| CG-SEC-003 | `eval()` / `exec()` on non-literal input | HIGH | CWE-95 |
 | CG-SEC-004 | `pickle.loads` / `yaml.load` without SafeLoader | HIGH | CWE-502 |
 | CG-SEC-005 | `subprocess(..., shell=True)` with non-literal args | HIGH | CWE-78 |
 

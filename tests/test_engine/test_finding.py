@@ -32,20 +32,21 @@ class TestSeverityOrdering:
 
 class TestLocation:
     def test_valid(self) -> None:
-        loc = Location(file="foo.py", line=1, col=0)
+        loc = Location(file="foo.py", line=1, col=1)
         assert loc.file == "foo.py"
         assert loc.line == 1
 
     def test_line_must_be_positive(self) -> None:
         with pytest.raises(ValueError, match="line must be"):
-            Location(file="x.py", line=0, col=0)
+            Location(file="x.py", line=0, col=1)
 
-    def test_col_must_be_non_negative(self) -> None:
+    def test_col_must_be_positive(self) -> None:
+        # Columns are 1-indexed; 0 is invalid.
         with pytest.raises(ValueError, match="col must be"):
-            Location(file="x.py", line=1, col=-1)
+            Location(file="x.py", line=1, col=0)
 
     def test_optional_end_position(self) -> None:
-        loc = Location(file="x.py", line=1, col=0, end_line=3, end_col=10)
+        loc = Location(file="x.py", line=1, col=1, end_line=3, end_col=10)
         assert loc.end_line == 3
         assert loc.end_col == 10
 
@@ -58,7 +59,7 @@ class TestFinding:
             description="Test finding",
             severity=Severity.HIGH,
             category=Category.SECURITY,
-            location=Location(file="test.py", line=1, col=0),
+            location=Location(file="test.py", line=1, col=1),
         )
         defaults.update(kwargs)
         return Finding(**defaults)  # type: ignore[arg-type]
@@ -94,3 +95,10 @@ class TestFinding:
         assert d["location"]["file"] == "test.py"
         assert d["cwe"] == "CWE-89"
         assert d["suppressed"] is False
+        assert d["fingerprint"] == ""  # unset until the runner assigns it
+
+    def test_with_fingerprint(self) -> None:
+        f = self._make()
+        fp = f.with_fingerprint("abc123")
+        assert fp.fingerprint == "abc123"
+        assert f.fingerprint == ""  # original unchanged (frozen)
