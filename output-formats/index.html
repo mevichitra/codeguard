@@ -395,6 +395,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../baseline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Baseline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../suppressions/" class="md-nav__link">
         
   
@@ -541,6 +568,39 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#github" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        github
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rdjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        rdjson
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#junit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        junit
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -569,10 +629,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
         
           
-          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
             
   
   
@@ -590,8 +650,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_9">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -776,6 +836,39 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#github" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        github
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rdjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        rdjson
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#junit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        junit
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -802,33 +895,42 @@
 
 
 <h1 id="output-formats">Output formats<a class="headerlink" href="#output-formats" title="Permanent link">&para;</a></h1>
-<p>Select with <code>--format</code>.</p>
+<p>Select with <code>--format</code> (on <code>scan</code> and <code>ci</code>). Suppressed and baselined findings
+are omitted from every format unless <code>--show-suppressed</code> is given.</p>
 <h2 id="human-default"><code>human</code> (default)<a class="headerlink" href="#human-default" title="Permanent link">&para;</a></h2>
-<p>Coloured terminal output: one header line per finding (<code>file:line:col [RULE] SEVERITY
-title</code>), the offending source line with a caret, the fix suggestion, and a severity
-summary.</p>
+<p>Coloured terminal output: one header line per finding (<code>file:line:col [RULE]
+SEVERITY  title</code>), the offending source line with a caret, the fix suggestion,
+and a severity summary.</p>
 <h2 id="json"><code>json</code><a class="headerlink" href="#json" title="Permanent link">&para;</a></h2>
-<p>A JSON array of finding objects. Each object has <code>rule_id</code>, <code>title</code>, <code>description</code>,
-<code>severity</code>, <code>category</code>, <code>location</code> (<code>file</code>, <code>line</code>, <code>col</code>, <code>end_line</code>, <code>end_col</code>),
-<code>cwe</code>, <code>owasp</code>, <code>fix_suggestion</code>, <code>confidence</code>, and <code>suppressed</code>.</p>
-<div class="admonition note">
-<p class="admonition-title">Changing in v2.0</p>
-<p><code>--format json</code> becomes an envelope object — <code>{ version, tool, rules, results,
-summary }</code> — with a per-finding <code>fingerprint</code>. The current bare-array output stays
-available as <code>--format json-legacy</code> for one minor version.</p>
-</div>
-<h2 id="sarif"><code>sarif</code><a class="headerlink" href="#sarif" title="Permanent link">&para;</a></h2>
-<p><a href="https://docs.oasis-open.org/sarif/sarif/v2.1.0/">SARIF 2.1.0</a> — the format GitHub code
-scanning and most analysis tooling understand. Includes a <code>rules[]</code> catalogue with
-CWE/OWASP metadata and, for suppressed findings, <code>suppressions[]</code> entries.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>codeguard<span class="w"> </span>scan<span class="w"> </span>src/<span class="w"> </span>--format<span class="w"> </span>sarif<span class="w"> </span>-o<span class="w"> </span>codeguard.sarif
+<p>An envelope object:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">"schema_version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">"tool"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CodeGuard"</span><span class="p">,</span><span class="w"> </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"…"</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">"rules"</span><span class="p">:</span><span class="w">   </span><span class="p">[</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CG-SEC-001"</span><span class="p">,</span><span class="w"> </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"…"</span><span class="p">,</span><span class="w"> </span><span class="nt">"severity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"high"</span><span class="p">,</span><span class="w"> </span><span class="nt">"cwe"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CWE-89"</span><span class="p">,</span><span class="w"> </span><span class="err">…</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">],</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">"results"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"rule_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"…"</span><span class="p">,</span><span class="w"> </span><span class="nt">"location"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="err">…</span><span class="p">},</span><span class="w"> </span><span class="nt">"fingerprint"</span><span class="p">:</span><span class="w"> </span><span class="s2">"…"</span><span class="p">,</span><span class="w"> </span><span class="nt">"baselined"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="err">…</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">],</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nt">"summary"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"findings"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="nt">"by_severity"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"high"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="nt">"suppressed"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">}</span>
 </code></pre></div>
-<div class="admonition note">
-<p class="admonition-title">Changing in v2.0</p>
-<p>SARIF output gains <code>partialFingerprints</code> (stable across reformatting and line moves),
-<code>security-severity</code>, <code>helpUri</code>, and CWE taxonomy entries. v2.0 also adds <code>github</code>
-(Actions annotations), <code>rdjson</code> (reviewdog), and <code>junit</code> formats.</p>
-</div>
+<p><code>--format json-legacy</code> emits the pre-2.0 bare array (deprecated, one minor version).</p>
+<h2 id="sarif"><code>sarif</code><a class="headerlink" href="#sarif" title="Permanent link">&para;</a></h2>
+<p><a href="https://docs.oasis-open.org/sarif/sarif/v2.1.0/">SARIF 2.1.0</a> for GitHub code
+scanning and other tooling. Includes a <code>rules[]</code> catalogue with <code>helpUri</code>,
+<code>security-severity</code>, and CWE taxonomy tags; every result carries
+<code>partialFingerprints</code> (stable across reformatting and line moves) and, when
+suppressed or baselined, a <code>suppressions[]</code> entry.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>codeguard<span class="w"> </span>scan<span class="w"> </span>src/<span class="w"> </span>--format<span class="w"> </span>sarif<span class="w"> </span>-o<span class="w"> </span>codeguard.sarif
+</code></pre></div>
+<h2 id="github"><code>github</code><a class="headerlink" href="#github" title="Permanent link">&para;</a></h2>
+<p>GitHub Actions workflow-command annotations (<code>::error file=…,line=…::message</code>),
+one per finding — shows on the PR diff without a SARIF upload. This is the
+default for <code>codeguard ci</code>.</p>
+<h2 id="rdjson"><code>rdjson</code><a class="headerlink" href="#rdjson" title="Permanent link">&para;</a></h2>
+<p><a href="https://github.com/reviewdog/reviewdog">Reviewdog Diagnostic JSON</a> — pipe into
+<code>reviewdog -f=rdjson -reporter=github-pr-review</code> for inline PR comments on
+changed lines only.</p>
+<h2 id="junit"><code>junit</code><a class="headerlink" href="#junit" title="Permanent link">&para;</a></h2>
+<p>JUnit XML — one <code>&lt;testcase&gt;</code> per finding (<code>&lt;failure&gt;</code> for active, <code>&lt;skipped&gt;</code> for
+baselined). Feeds CI test-report dashboards.</p>
 
 
 

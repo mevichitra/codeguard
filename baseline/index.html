@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://mevichitra.github.io/codeguard/rules/">
+        <link rel="canonical" href="https://mevichitra.github.io/codeguard/baseline/">
       
       
-        <link rel="prev" href="../output-formats/">
+        <link rel="prev" href="../ci/">
       
       
-        <link rel="next" href="../architecture/">
+        <link rel="next" href="../suppressions/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Overview - CodeGuard</title>
+        <title>Baseline - CodeGuard</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#rules" class="md-skip">
+        <a href="#baseline" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Overview
+              Baseline
             
           </span>
         </div>
@@ -392,10 +392,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../baseline/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Baseline
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -411,6 +438,59 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#create-one" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create one
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#use-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use it
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#maintain-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Maintain it
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -500,8 +580,6 @@
       
   
   
-    
-  
   
   
     
@@ -514,11 +592,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
         
           
           <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
@@ -539,7 +617,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_10">
             <span class="md-nav__icon md-icon"></span>
             
@@ -554,19 +632,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../rules/" class="md-nav__link">
         
   
   
@@ -582,7 +651,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -696,6 +764,47 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#create-one" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create one
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#use-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use it
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#maintain-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Maintain it
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -711,7 +820,7 @@
 
 
   
-    <a href="https://github.com/mevichitra/codeguard/edit/main/docs/rules/index.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/mevichitra/codeguard/edit/main/docs/baseline.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -719,109 +828,32 @@
   
 
 
-<h1 id="rules">Rules<a class="headerlink" href="#rules" title="Permanent link">&para;</a></h1>
-<p>Every rule has a stable ID (<code>CG-&lt;CATEGORY&gt;-&lt;NNN&gt;</code>), a severity, a CWE/OWASP mapping, and
-a fix suggestion. IDs are permanent — never renumbered or reused.</p>
-<p>The <code>1xx</code> block covers JavaScript / TypeScript; <code>0xx</code> covers Python.</p>
-<table>
-<thead>
-<tr>
-<th>ID</th>
-<th>Title</th>
-<th>Severity</th>
-<th>CWE</th>
-<th>Languages</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>CG-SEC-001</td>
-<td>SQL query built with string formatting</td>
-<td>HIGH</td>
-<td>CWE-89</td>
-<td>Python</td>
-</tr>
-<tr>
-<td>CG-SEC-002</td>
-<td>Hardcoded secret</td>
-<td>HIGH</td>
-<td>CWE-798</td>
-<td>Python</td>
-</tr>
-<tr>
-<td>CG-SEC-003</td>
-<td><code>eval()</code> / <code>exec()</code> on dynamic input</td>
-<td>HIGH</td>
-<td>CWE-95</td>
-<td>Python</td>
-</tr>
-<tr>
-<td>CG-SEC-004</td>
-<td>Unsafe deserialization</td>
-<td>HIGH</td>
-<td>CWE-502</td>
-<td>Python</td>
-</tr>
-<tr>
-<td>CG-SEC-005</td>
-<td><code>subprocess</code> with <code>shell=True</code> and a dynamic command</td>
-<td>HIGH</td>
-<td>CWE-78</td>
-<td>Python</td>
-</tr>
-<tr>
-<td>CG-SEC-101</td>
-<td>Dynamic code execution (<code>eval</code> / <code>Function</code> / string timer)</td>
-<td>HIGH</td>
-<td>CWE-95</td>
-<td>JS, TS</td>
-</tr>
-<tr>
-<td>CG-SEC-102</td>
-<td><code>child_process.exec</code> with a dynamic command</td>
-<td>HIGH</td>
-<td>CWE-78</td>
-<td>JS, TS</td>
-</tr>
-<tr>
-<td>CG-SEC-103</td>
-<td>DOM XSS sink assigned a non-literal (<code>innerHTML</code>, <code>document.write</code>, …)</td>
-<td>HIGH</td>
-<td>CWE-79</td>
-<td>JS, TS</td>
-</tr>
-<tr>
-<td>CG-SEC-104</td>
-<td><code>dangerouslySetInnerHTML</code> with a non-literal value</td>
-<td>HIGH</td>
-<td>CWE-79</td>
-<td>JS, TS</td>
-</tr>
-<tr>
-<td>CG-SEC-105</td>
-<td>Hardcoded secret</td>
-<td>HIGH</td>
-<td>CWE-798</td>
-<td>JS, TS</td>
-</tr>
-<tr>
-<td>CG-SEC-106</td>
-<td><code>Math.random()</code> used for a security value</td>
-<td>MEDIUM</td>
-<td>CWE-338</td>
-<td>JS, TS</td>
-</tr>
-</tbody>
-</table>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>codeguard<span class="w"> </span>list-rules
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>codeguard<span class="w"> </span>list-rules<span class="w"> </span>--language<span class="w"> </span>javascript
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>codeguard<span class="w"> </span>explain<span class="w"> </span>CG-SEC-101
+<h1 id="baseline">Baseline<a class="headerlink" href="#baseline" title="Permanent link">&para;</a></h1>
+<p>A <strong>baseline</strong> freezes the findings that exist in your codebase today so CI only
+fails on <em>new</em> problems. It is a small JSON file of finding fingerprints —
+fingerprints are stable across reformatting and line moves, so a baselined
+finding stays matched as the code around it changes.</p>
+<h2 id="create-one">Create one<a class="headerlink" href="#create-one" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>codeguard<span class="w"> </span>baseline<span class="w"> </span>create<span class="w">              </span><span class="c1"># writes .codeguard-baseline.json</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>codeguard<span class="w"> </span>baseline<span class="w"> </span>create<span class="w"> </span>src/<span class="w"> </span>-o<span class="w"> </span>ci/codeguard-baseline.json
 </code></pre></div>
-<div class="admonition note">
-<p class="admonition-title">v2.0</p>
-<p>This table will be <strong>generated</strong> from rule metadata (the same source
-<code>codeguard explain</code> reads), with a page per rule.</p>
-</div>
+<h2 id="use-it">Use it<a class="headerlink" href="#use-it" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>codeguard<span class="w"> </span>scan<span class="w"> </span>.<span class="w"> </span>--baseline<span class="w"> </span>.codeguard-baseline.json
+</code></pre></div>
+<p>Or point at it from <code>codeguard.toml</code> so every run picks it up:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">[codeguard]</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">baseline</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">".codeguard-baseline.json"</span>
+</code></pre></div>
+<p>Baselined findings are <strong>hidden</strong> from the default output and never affect the
+exit code. <code>--show-suppressed</code> reveals them (tagged <code>(baselined)</code>); JSON keeps a
+<code>"baselined": true</code> field and SARIF emits a <code>suppressions</code> entry so GitHub code
+scanning dismisses them.</p>
+<h2 id="maintain-it">Maintain it<a class="headerlink" href="#maintain-it" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>codeguard<span class="w"> </span>baseline<span class="w"> </span>update<span class="w">   </span><span class="c1"># add findings that have appeared since (keeps first_seen)</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>codeguard<span class="w"> </span>baseline<span class="w"> </span>prune<span class="w">    </span><span class="c1"># drop entries whose finding no longer occurs</span>
+</code></pre></div>
+<p>A good workflow: <code>create</code> once, <code>prune</code> on a schedule, and let PRs drive the
+count down — never <code>update</code> to sweep new findings under the rug.</p>
 
 
 

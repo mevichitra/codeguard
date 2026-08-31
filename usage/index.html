@@ -385,10 +385,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#scan-options" class="md-nav__link">
+  <a href="#scan-ci-options" class="md-nav__link">
     <span class="md-ellipsis">
       
-        scan options
+        scan / ci options
       
     </span>
   </a>
@@ -456,6 +456,33 @@
     
   
     CI integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../baseline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Baseline
   
 
     
@@ -569,10 +596,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
         
           
-          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
             
   
   
@@ -590,8 +617,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_9">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -755,10 +782,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#scan-options" class="md-nav__link">
+  <a href="#scan-ci-options" class="md-nav__link">
     <span class="md-ellipsis">
       
-        scan options
+        scan / ci options
       
     </span>
   </a>
@@ -821,6 +848,14 @@ from stdin with <code>-</code>.</p>
 <td>Scan paths and report findings.</td>
 </tr>
 <tr>
+<td><code>ci</code></td>
+<td>Diff-aware scan for pull requests — see <a href="../ci/">CI integration</a>.</td>
+</tr>
+<tr>
+<td><code>baseline create / update / prune</code></td>
+<td>Manage a <a href="../baseline/">baseline</a> file.</td>
+</tr>
+<tr>
 <td><code>list-rules</code></td>
 <td>List every registered rule (<code>--format json</code>, <code>--language</code>, <code>--category</code>, <code>--severity</code>).</td>
 </tr>
@@ -838,7 +873,7 @@ from stdin with <code>-</code>.</p>
 </tr>
 </tbody>
 </table>
-<h2 id="scan-options"><code>scan</code> options<a class="headerlink" href="#scan-options" title="Permanent link">&para;</a></h2>
+<h2 id="scan-ci-options"><code>scan</code> / <code>ci</code> options<a class="headerlink" href="#scan-ci-options" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -852,8 +887,8 @@ from stdin with <code>-</code>.</p>
 <td>Use a specific config file.</td>
 </tr>
 <tr>
-<td><code>--format {human,json,json-legacy,sarif}</code></td>
-<td>Output format. <code>json-legacy</code> is the deprecated bare array.</td>
+<td><code>--format {human,json,json-legacy,sarif,github,rdjson,junit}</code></td>
+<td>Output format. See <a href="../output-formats/">Output formats</a>.</td>
 </tr>
 <tr>
 <td><code>--rule RULE_ID</code></td>
@@ -862,6 +897,14 @@ from stdin with <code>-</code>.</p>
 <tr>
 <td><code>--exclude GLOB</code> / <code>--include GLOB</code></td>
 <td>Path filters. Repeatable.</td>
+</tr>
+<tr>
+<td><code>--diff REF</code></td>
+<td>Only scan files changed since <code>REF</code> (merge-base with <code>HEAD</code>).</td>
+</tr>
+<tr>
+<td><code>--baseline PATH</code></td>
+<td>Findings in the baseline don't fail the run.</td>
 </tr>
 <tr>
 <td><code>--fail-on {critical,high,medium,low,info,never}</code></td>
@@ -881,7 +924,7 @@ from stdin with <code>-</code>.</p>
 </tr>
 <tr>
 <td><code>--show-suppressed</code></td>
-<td>Include suppressed findings in the output.</td>
+<td>Include suppressed / baselined findings in the output.</td>
 </tr>
 <tr>
 <td><code>-q, --quiet</code></td>
@@ -890,10 +933,6 @@ from stdin with <code>-</code>.</p>
 <tr>
 <td><code>--no-color</code></td>
 <td>Disable colour (also honours <code>NO_COLOR</code>).</td>
-</tr>
-<tr>
-<td><code>--stdin-filename NAME</code></td>
-<td>Filename to assume for <code>-</code>.</td>
 </tr>
 <tr>
 <td><code>-o, --output PATH</code></td>
@@ -905,12 +944,15 @@ from stdin with <code>-</code>.</p>
 </tr>
 </tbody>
 </table>
+<p><code>ci</code> additionally takes <code>--sarif PATH</code> (write a SARIF report as well) and, when
+<code>--diff</code> is omitted, auto-detects the base branch.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>codeguard<span class="w"> </span>scan<span class="w"> </span>src/
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>codeguard<span class="w"> </span>scan<span class="w"> </span>.<span class="w"> </span>--fail-on<span class="w"> </span>high<span class="w"> </span>--format<span class="w"> </span>sarif<span class="w"> </span>-o<span class="w"> </span>results.sarif
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>codeguard<span class="w"> </span>scan<span class="w"> </span>.<span class="w"> </span>--exclude<span class="w"> </span><span class="s2">"migrations/**"</span><span class="w"> </span>-j<span class="w"> </span><span class="m">0</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>git<span class="w"> </span>diff<span class="w"> </span>--name-only<span class="w"> </span>--diff-filter<span class="o">=</span>d<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>codeguard<span class="w"> </span>scan
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>codeguard<span class="w"> </span>explain<span class="w"> </span>CG-SEC-001
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>codeguard<span class="w"> </span>scan<span class="w"> </span>.<span class="w"> </span>--diff<span class="w"> </span>origin/main<span class="w"> </span>--baseline<span class="w"> </span>.codeguard-baseline.json
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>codeguard<span class="w"> </span>ci<span class="w"> </span>--diff<span class="w"> </span>origin/main<span class="w"> </span>--sarif<span class="w"> </span>codeguard.sarif
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>codeguard<span class="w"> </span>explain<span class="w"> </span>CG-SEC-001
 </code></pre></div>
 <p>See <a href="../exit-codes/">Exit codes</a> and <a href="../configuration/">Configuration</a>.</p>
 
