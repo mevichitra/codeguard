@@ -1,12 +1,13 @@
 # CodeGuard
 
-Static analysis for Python code, with a focus on security patterns common in AI-generated code.
+Fast, offline static analysis that finds security anti-patterns in **Python, JavaScript, and TypeScript** — and drops into every gate of your workflow (editor, pre-commit, PR/CI, scheduled audit) from a single config file.
 
-**Status: early alpha.** The rule engine and CLI work; five security rules are implemented and tested. Do not use in production yet.
+**Status: 2.0 (beta).** Rule IDs, the `Finding`/JSON schema, config keys, and exit codes are a stable contract from 2.0. See [migration notes](docs/migration-v2.md) if you used the 0.1 alpha.
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://python.org)
 [![CI](https://github.com/mevichitra/codeguard/actions/workflows/ci.yml/badge.svg)](https://github.com/mevichitra/codeguard/actions)
+[![PyPI](https://img.shields.io/pypi/v/codeguard-cli.svg)](https://pypi.org/project/codeguard-cli/)
 
 ---
 
@@ -141,16 +142,18 @@ Adding a rule requires: one rule file + two test fixtures (vulnerable + safe). S
 
 ## Project status and roadmap
 
-CodeGuard is in **early alpha**. The public interfaces (rule IDs, `Finding` schema, CLI flags) are not yet stable across versions.
+**2.0 (beta).** Rule IDs, the `Finding` / JSON schema, config keys, and the exit-code
+contract are stable. Full details in [the changelog](CHANGELOG.md) and
+[docs/](https://mevichitra.github.io/codeguard/).
 
-Planned work, roughly in order:
+On the roadmap:
 
-1. More security rules (secrets scanning improvements, prompt-injection patterns in LLM-calling code, hardcoded IPs/URLs)
-2. `codeguard.toml` config support
-3. Suppression audit report
-4. FastAPI wrapper (thin layer over the library — no logic in the API)
-5. Experimental AI-generated-code heuristics (isolated module, clearly labelled)
-6. JavaScript/TypeScript support
+1. Light intraprocedural taint tracking (source → sink, sanitizer-aware) to cut false positives further
+2. A Semgrep-compatible YAML rule subset for custom rules
+3. Autofix (`--fix`) for the safe-fix rules
+4. Standalone single-file binaries and a Homebrew tap
+5. An LSP server for editor integration
+6. Optional, offline AI-assisted triage (confidence + rationale, no code leaves the machine)
 
 ---
 

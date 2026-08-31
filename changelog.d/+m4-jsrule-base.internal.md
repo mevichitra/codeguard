@@ -1,1 +1,0 @@
-Added `TreeSitterRule`, a base class for JS/TS rules that walk a `SourceNode` tree, and `codeguard.rules._jsnodes` with call / argument / literal helpers. `run_benchmark.py` now also picks up `.js` / `.jsx` / `.ts` / `.tsx` corpus samples.

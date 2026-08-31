@@ -37,6 +37,11 @@ nav:
   - Output formats: output-formats.md
   - Rules:
       - Overview: rules/index.md
+      - CG-SEC-001 SQL injection: rules/CG-SEC-001.md
+      - CG-SEC-002 Hardcoded secrets: rules/CG-SEC-002.md
+      - CG-SEC-003 eval / exec: rules/CG-SEC-003.md
+      - CG-SEC-004 Unsafe deserialization: rules/CG-SEC-004.md
+      - CG-SEC-005 Shell injection: rules/CG-SEC-005.md
   - Architecture: architecture.md
   - Migrating to v2: migration-v2.md
   - Contributing: contributing.md

@@ -2,11 +2,11 @@
 
 ## Supported versions
 
-CodeGuard is in early alpha. Only the latest released version receives security fixes.
+Only the latest `2.x` release receives security fixes.
 
 | Version | Supported |
 |---|---|
-| latest (0.x) | ✅ Yes |
+| 2.x (latest) | ✅ Yes |
 | older | ❌ No |
 
 ## Reporting a vulnerability
