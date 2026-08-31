@@ -1,0 +1,16 @@
+.git
+.github
+.venv
+venv
+archive
+site
+dist
+build
+frontend*
+**/__pycache__
+**/*.pyc
+.mypy_cache
+.ruff_cache
+.pytest_cache
+htmlcov
+.codeguard-baseline.json

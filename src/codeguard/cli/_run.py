@@ -55,6 +55,7 @@ class RunOptions:
     stdin_filename: str = "stdin.py"
     output: Path | None = None
     baseline_path: Path | None = None
+    now: str | None = None  # pin the date for `until=` suppression expiry
     diff_ref: str | None = None
     diff_auto: bool = False  # `ci` -- pick a base branch if diff_ref not given
     sarif_out: Path | None = None  # `ci` -- also write SARIF here
@@ -99,7 +100,16 @@ def execute(opt: RunOptions) -> int:
         for r in REGISTRY.all()
         if (selected is None or r.id in selected) and r.id not in disabled
     ]
-    runner = AnalysisRunner(rule_ids=active_ids)
+    now = None
+    if opt.now:
+        from datetime import date
+
+        try:
+            now = date.fromisoformat(opt.now)
+        except ValueError:
+            err.print(f"[bold red]Error:[/bold red] --now must be YYYY-MM-DD, got {opt.now!r}")
+            return EXIT_USAGE
+    runner = AnalysisRunner(rule_ids=active_ids, now=now)
 
     disc = DiscoveryConfig(
         include=[*config.include, *opt.includes],

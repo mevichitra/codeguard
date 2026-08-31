@@ -10,51 +10,7 @@ from pathlib import Path
 import pytest
 
 from codeguard.engine.registry import RuleRegistry
-from codeguard.engine.runner import AnalysisRunner, _parse_file_disables, _parse_suppressions
-
-
-class TestParseSuppressions:
-    def test_single_rule(self) -> None:
-        src = "x = 1  # codeguard: ignore[CG-SEC-001]\n"
-        result = _parse_suppressions(src)
-        assert result == {1: {"CG-SEC-001"}}
-
-    def test_multiple_rules(self) -> None:
-        src = "x = 1  # codeguard: ignore[CG-SEC-001, CG-SEC-002]\n"
-        result = _parse_suppressions(src)
-        assert result == {1: {"CG-SEC-001", "CG-SEC-002"}}
-
-    def test_no_suppressions(self) -> None:
-        src = "x = 1\ny = 2\n"
-        assert _parse_suppressions(src) == {}
-
-    def test_correct_line_number(self) -> None:
-        src = "a = 1\nb = 2  # codeguard: ignore[CG-SEC-003]\nc = 3\n"
-        result = _parse_suppressions(src)
-        assert 2 in result
-        assert "CG-SEC-003" in result[2]
-
-
-class TestParseFileDisables:
-    def test_single_disable(self) -> None:
-        src = "# codeguard: disable[CG-SEC-001]\nx = 1\n"
-        assert _parse_file_disables(src) == {"CG-SEC-001"}
-
-    def test_multiple_disables_in_one_line(self) -> None:
-        src = "# codeguard: disable[CG-SEC-001, CG-SEC-002]\nx = 1\n"
-        assert _parse_file_disables(src) == {"CG-SEC-001", "CG-SEC-002"}
-
-    def test_multiple_disable_lines(self) -> None:
-        src = textwrap.dedent("""\
-            # codeguard: disable[CG-SEC-001]
-            # codeguard: disable[CG-SEC-003]
-            x = 1
-        """)
-        assert _parse_file_disables(src) == {"CG-SEC-001", "CG-SEC-003"}
-
-    def test_no_disables(self) -> None:
-        src = "x = 1\n"
-        assert _parse_file_disables(src) == set()
+from codeguard.engine.runner import AnalysisRunner
 
 
 class TestAnalysisRunner:

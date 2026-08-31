@@ -8,9 +8,9 @@ what rules detect.
 
 from __future__ import annotations
 
-import re
 import warnings
 from collections.abc import Iterable
+from datetime import date
 from pathlib import Path
 
 from codeguard.lang.base import Language
@@ -18,36 +18,10 @@ from codeguard.lang.registry import language_for_path, support_for
 
 from . import fingerprint as _fp
 from .context import RuleContext
-from .finding import Finding
+from .finding import Category, Finding, Location
 from .registry import REGISTRY, RuleRegistry
 from .rule import Rule
-
-# Matches:  # codeguard: ignore[CG-SEC-001]
-#           # codeguard: ignore[CG-SEC-001, CG-SEC-002]
-_SUPPRESS_RE = re.compile(r"(?:#|//)\s*codeguard:\s*ignore\[([^\]]+)\]")
-
-# Matches:  # codeguard: disable[CG-SEC-001]   (file-level; alias: ignore-file)
-_DISABLE_RE = re.compile(r"(?:#|//)\s*codeguard:\s*(?:disable|ignore-file)\[([^\]]+)\]")
-
-
-def _parse_suppressions(source: str) -> dict[int, set[str]]:
-    """Map line number (1-indexed) -> set of rule IDs suppressed on that line."""
-    suppressions: dict[int, set[str]] = {}
-    for lineno, line in enumerate(source.splitlines(), start=1):
-        match = _SUPPRESS_RE.search(line)
-        if match:
-            suppressions[lineno] = {rid.strip() for rid in match.group(1).split(",")}
-    return suppressions
-
-
-def _parse_file_disables(source: str) -> set[str]:
-    """Return the set of rule IDs disabled file-wide."""
-    disables: set[str] = set()
-    for line in source.splitlines():
-        match = _DISABLE_RE.search(line)
-        if match:
-            disables.update(rid.strip() for rid in match.group(1).split(","))
-    return disables
+from .suppressions import META_EXPIRED, META_MISSING_REASON, SuppressionSet
 
 
 class AnalysisRunner:
@@ -66,9 +40,13 @@ class AnalysisRunner:
         self,
         registry: RuleRegistry | None = None,
         rule_ids: list[str] | None = None,
+        *,
+        now: date | None = None,
     ) -> None:
         self._registry = registry if registry is not None else REGISTRY
         self._filter: set[str] | None = set(rule_ids) if rule_ids is not None else None
+        #: Date used for `until=` suppression expiry (default: today, per run).
+        self._now = now
 
     @property
     def _active_rules(self) -> list[Rule]:
@@ -89,12 +67,13 @@ class AnalysisRunner:
         filename: str = "<stdin>",
         *,
         language: Language | None = None,
+        now: date | None = None,
     ) -> list[Finding]:
         """Analyse *source* text and return findings, suppressions applied.
 
         Findings are sorted by ``(location.line, rule_id)`` and carry a
         fingerprint.  Suppressed findings are **included** with
-        ``suppressed=True``.
+        ``suppressed=True``.  *now* (default today) dates ``until=`` expiry.
 
         Parameters
         ----------
@@ -133,26 +112,74 @@ class AnalysisRunner:
             lang=support,
             root=parsed.root,  # type: ignore[arg-type]
         )
-        suppressions = _parse_suppressions(source)
-        file_disables = _parse_file_disables(source)
+        today = now or self._now or date.today()
+        suppset = SuppressionSet.parse(source)
         rel = _fp.relative_path(filename)
         py_tree = ctx.python_ast if lang is Language.PYTHON else None
+        enabled_ids = {r.id for r in self._active_rules}
+
+        def _fingerprinted(f: Finding) -> Finding:
+            scope = _fp.python_scope(py_tree, f.location.line) if py_tree is not None else ""
+            return f.with_fingerprint(
+                _fp.compute(f.rule_id, rel, source, f.location.line, scope=scope)
+            )
 
         findings: list[Finding] = []
+        meta_lines: dict[str, set[int]] = {META_MISSING_REASON: set(), META_EXPIRED: set()}
+
         for rule in self._rules_for(lang):
             for finding in rule.analyze(ctx):
                 line = finding.location.line
-                line_ids = suppressions.get(line, set())
-                if finding.rule_id in file_disables or finding.rule_id in line_ids:
-                    finding = finding.as_suppressed()
-                scope = _fp.python_scope(py_tree, line) if py_tree is not None else ""
-                finding = finding.with_fingerprint(
-                    _fp.compute(finding.rule_id, rel, source, line, scope=scope)
-                )
-                findings.append(finding)
+                verdict = suppset.outcome(finding.rule_id, line, today)
+                if verdict is not None:
+                    kind, supp = verdict
+                    if kind == "suppress":
+                        finding = finding.as_suppressed()
+                        if supp.reason is None:
+                            meta_lines[META_MISSING_REASON].add(supp.line)
+                    elif kind == "expired":
+                        meta_lines[META_EXPIRED].add(supp.line)
+                findings.append(_fingerprinted(finding))
+
+        findings.extend(
+            self._meta_findings(meta_lines, suppset, filename, source, rel, py_tree, enabled_ids)
+        )
 
         findings.sort(key=lambda f: (f.location.line, f.location.col, f.rule_id))
         return findings
+
+    def _meta_findings(
+        self,
+        meta_lines: dict[str, set[int]],
+        suppset: SuppressionSet,
+        filename: str,
+        source: str,
+        rel: str,
+        py_tree: object,
+        enabled_ids: set[str],
+    ) -> list[Finding]:
+        out: list[Finding] = []
+        for meta_id, lines in meta_lines.items():
+            if meta_id not in enabled_ids or meta_id not in self._registry:
+                continue
+            rule = self._registry.get(meta_id)
+            assert rule is not None
+            for line in sorted(lines):
+                f = Finding(
+                    rule_id=meta_id,
+                    title=rule.title,
+                    description=rule.description,
+                    severity=rule.severity,
+                    category=Category.META,
+                    location=Location(file=filename, line=line, col=1),
+                    fix_suggestion=None,
+                )
+                # a `# codeguard: ignore[CG-META-001]` on the same line still works
+                if suppset.outcome(meta_id, line, date.max):
+                    f = f.as_suppressed()
+                scope = _fp.python_scope(py_tree, line) if py_tree is not None else ""  # type: ignore[arg-type]
+                out.append(f.with_fingerprint(_fp.compute(meta_id, rel, source, line, scope=scope)))
+        return out
 
     def run_file(self, path: Path) -> list[Finding]:
         """Analyse a single file on disk.
@@ -193,10 +220,11 @@ class AnalysisRunner:
             from concurrent.futures import ProcessPoolExecutor
 
             filter_ids = sorted(self._filter) if self._filter is not None else None
+            now_iso = self._now.isoformat() if self._now is not None else None
             with ProcessPoolExecutor(
                 max_workers=jobs,
                 initializer=_init_worker,
-                initargs=(filter_ids,),
+                initargs=(filter_ids, now_iso),
             ) as pool:
                 for result in pool.map(_scan_one, (str(p) for p in files)):
                     findings.extend(result)
@@ -224,11 +252,12 @@ class AnalysisRunner:
 _WORKER_RUNNER: AnalysisRunner | None = None
 
 
-def _init_worker(rule_ids: list[str] | None) -> None:
+def _init_worker(rule_ids: list[str] | None, now_iso: str | None) -> None:
     global _WORKER_RUNNER
     import codeguard.rules  # noqa: F401  -- register built-in rules in the child
 
-    _WORKER_RUNNER = AnalysisRunner(rule_ids=rule_ids)
+    now = date.fromisoformat(now_iso) if now_iso else None
+    _WORKER_RUNNER = AnalysisRunner(rule_ids=rule_ids, now=now)
 
 
 def _scan_one(path_str: str) -> list[Finding]:

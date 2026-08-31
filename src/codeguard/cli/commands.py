@@ -36,6 +36,7 @@ def register(group: click.Group) -> None:
     group.add_command(_validate)
     group.add_command(_init)
     group.add_command(_baseline)
+    group.add_command(_suppressions)
 
 
 @click.command("list-rules")
@@ -269,3 +270,121 @@ def _baseline_prune(paths: tuple[Path, ...], config_path: Path | None, baseline_
     pruned = Baseline.load(baseline_file).pruned(live)
     pruned.save(baseline_file)
     click.echo(f"Pruned {baseline_file} (-{before - len(pruned)} stale entry/entries)")
+
+
+# ---------------------------------------------------------------------------
+# suppressions
+# ---------------------------------------------------------------------------
+
+
+@click.group("suppressions")
+def _suppressions() -> None:
+    """Inspect `# codeguard: ignore[...]` comments across the codebase."""
+
+
+@_suppressions.command("list")
+@click.argument("paths", nargs=-1, type=click.Path(path_type=Path))
+@click.option(
+    "--config",
+    "config_path",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    default=None,
+)
+@click.option("--expired", is_flag=True, help="Show only expired suppressions (exit 1 if any).")
+@click.option("--unused", is_flag=True, help="Show only suppressions that suppress nothing.")
+@click.option("--format", "fmt", type=click.Choice(["table", "json"]), default="table")
+@click.option(
+    "--now",
+    "now_str",
+    metavar="YYYY-MM-DD",
+    default=None,
+    help="Date used to evaluate `until=` (default: today).",
+)
+def _suppressions_list(
+    paths: tuple[Path, ...],
+    config_path: Path | None,
+    expired: bool,
+    unused: bool,
+    fmt: str,
+    now_str: str | None,
+) -> None:
+    """List every suppression comment with its status (active / expired / unused)."""
+    import json as _json
+    from datetime import date
+
+    from codeguard.config import load_config
+    from codeguard.engine.discovery import DiscoveryConfig, discover
+    from codeguard.engine.runner import AnalysisRunner
+    from codeguard.engine.suppressions import SuppressionSet
+    from codeguard.lang.registry import language_for_path
+
+    today = date.fromisoformat(now_str) if now_str else date.today()
+
+    targets = [Path(p) for p in paths] or [Path(".")]
+    first = targets[0]
+    root = first if first.is_dir() else first.parent
+    config = load_config(config_path or find_config(root))
+    cfg_root = Path(config.source_dir) if config.source_dir else root
+    disc = DiscoveryConfig(
+        include=list(config.include),
+        exclude=list(config.exclude),
+        respect_gitignore=config.gitignore,
+    )
+    files = discover(targets, disc, root=cfg_root)
+    runner = AnalysisRunner()
+
+    rows: list[dict[str, object]] = []
+    for path in files:
+        if language_for_path(path) is None:
+            continue
+        source = path.read_text(encoding="utf-8", errors="replace")
+        suppset = SuppressionSet.parse(source)
+        if not suppset.all():
+            continue
+        try:
+            findings = runner.run(source, filename=str(path), now=today)
+        except SyntaxError:
+            findings = []
+        suppressed_at = {(f.rule_id, f.location.line) for f in findings if f.suppressed}
+        suppressed_rules = {f.rule_id for f in findings if f.suppressed}
+
+        for supp in suppset.all():
+            if supp.is_expired(today):
+                status = "expired"
+            elif supp.file_level:
+                status = "active" if supp.rule_ids & suppressed_rules else "unused"
+            else:
+                status = (
+                    "active"
+                    if any((rid, supp.line) in suppressed_at for rid in supp.rule_ids)
+                    else "unused"
+                )
+            rows.append(
+                {
+                    "file": str(path),
+                    "line": supp.line,
+                    "rules": sorted(supp.rule_ids),
+                    "scope": "file" if supp.file_level else "line",
+                    "reason": supp.reason,
+                    "until": supp.until.isoformat() if supp.until else None,
+                    "status": status,
+                }
+            )
+
+    if expired:
+        rows = [r for r in rows if r["status"] == "expired"]
+    if unused:
+        rows = [r for r in rows if r["status"] == "unused"]
+
+    if fmt == "json":
+        click.echo(_json.dumps(rows, indent=2))
+    elif not rows:
+        click.echo("No suppressions." if not (expired or unused) else "None.")
+    else:
+        for r in rows:
+            rules = ",".join(r["rules"])  # type: ignore[arg-type]
+            reason = r["reason"] or "(no reason)"
+            click.echo(f"{r['file']}:{r['line']}  {r['status']:<8} {rules:<24} {reason}")
+
+    if expired and rows:
+        sys.exit(1)
