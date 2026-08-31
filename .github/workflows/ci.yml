@@ -85,7 +85,9 @@ jobs:
           /tmp/smoke/bin/pip install dist/*.whl
           /tmp/smoke/bin/codeguard --version
           /tmp/smoke/bin/codeguard list-rules
+          # Python and JavaScript scanning both work from the installed wheel.
           /tmp/smoke/bin/codeguard scan tests/fixtures/python/security/cg_sec_001/vulnerable.py && exit 1 || test $? -eq 1
+          /tmp/smoke/bin/codeguard scan examples/vulnerable_example.js && exit 1 || test $? -eq 1
       - uses: actions/upload-artifact@v4
         with:
           name: dist

@@ -20,12 +20,16 @@ class TestListRules:
     def test_json(self) -> None:
         r = CliRunner().invoke(cli, ["list-rules", "--format", "json"])
         data = json.loads(r.output)
-        assert {row["id"] for row in data} >= {"CG-SEC-001", "CG-SEC-005"}
-        assert all(row["languages"] == ["python"] for row in data)
+        assert {row["id"] for row in data} >= {"CG-SEC-001", "CG-SEC-101"}
+        by_id = {row["id"]: row for row in data}
+        assert by_id["CG-SEC-001"]["languages"] == ["python"]
+        assert set(by_id["CG-SEC-101"]["languages"]) == {"javascript", "typescript"}
 
     def test_filter_language(self) -> None:
         r = CliRunner().invoke(cli, ["list-rules", "--language", "javascript", "--format", "json"])
-        assert json.loads(r.output) == []
+        ids = {row["id"] for row in json.loads(r.output)}
+        assert "CG-SEC-101" in ids
+        assert "CG-SEC-001" not in ids  # python-only
 
 
 class TestExplain:

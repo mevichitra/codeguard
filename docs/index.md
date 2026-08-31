@@ -5,10 +5,10 @@ built to sit at every gate of your workflow (editor, pre-commit, pre-push, PR/CI
 scheduled audit) from a single config file.
 
 !!! warning "Status: alpha, heading to v2.0"
-    Today CodeGuard scans **Python** with five security rules. The **v2.0** line adds
-    JavaScript and TypeScript, a config file, baseline/diff scanning, a CI-native command,
-    and packaged distribution (pre-commit hook, GitHub Action, Docker image, standalone
-    binaries). Public interfaces are not yet stable — see [Migrating to v2](migration-v2.md).
+    CodeGuard scans **Python, JavaScript, and TypeScript**. Still on the **v2.0**
+    road: baseline/diff scanning, a CI-native command, and packaged distribution
+    (pre-commit hook, GitHub Action, Docker image, standalone binaries). Public
+    interfaces are not yet stable — see [Migrating to v2](migration-v2.md).
 
 ## What it produces
 
@@ -27,15 +27,16 @@ myproject/auth.py:12:5  [CG-SEC-001] HIGH  SQL query built with string formattin
 
 ## Rules today
 
-| ID | Catches | Severity | CWE |
-|---|---|---|---|
-| CG-SEC-001 | SQL built with f-strings / `%` / `.format()` / concat | HIGH | CWE-89 |
-| CG-SEC-002 | Hardcoded passwords, API keys, tokens | HIGH | CWE-798 |
-| CG-SEC-003 | `eval()` / `exec()` / `compile()` on non-literal input | HIGH | CWE-95 |
-| CG-SEC-004 | `pickle` / `marshal` / `yaml.load` without a safe loader | HIGH | CWE-502 |
-| CG-SEC-005 | `subprocess(..., shell=True)` with a dynamic command | HIGH | CWE-78 |
+**Python** (`0xx`): SQL string-formatting (CWE-89), hardcoded secrets (CWE-798),
+`eval`/`exec` on dynamic input (CWE-95), unsafe deserialization (CWE-502),
+`subprocess` shell injection (CWE-78).
 
-See [Rules overview](rules/index.md).
+**JavaScript / TypeScript** (`1xx`): dynamic code execution (CWE-95),
+`child_process` shell injection (CWE-78), DOM XSS sinks (CWE-79),
+`dangerouslySetInnerHTML` (CWE-79), hardcoded secrets (CWE-798),
+`Math.random()` for security values (CWE-338).
+
+See [Rules overview](rules/index.md) or run `codeguard list-rules`.
 
 ## Next steps
 

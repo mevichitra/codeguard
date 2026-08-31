@@ -7,6 +7,7 @@ import ast
 from abc import ABC, abstractmethod
 
 from codeguard.lang.base import Language
+from codeguard.lang.node import SourceNode
 
 from .context import RuleContext
 from .finding import Category, Finding, Location, Severity
@@ -139,6 +140,53 @@ class AstRule(Rule):
                 col=col + 1,
                 end_line=end_line,
                 end_col=None if end_col is None else end_col + 1,
+            ),
+            cwe=self.cwe,
+            owasp=self.owasp,
+            fix_suggestion=fix_suggestion,
+            confidence=confidence,
+        )
+
+
+class TreeSitterRule(Rule):
+    """Base class for rules over a tree-sitter tree (JavaScript / TypeScript).
+
+    Subclasses set ``languages`` and implement :meth:`check_tree`, working with
+    the uniform :class:`~codeguard.lang.node.SourceNode` API.
+    """
+
+    def analyze(self, ctx: RuleContext) -> list[Finding]:
+        return self.check_tree(ctx.root, ctx)
+
+    @abstractmethod
+    def check_tree(self, root: SourceNode, ctx: RuleContext) -> list[Finding]:
+        """Analyse *root* (the file's tree) and return findings."""
+
+    def _make_finding(
+        self,
+        *,
+        node: SourceNode,
+        ctx: RuleContext,
+        description: str | None = None,
+        fix_suggestion: str | None = None,
+        confidence: float = 1.0,
+        severity: Severity | None = None,
+    ) -> Finding:
+        """Build a :class:`Finding` from a :class:`SourceNode` (already 1-indexed)."""
+        start = node.start
+        end = node.end
+        return Finding(
+            rule_id=self.id,
+            title=self.title,
+            description=description or self.description,
+            severity=severity if severity is not None else self.severity,
+            category=self.category,
+            location=Location(
+                file=ctx.filename,
+                line=start.line,
+                col=start.col,
+                end_line=end.line if end else None,
+                end_col=end.col if end else None,
             ),
             cwe=self.cwe,
             owasp=self.owasp,
