@@ -1,19 +1,22 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Abstract base class for all CodeGuard rules."""
+"""Abstract base classes for CodeGuard rules."""
 
 from __future__ import annotations
 
 import ast
 from abc import ABC, abstractmethod
 
+from codeguard.lang.base import Language
+
+from .context import RuleContext
 from .finding import Category, Finding, Location, Severity
 
 
 class Rule(ABC):
-    """Abstract base class that every CodeGuard rule must implement.
+    """Abstract base class that every CodeGuard rule implements.
 
-    Each rule detects exactly one concern.  Rules are self-contained:
-    they receive a parsed AST and raw source, they return findings.
+    Each rule detects exactly one concern.  Rules are self-contained: they
+    receive a :class:`~codeguard.engine.context.RuleContext` and return findings.
     They have no knowledge of other rules and no persistent state.
 
     To add a new rule, see CONTRIBUTING.md § "Adding a rule".
@@ -21,20 +24,29 @@ class Rule(ABC):
     Class attributes
     ----------------
     id:
-        Stable rule identifier, e.g. ``CG-SEC-001``. Defined on the class,
-        never on instances. Never renumber or reuse an ID.
+        Stable rule identifier, e.g. ``CG-SEC-001``.  Defined on the class,
+        never on instances.  Never renumber or reuse an ID.
     title:
-        Short (≤ 80 char) human-readable title.
+        Short (<= 80 char) human-readable title.
     description:
         Full explanation for developers who've never encountered this issue.
     severity:
-        Default severity. Override per-finding via ``_make_finding`` if needed.
+        Default severity.  Override per-finding when needed.
     category:
-        Broad category — security, quality, performance, ai-smell.
+        Broad category -- security, quality, performance, ai-smell.
+    languages:
+        The set of languages this rule can analyse.  The runner skips a rule
+        for any file whose language is not in this set.
     cwe:
         Primary CWE identifier, e.g. ``"CWE-89"``.  ``None`` if not applicable.
     owasp:
         OWASP category, e.g. ``"A03:2021 - Injection"``.  ``None`` if not applicable.
+    help_uri:
+        Link to the rule's documentation page.  ``None`` falls back to a
+        conventional URL derived from the rule ID.
+    wants_dataflow:
+        Opt in to the intraprocedural taint pass (a later milestone).  Ignored
+        today.
     """
 
     id: str
@@ -42,11 +54,42 @@ class Rule(ABC):
     description: str
     severity: Severity
     category: Category
+    languages: frozenset[Language]
     cwe: str | None = None
     owasp: str | None = None
+    help_uri: str | None = None
+    wants_dataflow: bool = False
 
     @abstractmethod
-    def check(self, tree: ast.AST, source: str, filename: str) -> list[Finding]:
+    def analyze(self, ctx: RuleContext) -> list[Finding]:
+        """Analyse the file described by *ctx* and return findings.
+
+        Returns
+        -------
+        list[Finding]
+            Empty list means no findings.  Never return ``None``.
+        """
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(id={self.id!r})"
+
+
+class AstRule(Rule):
+    """Base class for Python rules that work directly on a :mod:`ast` tree.
+
+    Subclasses implement :meth:`check_ast` with the same signature CodeGuard
+    rules have always used.  This class adapts it to the language-aware
+    :meth:`Rule.analyze` protocol and centralises the 0-indexed to 1-indexed
+    column conversion in :meth:`_make_finding`.
+    """
+
+    languages = frozenset({Language.PYTHON})
+
+    def analyze(self, ctx: RuleContext) -> list[Finding]:
+        return self.check_ast(ctx.python_ast, ctx.source, ctx.filename)
+
+    @abstractmethod
+    def check_ast(self, tree: ast.AST, source: str, filename: str) -> list[Finding]:
         """Analyse *tree* and return findings.
 
         Parameters
@@ -56,16 +99,11 @@ class Rule(ABC):
         source:
             Raw source text, available for line-level context if needed.
         filename:
-            File path string — used when constructing :class:`~codeguard.engine.finding.Location`.
-
-        Returns
-        -------
-        list[Finding]
-            Empty list means no findings.  Never return ``None``.
+            File path string -- used when constructing :class:`Location`.
         """
 
     # ------------------------------------------------------------------
-    # Helpers for rule implementations
+    # Helper for rule implementations
     # ------------------------------------------------------------------
 
     def _make_finding(
@@ -78,11 +116,11 @@ class Rule(ABC):
         confidence: float = 1.0,
         severity: Severity | None = None,
     ) -> Finding:
-        """Convenience factory — builds a :class:`Finding` from an AST node.
+        """Build a :class:`Finding` from an AST *node*.
 
-        Pulls ``lineno``, ``col_offset``, ``end_lineno``, ``end_col_offset``
-        from *node* automatically.  All keyword arguments override the rule's
-        class-level defaults when provided.
+        Pulls ``lineno`` / ``col_offset`` / ``end_lineno`` / ``end_col_offset``
+        from *node* and converts the 0-indexed AST columns to CodeGuard's
+        1-indexed :class:`Location` columns.
         """
         line: int = getattr(node, "lineno", 1)
         col: int = getattr(node, "col_offset", 0)
@@ -97,16 +135,13 @@ class Rule(ABC):
             category=self.category,
             location=Location(
                 file=filename,
-                line=line,
-                col=col,
+                line=max(line, 1),
+                col=col + 1,
                 end_line=end_line,
-                end_col=end_col,
+                end_col=None if end_col is None else end_col + 1,
             ),
             cwe=self.cwe,
             owasp=self.owasp,
             fix_suggestion=fix_suggestion,
             confidence=confidence,
         )
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(id={self.id!r})"

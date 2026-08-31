@@ -11,19 +11,19 @@ import pytest
 
 from codeguard.engine.finding import Category, Finding, Location, Severity
 from codeguard.engine.registry import RuleRegistry
-from codeguard.engine.rule import Rule
+from codeguard.engine.rule import AstRule
 from codeguard.engine.runner import AnalysisRunner, _parse_file_disables, _parse_suppressions
 
 
 def _build_per_file_runner(exclude: list[str] | None = None) -> AnalysisRunner:
-    class PerFileRule(Rule):
+    class PerFileRule(AstRule):
         id = "CG-TEST-100"
         title = "Per-file marker"
         description = "Emits one finding for each scanned file."
         severity = Severity.LOW
         category = Category.SECURITY
 
-        def check(self, tree, source, filename):  # type: ignore[override]
+        def check_ast(self, tree, source, filename):  # type: ignore[override]
             return [
                 Finding(
                     rule_id=self.id,
@@ -31,7 +31,7 @@ def _build_per_file_runner(exclude: list[str] | None = None) -> AnalysisRunner:
                     description=self.description,
                     severity=self.severity,
                     category=self.category,
-                    location=Location(file=filename, line=1, col=0),
+                    location=Location(file=filename, line=1, col=1),
                 )
             ]
 
@@ -107,16 +107,16 @@ class TestAnalysisRunner:
     def test_suppression_marks_finding(self) -> None:
         # A rule that always fires on any source
         from codeguard.engine.finding import Category, Finding, Location, Severity
-        from codeguard.engine.rule import Rule
+        from codeguard.engine.rule import AstRule
 
-        class AlwaysFires(Rule):
+        class AlwaysFires(AstRule):
             id = "CG-TEST-999"
             title = "Always fires"
             description = "Test rule"
             severity = Severity.HIGH
             category = Category.SECURITY
 
-            def check(self, tree, source, filename):  # type: ignore[override]
+            def check_ast(self, tree, source, filename):  # type: ignore[override]
                 return [
                     Finding(
                         rule_id=self.id,
@@ -124,7 +124,7 @@ class TestAnalysisRunner:
                         description=self.description,
                         severity=self.severity,
                         category=self.category,
-                        location=Location(file=filename, line=1, col=0),
+                        location=Location(file=filename, line=1, col=1),
                     )
                 ]
 
@@ -139,16 +139,16 @@ class TestAnalysisRunner:
 
     def test_file_disable_suppresses_findings(self) -> None:
         from codeguard.engine.finding import Category, Finding, Location, Severity
-        from codeguard.engine.rule import Rule
+        from codeguard.engine.rule import AstRule
 
-        class AlwaysFires(Rule):
+        class AlwaysFires(AstRule):
             id = "CG-TEST-888"
             title = "Always fires"
             description = "Test rule"
             severity = Severity.HIGH
             category = Category.SECURITY
 
-            def check(self, tree, source, filename):  # type: ignore[override]
+            def check_ast(self, tree, source, filename):  # type: ignore[override]
                 return [
                     Finding(
                         rule_id=self.id,
@@ -156,7 +156,7 @@ class TestAnalysisRunner:
                         description=self.description,
                         severity=self.severity,
                         category=self.category,
-                        location=Location(file=filename, line=2, col=0),
+                        location=Location(file=filename, line=2, col=1),
                     )
                 ]
 

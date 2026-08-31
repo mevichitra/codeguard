@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""AST runner — executes registered rules against Python source files.
+"""Analysis runner -- executes registered rules against source files.
 
 The runner is the only component that knows about both the registry and the
 file system.  Rules know nothing about files; the runner knows nothing about
@@ -8,56 +8,51 @@ what rules detect.
 
 from __future__ import annotations
 
-import ast
 import re
 import warnings
 from collections.abc import Sequence
 from fnmatch import fnmatch
 from pathlib import Path
 
+from codeguard.lang.base import Language
+from codeguard.lang.registry import language_for_path, support_for
+
+from . import fingerprint as _fp
+from .context import RuleContext
 from .finding import Finding
 from .registry import REGISTRY, RuleRegistry
+from .rule import Rule
 
 # Matches:  # codeguard: ignore[CG-SEC-001]
 #           # codeguard: ignore[CG-SEC-001, CG-SEC-002]
-_SUPPRESS_RE = re.compile(r"#\s*codeguard:\s*ignore\[([^\]]+)\]")
+_SUPPRESS_RE = re.compile(r"(?:#|//)\s*codeguard:\s*ignore\[([^\]]+)\]")
 
-# Matches:  # codeguard: disable[CG-SEC-001]
-#           # codeguard: disable[CG-SEC-001, CG-SEC-002]
-_DISABLE_RE = re.compile(r"#\s*codeguard:\s*disable\[([^\]]+)\]")
+# Matches:  # codeguard: disable[CG-SEC-001]   (file-level; alias: ignore-file)
+_DISABLE_RE = re.compile(r"(?:#|//)\s*codeguard:\s*(?:disable|ignore-file)\[([^\]]+)\]")
 
 
 def _parse_suppressions(source: str) -> dict[int, set[str]]:
-    """Scan *source* for inline suppression comments and return a map.
-
-    Returns
-    -------
-    dict[int, set[str]]
-        ``{line_number: {rule_id, ...}}``, 1-indexed.  Lines without a
-        suppression comment are absent from the dict.
-    """
+    """Map line number (1-indexed) -> set of rule IDs suppressed on that line."""
     suppressions: dict[int, set[str]] = {}
     for lineno, line in enumerate(source.splitlines(), start=1):
         match = _SUPPRESS_RE.search(line)
         if match:
-            rule_ids = {rid.strip() for rid in match.group(1).split(",")}
-            suppressions[lineno] = rule_ids
+            suppressions[lineno] = {rid.strip() for rid in match.group(1).split(",")}
     return suppressions
 
 
 def _parse_file_disables(source: str) -> set[str]:
-    """Scan *source* for file-level disable comments and return a set of rule IDs."""
+    """Return the set of rule IDs disabled file-wide."""
     disables: set[str] = set()
     for line in source.splitlines():
         match = _DISABLE_RE.search(line)
         if match:
-            rule_ids = {rid.strip() for rid in match.group(1).split(",")}
-            disables.update(rule_ids)
+            disables.update(rid.strip() for rid in match.group(1).split(","))
     return disables
 
 
 class AnalysisRunner:
-    """Runs registered rules against Python source code.
+    """Runs registered rules against source code.
 
     Parameters
     ----------
@@ -66,7 +61,6 @@ class AnalysisRunner:
         :data:`~codeguard.engine.registry.REGISTRY` singleton.
     rule_ids:
         When provided, only rules whose IDs are in this collection are run.
-        Unknown IDs are silently ignored (the runner doesn't validate them).
     """
 
     def __init__(
@@ -80,58 +74,99 @@ class AnalysisRunner:
         self._exclude_patterns = [p.strip() for p in exclude or () if p.strip()]
 
     @property
-    def _active_rules(self) -> list:  # type: ignore[type-arg]
+    def _active_rules(self) -> list[Rule]:
         if self._filter is None:
             return self._registry.all()
         return [r for r in self._registry.all() if r.id in self._filter]
+
+    def _rules_for(self, language: Language) -> list[Rule]:
+        return [r for r in self._active_rules if language in r.languages]
 
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
 
-    def run(self, source: str, filename: str = "<stdin>") -> list[Finding]:
+    def run(
+        self,
+        source: str,
+        filename: str = "<stdin>",
+        *,
+        language: Language | None = None,
+    ) -> list[Finding]:
         """Analyse *source* text and return findings, suppressions applied.
 
-        Findings are sorted by ``(location.line, rule_id)``.
-
-        Suppressed findings are **included** with ``suppressed=True`` — callers
-        that only want actionable findings should filter on ``f.suppressed``.
+        Findings are sorted by ``(location.line, rule_id)`` and carry a
+        fingerprint.  Suppressed findings are **included** with
+        ``suppressed=True``.
 
         Parameters
         ----------
         source:
-            Raw Python source code.
+            Raw source code.
         filename:
-            Used in :class:`~codeguard.engine.finding.Location`.
+            Used in :class:`~codeguard.engine.finding.Location` and to detect
+            the language when *language* is not given.
+        language:
+            Force a language instead of detecting from *filename*.  Defaults to
+            Python for ``"<stdin>"``.
 
         Raises
         ------
         SyntaxError
-            If *source* is not valid Python.  Callers should handle this;
-            see :meth:`run_file` for a version that handles it gracefully.
+            If *source* is not valid for its language.  :meth:`run_file` handles
+            this gracefully.
+        ValueError
+            If the language cannot be determined.
         """
-        tree = ast.parse(source, filename=filename)
+        lang = language or language_for_path(filename) or Language.PYTHON
+        support = support_for(lang)
+
+        parsed = support.parse(source, filename)
+        if not parsed.ok or parsed.root is None:
+            err = parsed.error
+            raise SyntaxError(
+                (err.message if err else "parse error"),
+                (filename, err.line if err else None, err.col if err else None, None),
+            )
+
+        ctx = RuleContext(
+            filename=filename,
+            source=source,
+            language=lang,
+            lang=support,
+            root=parsed.root,  # type: ignore[arg-type]
+        )
         suppressions = _parse_suppressions(source)
         file_disables = _parse_file_disables(source)
-        findings: list[Finding] = []
+        rel = _fp.relative_path(filename)
+        py_tree = ctx.python_ast if lang is Language.PYTHON else None
 
-        for rule in self._active_rules:
-            for finding in rule.check(tree, source, filename):
-                if finding.rule_id in file_disables or finding.rule_id in suppressions.get(
-                    finding.location.line, set()
-                ):
+        findings: list[Finding] = []
+        for rule in self._rules_for(lang):
+            for finding in rule.analyze(ctx):
+                line = finding.location.line
+                line_ids = suppressions.get(line, set())
+                if finding.rule_id in file_disables or finding.rule_id in line_ids:
                     finding = finding.as_suppressed()
+                scope = _fp.python_scope(py_tree, line) if py_tree is not None else ""
+                finding = finding.with_fingerprint(
+                    _fp.compute(finding.rule_id, rel, source, line, scope=scope)
+                )
                 findings.append(finding)
 
-        findings.sort(key=lambda f: (f.location.line, f.rule_id))
+        findings.sort(key=lambda f: (f.location.line, f.location.col, f.rule_id))
         return findings
 
     def run_file(self, path: Path) -> list[Finding]:
-        """Analyse a single ``.py`` file on disk.
+        """Analyse a single file on disk.
 
-        Returns an empty list and emits a :class:`SyntaxWarning` if the file
-        cannot be parsed, rather than raising.
+        Returns an empty list (and warns) for an unsupported extension, an
+        unreadable file, or a syntax error, rather than raising.
         """
+        lang = language_for_path(path)
+        if lang is None:
+            return []
+
         try:
             source = path.read_text(encoding="utf-8", errors="replace")
         except OSError as exc:
@@ -139,38 +174,33 @@ class AnalysisRunner:
             return []
 
         try:
-            return self.run(source, filename=str(path))
+            return self.run(source, filename=str(path), language=lang)
         except SyntaxError as exc:
             warnings.warn(
-                f"Skipping {path}: syntax error on line {exc.lineno} — {exc.msg}",
+                f"Skipping {path}: syntax error on line {exc.lineno} -- {exc.msg}",
                 SyntaxWarning,
                 stacklevel=2,
             )
             return []
 
     def run_path(self, path: Path) -> list[Finding]:
-        """Analyse a file or directory (``*.py``, recursive).
+        """Analyse a file, or a directory recursively.
 
-        Parameters
-        ----------
-        path:
-            A ``.py`` file, or a directory to scan recursively.
-
-        Returns
-        -------
-        list[Finding]
-            All findings from all files, sorted by ``(file, line, rule_id)``.
+        Directory scanning currently walks every file with a supported
+        extension; ``.gitignore`` and exclude handling arrive in a later
+        milestone.
         """
         if path.is_file():
             return self.run_file(path)
 
         findings: list[Finding] = []
-        for py_file in sorted(path.rglob("*.py")):
-            if self._is_excluded(path, py_file):
-                continue
-            findings.extend(self.run_file(py_file))
+        for child in sorted(path.rglob("*")):
+            if child.is_file() and language_for_path(child) is not None:
+                if self._is_excluded(path, child):
+                    continue
+                findings.extend(self.run_file(child))
 
-        findings.sort(key=lambda f: (f.location.file, f.location.line, f.rule_id))
+        findings.sort(key=lambda f: (f.location.file, f.location.line, f.location.col, f.rule_id))
         return findings
 
     def _is_excluded(self, root: Path, file_path: Path) -> bool:

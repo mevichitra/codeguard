@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import enum
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 
 _SEVERITY_ORDER = ["critical", "high", "medium", "low", "info"]
 
@@ -38,14 +38,16 @@ class Category(str, enum.Enum):
     QUALITY = "quality"
     PERFORMANCE = "performance"
     AI_SMELL = "ai-smell"
+    META = "meta"
 
 
 @dataclass(frozen=True)
 class Location:
     """Precise source location of a finding.
 
-    Line and column numbers are 1-indexed to match what editors and SARIF expect.
-    ``col`` is the start column; ``end_line`` / ``end_col`` are optional end positions.
+    Line and column numbers are **1-indexed** to match what editors and SARIF
+    expect.  ``col`` is the start column; ``end_line`` / ``end_col`` are optional
+    end positions.
     """
 
     file: str
@@ -56,16 +58,55 @@ class Location:
 
     def __post_init__(self) -> None:
         if self.line < 1:
-            raise ValueError(f"line must be ≥ 1, got {self.line}")
-        if self.col < 0:
-            raise ValueError(f"col must be ≥ 0, got {self.col}")
+            raise ValueError(f"line must be >= 1, got {self.line}")
+        if self.col < 1:
+            raise ValueError(f"col must be >= 1, got {self.col}")
+
+
+@dataclass(frozen=True)
+class TextEdit:
+    """A single replacement in a source file, for an autofix.
+
+    Reserved for the autofix milestone; no rule emits one today.
+    """
+
+    start_line: int
+    start_col: int
+    end_line: int
+    end_col: int
+    replacement: str
+
+
+@dataclass(frozen=True)
+class Fix:
+    """A suggested code change that resolves a finding.
+
+    Reserved for the autofix milestone; ``Finding.fix`` is always ``None`` today.
+    """
+
+    description: str
+    edits: tuple[TextEdit, ...]
+    safe: bool = True
+
+
+@dataclass(frozen=True)
+class Triage:
+    """A verdict on whether a finding is a true positive.
+
+    Reserved for a post-2.0 offline triage layer; ``Finding.triage`` is always
+    ``None`` today.
+    """
+
+    verdict: str  # "true" | "false" | "uncertain"
+    rationale: str
+    source: str  # "heuristic" | "offline-model" | "human"
 
 
 @dataclass(frozen=True)
 class Finding:
     """A single diagnostic produced by a rule.
 
-    ``rule_id`` is a stable public contract — it will never be renumbered.
+    ``rule_id`` is a stable public contract -- it will never be renumbered.
     Tools, IDE plugins, and inline suppressions key on it.
 
     Attributes
@@ -73,7 +114,7 @@ class Finding:
     rule_id:
         Stable rule identifier, e.g. ``CG-SEC-001``.
     title:
-        Short (≤80 char) human-readable title.
+        Short (<= 80 char) human-readable title.
     description:
         Full explanation of what was detected and why it matters.
     severity:
@@ -87,14 +128,22 @@ class Finding:
     owasp:
         OWASP category reference, e.g. ``A03:2021 - Injection``.
     fix_suggestion:
-        Actionable one-sentence fix. Optional but strongly encouraged.
+        Actionable one-sentence fix.  Optional but strongly encouraged.
     confidence:
-        Detection confidence in [0.0, 1.0]. Rules must be honest.
-        1.0 means the rule is certain; < 1.0 signals heuristic detection.
+        Detection confidence in ``[0.0, 1.0]``.  ``1.0`` means the rule is
+        certain; ``< 1.0`` signals heuristic detection.
     suppressed:
-        True when an inline ``# codeguard: ignore[RULE-ID]`` comment was found
-        on the finding's line. Suppressed findings are still returned so callers
-        can audit suppression usage.
+        True when a ``# codeguard: ignore[RULE-ID]`` comment (or the file-level
+        form) applied to this finding.  Suppressed findings are still returned so
+        callers can audit suppression usage.
+    fingerprint:
+        Stable identity of this finding across reformatting and line moves,
+        assigned by the runner.  Empty until assigned.
+    fix:
+        A suggested autofix, or ``None``.  Reserved for a later milestone.
+    triage:
+        A true/false-positive verdict, or ``None``.  Reserved for a later
+        milestone.
     """
 
     rule_id: str
@@ -108,6 +157,9 @@ class Finding:
     fix_suggestion: str | None = None
     confidence: float = 1.0
     suppressed: bool = False
+    fingerprint: str = ""
+    fix: Fix | None = field(default=None)
+    triage: Triage | None = field(default=None)
 
     def __post_init__(self) -> None:
         if not self.rule_id:
@@ -118,6 +170,10 @@ class Finding:
     def as_suppressed(self) -> Finding:
         """Return a copy of this finding with ``suppressed=True``."""
         return replace(self, suppressed=True)
+
+    def with_fingerprint(self, fingerprint: str) -> Finding:
+        """Return a copy of this finding with ``fingerprint`` set."""
+        return replace(self, fingerprint=fingerprint)
 
     def to_dict(self) -> dict:  # type: ignore[type-arg]
         """Serialise to a plain dict suitable for JSON output."""
@@ -139,4 +195,5 @@ class Finding:
             "fix_suggestion": self.fix_suggestion,
             "confidence": self.confidence,
             "suppressed": self.suppressed,
+            "fingerprint": self.fingerprint,
         }

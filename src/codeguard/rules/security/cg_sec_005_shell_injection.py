@@ -34,7 +34,7 @@ import ast
 
 from codeguard.engine.finding import Category, Finding, Severity
 from codeguard.engine.registry import REGISTRY
-from codeguard.engine.rule import Rule
+from codeguard.engine.rule import AstRule
 
 _SUBPROCESS_FUNCS = frozenset(
     {"run", "call", "Popen", "check_output", "check_call", "getoutput", "getstatusoutput"}
@@ -48,7 +48,7 @@ _FIX = (
 )
 
 
-class ShellInjectionRule(Rule):
+class ShellInjectionRule(AstRule):
     """Detect subprocess calls with shell=True and a non-literal command."""
 
     id = "CG-SEC-005"
@@ -63,7 +63,7 @@ class ShellInjectionRule(Rule):
     cwe = "CWE-78"
     owasp = "A03:2021 - Injection"
 
-    def check(self, tree: ast.AST, source: str, filename: str) -> list[Finding]:
+    def check_ast(self, tree: ast.AST, source: str, filename: str) -> list[Finding]:
         """Find subprocess calls with shell=True and dynamic commands."""
         findings: list[Finding] = []
 

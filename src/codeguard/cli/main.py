@@ -41,10 +41,10 @@ def cli() -> None:
 @click.option(
     "--format",
     "output_format",
-    type=click.Choice(["human", "json", "sarif"], case_sensitive=False),
+    type=click.Choice(["human", "json", "json-legacy", "sarif"], case_sensitive=False),
     default="human",
     show_default=True,
-    help="Output format.",
+    help="Output format. 'json-legacy' is the deprecated pre-2.0 bare array.",
 )
 @click.option(
     "--rule",
@@ -132,13 +132,24 @@ def scan(
         findings = [f for f in findings if f.severity >= threshold or f.suppressed]
 
     # Format output
-    from codeguard.cli.formatters import format_human, format_json, format_sarif
+    from codeguard.cli.formatters import (
+        format_human,
+        format_json,
+        format_json_legacy,
+        format_sarif,
+    )
 
     fmt = output_format.lower()
     if fmt == "human":
         text = format_human(findings, show_suppressed=show_suppressed)
     elif fmt == "json":
-        text = format_json(findings, show_suppressed=show_suppressed)
+        text = format_json(findings, show_suppressed=show_suppressed, tool_version=__version__)
+    elif fmt == "json-legacy":
+        console.print(
+            "[yellow]warning:[/yellow] --format json-legacy is deprecated; "
+            "switch to --format json (envelope object)."
+        )
+        text = format_json_legacy(findings, show_suppressed=show_suppressed)
     elif fmt == "sarif":
         text = format_sarif(findings, tool_version=__version__)
     else:
