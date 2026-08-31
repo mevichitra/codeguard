@@ -18,6 +18,11 @@ The `1xx` block covers JavaScript / TypeScript; `0xx` covers Python.
 | CG-SEC-104 | `dangerouslySetInnerHTML` with a non-literal value | HIGH | CWE-79 | JS, TS |
 | CG-SEC-105 | Hardcoded secret | HIGH | CWE-798 | JS, TS |
 | CG-SEC-106 | `Math.random()` used for a security value | MEDIUM | CWE-338 | JS, TS |
+| CG-META-001 | Suppression comment has no `reason:` | LOW | — | all |
+| CG-META-002 | Suppression `until=` date has passed | MEDIUM | — | all |
+
+`CG-META-*` are raised by the suppression engine, not by code analysis — see
+[Suppressions](../suppressions.md).
 
 ```bash
 codeguard list-rules

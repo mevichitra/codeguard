@@ -59,6 +59,14 @@ attribute is required. Python rules subclass `AstRule` and keep
 `check_ast(tree, source, filename)`; JavaScript / TypeScript rules subclass
 `TreeSitterRule` and implement `check_tree(root, ctx)` over a `SourceNode`.
 
+### Suppressions require a reason; `disable` renamed
+
+Add `reason: …` to every `# codeguard: ignore[…]` — bare ones still suppress but
+raise the new low-severity `CG-META-001`. `# codeguard: disable[…]` is now a
+deprecated spelling of `# codeguard: ignore-file[…]` (still works). An
+`until=YYYY-MM-DD` that has passed reactivates the finding and raises
+`CG-META-002`. Audit with `codeguard suppressions list`.
+
 ### Test fixtures moved (contributors)
 
 `tests/fixtures/<category>/<rule_id>/` → `tests/fixtures/<language>/<category>/<rule_id>/`,
@@ -66,7 +74,4 @@ and `conftest.load_fixture` gained a leading `language` argument.
 
 ## Planned (not yet on `main`)
 
-| Change | What to do |
-|---|---|
-| Inline suppressions require `reason:` | Add `reason: …` to each `# codeguard: ignore[…]`. Bare ones still suppress but raise `CG-META-001`. |
-| `disable[…]` → `ignore-file[…]` | Rename at leisure; the old spelling stays as a deprecated alias. |
+Nothing outstanding — v2.0 is feature-complete pending release packaging.

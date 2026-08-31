@@ -119,6 +119,13 @@ def _common_options(fn: _CmdFn) -> _CmdFn:
         ),
         click.option("--no-gitignore", is_flag=True, help="Do not read .gitignore."),
         click.option(
+            "--now",
+            "now",
+            metavar="YYYY-MM-DD",
+            default=None,
+            help="Pin the date used for `until=` suppression expiry.",
+        ),
+        click.option(
             "--jobs",
             "-j",
             type=int,
