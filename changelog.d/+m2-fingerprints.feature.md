@@ -1,1 +1,0 @@
-Every finding now carries a stable `fingerprint` (scheme `codeguard/v1`) derived from the rule, the file, the enclosing function/class, and the normalized statement — stable across reformatting and line moves. SARIF output emits it as `partialFingerprints`, and it is the identity key for the baseline and diff workflows landing next.

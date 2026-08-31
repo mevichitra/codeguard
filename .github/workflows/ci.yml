@@ -135,6 +135,11 @@ jobs:
         run: |
           base="${{ github.event.pull_request.base.sha }}"
           changed=$(git diff --name-only "$base" HEAD)
+          # Release PRs edit CHANGELOG.md directly (towncrier consumed the fragments).
+          if echo "$changed" | grep -qE '^CHANGELOG\.md$'; then
+            echo "CHANGELOG.md edited directly -- fragment check skipped."
+            exit 0
+          fi
           if echo "$changed" | grep -qE '^src/codeguard/'; then
             if ! echo "$changed" | grep -qE '^changelog\.d/.+\.(breaking|feature|bugfix|doc|internal)\.md$'; then
               echo "::error::This PR changes src/ but adds no changelog.d/ fragment. See changelog.d/README.md."

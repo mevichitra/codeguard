@@ -1,1 +1,0 @@
-New `codeguard ci` command: diff-aware scanning for pull requests. It scans only files changed since the base branch (auto-detected, or `--diff REF`), applies the baseline, defaults to GitHub Actions annotations, and can also write a SARIF report with `--sarif PATH`.

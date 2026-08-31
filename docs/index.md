@@ -4,11 +4,12 @@ Static analysis that finds security anti-patterns in source code — fast, offli
 built to sit at every gate of your workflow (editor, pre-commit, pre-push, PR/CI, merge,
 scheduled audit) from a single config file.
 
-!!! warning "Status: alpha, heading to v2.0"
-    CodeGuard scans **Python, JavaScript, and TypeScript**. Still on the **v2.0**
-    road: baseline/diff scanning, a CI-native command, and packaged distribution
-    (pre-commit hook, GitHub Action, Docker image, standalone binaries). Public
-    interfaces are not yet stable — see [Migrating to v2](migration-v2.md).
+!!! note "Version 2.0 (beta)"
+    CodeGuard scans **Python, JavaScript, and TypeScript**, with a config file,
+    diff-aware CI, baselines, governed suppressions, and packaged distribution
+    (pre-commit hook, GitHub Action, Docker image). Rule IDs, the `Finding` /
+    JSON schema, config keys, and exit codes are a stable contract from 2.0 —
+    see [Migrating to v2](migration-v2.md) if you used the 0.1 alpha.
 
 ## What it produces
 

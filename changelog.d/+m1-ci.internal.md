@@ -1,1 +1,0 @@
-Overhauled CI: concurrency cancellation, pip caching, a Windows/macOS/Python 3.13 test matrix, a build-and-install smoke test, `pip-audit`, a docs build, an old-org URL guard, and a changelog-fragment check. The release workflow now runs lint, types, and tests behind a tag/version consistency check before publishing.

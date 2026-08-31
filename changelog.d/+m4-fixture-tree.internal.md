@@ -1,1 +1,0 @@
-Test fixtures moved to `tests/fixtures/<language>/<category>/<rule_id>/` and `conftest.load_fixture` gained a leading `language` argument, so JavaScript and TypeScript rules can carry their own fixtures.

@@ -1,1 +1,0 @@
-The PyPI project is now `codeguard-cli` (the bare `codeguard` name belongs to an unrelated project). The installed command and the import package are both still `codeguard`. Install with `pipx install codeguard-cli` / `uv tool install codeguard-cli` / `pip install codeguard-cli`.
