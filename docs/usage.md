@@ -1,37 +1,50 @@
 # Usage
 
 ```bash
-codeguard scan PATH
+codeguard scan [PATHS]...
 ```
 
-`PATH` is a file or a directory (scanned recursively for `*.py`).
+`PATHS` are files or directories (default `.`). Directories are scanned
+recursively, honouring `.gitignore` and skipping vendor/build directories. Read
+from stdin with `-`.
 
-## Options
+## Commands
+
+| Command | Purpose |
+|---|---|
+| `scan` | Scan paths and report findings. |
+| `list-rules` | List every registered rule (`--format json`, `--language`, `--category`, `--severity`). |
+| `explain <RULE_ID>` | Full description, CWE/OWASP, and docs link for a rule. |
+| `validate` | Validate `codeguard.toml`. |
+| `init` | Write a starter `codeguard.toml`. |
+
+## `scan` options
 
 | Flag | Description |
 |---|---|
-| `--format {human,json,sarif}` | Output format. Default `human`. |
-| `--rule RULE_ID` | Only run the named rule(s). Repeatable. Validated against the registry. |
-| `--severity {critical,high,medium,low,info}` | Only report findings at or above this level. |
+| `--config PATH` | Use a specific config file. |
+| `--format {human,json,json-legacy,sarif}` | Output format. `json-legacy` is the deprecated bare array. |
+| `--rule RULE_ID` | Only run the named rule(s). Repeatable. |
+| `--exclude GLOB` / `--include GLOB` | Path filters. Repeatable. |
+| `--fail-on {critical,high,medium,low,info,never}` | Minimum severity that makes the run exit `1` (default `info`). |
+| `--exit-zero` | Always exit `0` (report-only). |
+| `--no-gitignore` | Do not read `.gitignore`. |
+| `-j, --jobs N` | Parallel worker processes (`0` = one per CPU). |
 | `--show-suppressed` | Include suppressed findings in the output. |
-| `-o, --output PATH` | Write output to a file instead of stdout. |
+| `-q, --quiet` | Only print findings. |
+| `--no-color` | Disable colour (also honours `NO_COLOR`). |
+| `--stdin-filename NAME` | Filename to assume for `-`. |
+| `-o, --output PATH` | Write output to a file. |
+| `--severity LEVEL` | **Deprecated** alias of `--fail-on`. |
 
 ## Examples
 
 ```bash
 codeguard scan src/
-codeguard scan auth.py --format json
-codeguard scan src/ --format sarif -o results.sarif
-codeguard scan . --rule CG-SEC-001 --rule CG-SEC-002
-codeguard scan . --severity high
+codeguard scan . --fail-on high --format sarif -o results.sarif
+codeguard scan . --exclude "migrations/**" -j 0
+git diff --name-only --diff-filter=d | xargs codeguard scan
+codeguard explain CG-SEC-001
 ```
 
-## Exit codes
-
-`0` no findings · `1` findings · `2` error. Full contract in [Exit codes](exit-codes.md).
-
-!!! note "Changing in v2.0"
-    v2.0 adds `codeguard ci`, `baseline`, `list-rules`, `explain`, `validate`, and `init`
-    commands, a [config file](configuration.md), `--fail-on` / `--diff` / `--baseline` /
-    `--jobs` / `--exclude` flags, stdin input, and `.gitignore`-aware discovery. `--severity`
-    becomes a display filter and `--fail-on` controls the exit code.
+See [Exit codes](exit-codes.md) and [Configuration](configuration.md).

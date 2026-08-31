@@ -18,6 +18,8 @@ repos:
         additional_dependencies:
           - click
           - rich
+          - pathspec
+          - platformdirs
         files: ^src/
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
