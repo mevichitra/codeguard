@@ -58,13 +58,13 @@ def _find_demo_script() -> Path | None:
 
 @click.command("run")
 def _run_demo() -> None:
-    """Run all bundled showcases and open the generated HTML report."""
+    """Open the interactive showcase menu."""
     script = _find_demo_script()
     if script is None:
         raise click.ClickException(
             "demo suite not found; run this command from a CodeGuard source checkout"
         )
-    completed = subprocess.run(["bash", str(script), "--html", "all"], check=False)
+    completed = subprocess.run(["bash", str(script)], check=False)
     if completed.returncode:
         raise click.exceptions.Exit(completed.returncode)
 

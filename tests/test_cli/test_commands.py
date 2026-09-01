@@ -9,8 +9,8 @@ from pathlib import Path
 
 from click.testing import CliRunner
 
-from codeguard.cli.main import cli
 from codeguard.cli import commands
+from codeguard.cli.main import cli
 
 
 class TestListRules:
@@ -78,9 +78,15 @@ class TestInit:
         # and it round-trips through validate
         assert runner.invoke(cli, ["validate"]).exit_code == 0
 
+    def test_refuses_overwrite(self, tmp_path: Path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "codeguard.toml").write_text("[codeguard]\n", encoding="utf-8")
+        r = CliRunner().invoke(cli, ["init"])
+        assert r.exit_code == 2
+
 
 class TestRunDemo:
-    def test_run_invokes_html_demo_suite(self, monkeypatch, tmp_path: Path) -> None:
+    def test_run_invokes_interactive_demo_menu(self, monkeypatch, tmp_path: Path) -> None:
         script = tmp_path / "demos" / "run_demo.sh"
         script.parent.mkdir()
         script.write_text("#!/usr/bin/env bash\n", encoding="utf-8")
@@ -98,7 +104,7 @@ class TestRunDemo:
         result = CliRunner().invoke(cli, ["run"])
 
         assert result.exit_code == 0
-        assert calls == [["bash", str(script), "--html", "all"]]
+        assert calls == [["bash", str(script)]]
 
     def test_run_reports_missing_demo_suite(self, monkeypatch) -> None:
         monkeypatch.setattr(commands, "_find_demo_script", lambda: None)
@@ -107,9 +113,3 @@ class TestRunDemo:
 
         assert result.exit_code == 1
         assert "demo suite not found" in result.output
-
-    def test_refuses_overwrite(self, tmp_path: Path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
-        monkeypatch.chdir(tmp_path)
-        (tmp_path / "codeguard.toml").write_text("[codeguard]\n", encoding="utf-8")
-        r = CliRunner().invoke(cli, ["init"])
-        assert r.exit_code == 2

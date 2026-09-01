@@ -17,18 +17,17 @@ print_menu() {
   echo "================================================================================"
   echo "                     CODEGUARD SHOWCASE DEMO SUITE                             "
   echo "================================================================================"
-  echo " Select a demo to run:"
-  echo "   [1] Demo 1: Developer Inner-Loop (Fast, Multi-Language Static Scan)"
-  echo "   [2] Demo 2: 'Stop the Bleeding' Legacy Baseline (Day-1 Adoption)"
-  echo "   [3] Demo 3: Diff-Aware CI Gating & Platform Integration (SARIF / GitHub)"
-  echo "   [4] Demo 4: Governed Suppressions & Anti-Rot Auditing (Meta-Rules)"
-  echo "   [5] Demo 5: Centralized Policy & Monorepo Governance (codeguard.toml)"
+  echo " Select an HTML report to generate and open:"
+  echo "   [1] Demo 1: Developer Inner-Loop"
+  echo "   [2] Demo 2: Legacy Baseline Adoption"
+  echo "   [3] Demo 3: Diff-Aware CI & SARIF"
+  echo "   [4] Demo 4: Governed Suppressions"
+  echo "   [5] Demo 5: Monorepo Policy"
   echo "   [6] Real-World Scan: OWASP NodeGoat (downloads on first run)"
-  echo "   [A] Run Bundled Demos 1-5 in Sequence"
-  echo "   [H] Generate Presentation-Ready HTML Report"
+  echo "   [A] Combined HTML Report for Demos 1-5"
   echo "   [Q] Quit"
   echo "================================================================================"
-  printf " Enter selection [1-6, A, H, Q]: "
+  printf " Enter selection [1-6, A, Q]: "
 }
 
 generate_html_report() {
@@ -126,14 +125,13 @@ while true; do
   print_menu
   read -r choice
   case "$choice" in
-    1) run_demo_1 ;;
-    2) run_demo_2 ;;
-    3) run_demo_3 ;;
-    4) run_demo_4 ;;
-    5) run_demo_5 ;;
+    1) generate_html_report 1 ;;
+    2) generate_html_report 2 ;;
+    3) generate_html_report 3 ;;
+    4) generate_html_report 4 ;;
+    5) generate_html_report 5 ;;
     6) run_demo_6 ;;
-    a|A) run_all ;;
-    h|H) generate_html_report all ;;
+    a|A) generate_html_report all ;;
     q|Q) echo "Exiting demo suite. Happy coding!" ; exit 0 ;;
     *) echo "Invalid option, please try again." ;;
   esac

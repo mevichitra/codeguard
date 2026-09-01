@@ -10,14 +10,15 @@ Launch the master interactive runner:
 ./demos/run_demo.sh
 ```
 
-Or use the CodeGuard CLI shortcut from anywhere inside the source checkout:
+Or open the interactive HTML report menu from anywhere inside the source checkout:
 
 ```bash
 codeguard run
 ```
 
-This is an alias for `./demos/run_demo.sh --html all`; it generates the bundled
-showcase report and opens it in Google Chrome.
+This is an alias for `./demos/run_demo.sh`. Choose demos 1–5 to generate an
+individual HTML report, `A` for the combined report, or `6` for the real-world
+OWASP NodeGoat scan. Generated reports open in Google Chrome.
 
 ## Presentation-ready HTML report
 
