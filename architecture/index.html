@@ -991,6 +991,10 @@
   frozen dataclass and the atomic unit of output.</li>
 <li><strong><code>engine/runner.py</code></strong> — <code>AnalysisRunner</code> walks the filesystem, parses each file, runs
   the active rules, applies suppressions, and returns findings.</li>
+<li><strong><code>analysis.py</code></strong> — project-level configuration, discovery, baseline, and policy orchestration
+  shared by editor integrations and CLI behavior.</li>
+<li><strong><code>lsp/</code></strong> — a dependency-free stdio language server that publishes CodeGuard findings as
+  native editor diagnostics for saved and in-memory source.</li>
 <li><strong><code>cli/</code></strong> — the <code>codeguard</code> command (<code>click</code>) and the output formatters.</li>
 <li><strong><code>rules/</code></strong> — built-in rules, grouped by category. Each is one file plus a
   vulnerable/safe fixture pair under <code>tests/fixtures/</code>.</li>
