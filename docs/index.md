@@ -41,6 +41,7 @@ See [Rules overview](rules/index.md) or run `codeguard list-rules`.
 
 ## Next steps
 
+- [Workflow & Value guide](workflow.md)
 - [Install](install.md)
 - [Usage](usage.md)
 - [CI integration](ci.md)

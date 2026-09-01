@@ -27,6 +27,7 @@ theme:
 
 nav:
   - Home: index.md
+  - Workflow & Value: workflow.md
   - Install: install.md
   - Usage: usage.md
   - Configuration: configuration.md

@@ -1,0 +1,2136 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="CodeGuard Product & Workflow Guide - Fast, offline static security analysis for Python, JavaScript, and TypeScript across your entire SDLC.">
+  <title>CodeGuard — Product & Workflow Guide</title>
+
+  <!-- Typography: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- PrismJS Syntax Highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4WFULAHTb5h5hWg2024WgPrQmSTGKi11MVEvP6OjSi28tPE0zkgKnTuZuwTWLWF9g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <style>
+    /* ==========================================================================
+       MUJI Design Tokens & Color Palette
+       Philosophy: Pure, functional, restrained, warm tactile natural paper & sumi ink.
+       Accent: CodeGuard Brand Color (Deep Indigo / Cobalt #4f46e5).
+       ========================================================================== */
+    :root[data-theme="light"] {
+      /* Washi paper & natural linen neutrals */
+      --bg-canvas: #fbfaf8;
+      --bg-surface: #ffffff;
+      --bg-surface-elevated: #f5f3ef;
+      --bg-surface-subtle: #faf8f5;
+      --bg-surface-muted: #eeeae2;
+      --bg-glass: rgba(251, 250, 248, 0.94);
+      
+      /* Subtle hairline borders */
+      --border-color: #e6e1d8;
+      --border-highlight: #cfc8bd;
+      --border-subtle: #ede9e1;
+      
+      /* Sumi ink & charcoal typography */
+      --text-primary: #201e1c;
+      --text-secondary: #5f5a53;
+      --text-muted: #8c867d;
+      
+      /* CodeGuard Brand Color Accents */
+      --brand-primary: #4f46e5;
+      --brand-primary-hover: #4338ca;
+      --brand-surface: #f5f3ff;
+      --brand-border: #dcd7fe;
+      --brand-glow: rgba(79, 70, 229, 0.08);
+
+      /* Semantic Tints (Subdued, natural, non-neon) */
+      --severity-high-bg: #fef2f2;
+      --severity-high-text: #991b1b;
+      --severity-high-border: #fecaca;
+      
+      --severity-med-bg: #fffbeb;
+      --severity-med-text: #92400e;
+      --severity-med-border: #fde68a;
+      
+      --severity-low-bg: #eff6ff;
+      --severity-low-text: #1e40af;
+      --severity-low-border: #bfdbfe;
+      
+      --severity-meta-bg: #faf5ff;
+      --severity-meta-text: #6b21a8;
+      --severity-meta-border: #e9d5ff;
+
+      --clean-bg: #f0fdf4;
+      --clean-text: #166534;
+      --clean-border: #bbf7d0;
+
+      --code-bg: #f5f3ef;
+      --code-border: #e6e1d8;
+      --table-header-bg: #f8f6f2;
+      --table-row-alt: #fdfcfb;
+      
+      --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.04);
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+    }
+
+    :root[data-theme="dark"] {
+      /* Dark sumi ink, stone & charcoal */
+      --bg-canvas: #141312;
+      --bg-surface: #1b1a18;
+      --bg-surface-elevated: #242220;
+      --bg-surface-subtle: #1f1e1c;
+      --bg-surface-muted: #2c2a27;
+      --bg-glass: rgba(20, 19, 18, 0.94);
+      
+      /* Fine dark stone borders */
+      --border-color: #2f2d29;
+      --border-highlight: #45423b;
+      --border-subtle: #252320;
+      
+      /* Warm parchment text */
+      --text-primary: #f2eee7;
+      --text-secondary: #aba498;
+      --text-muted: #757065;
+      
+      /* CodeGuard Brand Color Accents (Dark Mode) */
+      --brand-primary: #818cf8;
+      --brand-primary-hover: #a5b4fc;
+      --brand-surface: rgba(129, 140, 248, 0.1);
+      --brand-border: rgba(129, 140, 248, 0.28);
+      --brand-glow: rgba(129, 140, 248, 0.08);
+
+      /* Semantic Tints (Dark Mode) */
+      --severity-high-bg: rgba(239, 68, 68, 0.12);
+      --severity-high-text: #fca5a5;
+      --severity-high-border: rgba(239, 68, 68, 0.25);
+      
+      --severity-med-bg: rgba(245, 158, 11, 0.12);
+      --severity-med-text: #fcd34d;
+      --severity-med-border: rgba(245, 158, 11, 0.25);
+      
+      --severity-low-bg: rgba(59, 130, 246, 0.12);
+      --severity-low-text: #93c5fd;
+      --severity-low-border: rgba(59, 130, 246, 0.25);
+      
+      --severity-meta-bg: rgba(168, 85, 247, 0.12);
+      --severity-meta-text: #d8b4fe;
+      --severity-meta-border: rgba(168, 85, 247, 0.25);
+
+      --clean-bg: rgba(34, 197, 94, 0.12);
+      --clean-text: #86efac;
+      --clean-border: rgba(34, 197, 94, 0.25);
+
+      --code-bg: #11100f;
+      --code-border: #2c2925;
+      --table-header-bg: #1f1e1c;
+      --table-row-alt: #171615;
+
+      --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic UI', 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg-canvas);
+      color: var(--text-primary);
+      line-height: 1.72;
+      font-size: 15px;
+      font-weight: 400;
+      letter-spacing: -0.005em;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    /* ==========================================================================
+       Minimalist Header
+       ========================================================================== */
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg-glass);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2.5rem;
+      height: 56px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 0.85rem;
+      text-decoration: none;
+      color: var(--text-primary);
+    }
+
+    .brand-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      background: var(--brand-primary);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: var(--radius-sm);
+      letter-spacing: -0.02em;
+    }
+
+    .brand-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-primary);
+    }
+
+    .brand-version {
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .btn-minimal {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 0.35rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+
+    .btn-minimal:hover {
+      color: var(--text-primary);
+      background: var(--bg-surface-elevated);
+      border-color: var(--border-highlight);
+    }
+
+    .btn-minimal svg {
+      width: 14px;
+      height: 14px;
+      stroke-width: 1.75;
+    }
+
+    /* ==========================================================================
+       Layout Container
+       ========================================================================== */
+    .app-layout {
+      display: flex;
+      max-width: 1320px;
+      margin: 0 auto;
+      min-height: calc(100vh - 56px);
+    }
+
+    /* Minimal Left Sidebar */
+    .sidebar {
+      width: 250px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 56px;
+      height: calc(100vh - 56px);
+      overflow-y: auto;
+      padding: 2.25rem 1.25rem 2.25rem 2rem;
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .sidebar-heading {
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      margin-bottom: 0.65rem;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .sidebar-link {
+      display: block;
+      padding: 0.35rem 0.5rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.84rem;
+      border-radius: var(--radius-sm);
+      font-weight: 400;
+      transition: color 0.15s ease, background 0.15s ease;
+      line-height: 1.4;
+    }
+
+    .sidebar-link:hover {
+      color: var(--text-primary);
+      background: var(--bg-surface-elevated);
+    }
+
+    .sidebar-link.active {
+      color: var(--brand-primary);
+      font-weight: 600;
+      background: var(--brand-glow);
+    }
+
+    .sidebar-subitem {
+      padding-left: 1.15rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* Main Content Area */
+    .content-area {
+      flex: 1;
+      min-width: 0;
+      padding: 3rem 4rem 6rem 4rem;
+      max-width: 980px;
+    }
+
+    @media (max-width: 960px) {
+      .sidebar {
+        display: none;
+      }
+      .content-area {
+        padding: 2rem 1.5rem 4rem 1.5rem;
+      }
+    }
+
+    /* ==========================================================================
+       Hero / Philosophy Section
+       ========================================================================== */
+    .hero-section {
+      margin-bottom: 3.5rem;
+      padding-bottom: 2.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .hero-pretitle {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--brand-primary);
+      margin-bottom: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .hero-title {
+      font-size: 2.35rem;
+      font-weight: 600;
+      line-height: 1.25;
+      letter-spacing: -0.025em;
+      margin-bottom: 1.25rem;
+      color: var(--text-primary);
+    }
+
+    .hero-desc {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      line-height: 1.75;
+      max-width: 760px;
+      margin-bottom: 2.5rem;
+    }
+
+    /* MUJI Spec Sheet Stat Boxes */
+    .spec-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      border: 1px solid var(--border-color);
+      background: var(--bg-surface);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    @media (max-width: 700px) {
+      .spec-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .spec-box {
+      padding: 1.25rem 1.5rem;
+      border-right: 1px solid var(--border-color);
+      background: var(--bg-surface);
+    }
+
+    .spec-box:last-child {
+      border-right: none;
+    }
+
+    .spec-num {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--brand-primary);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .spec-label {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      letter-spacing: 0.02em;
+      margin-top: 0.35rem;
+      line-height: 1.35;
+    }
+
+    /* ==========================================================================
+       Typography & Section Headers
+       ========================================================================== */
+    h2.section-header {
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.015em;
+      margin: 4rem 0 1.25rem 0;
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+      scroll-margin-top: 70px;
+      color: var(--text-primary);
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.85rem;
+    }
+
+    .section-num-stamp {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--brand-primary);
+      font-family: 'Fira Code', monospace;
+      letter-spacing: 0.05em;
+    }
+
+    h3.sub-header {
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin: 2.25rem 0 0.85rem 0;
+      color: var(--text-primary);
+      scroll-margin-top: 70px;
+    }
+
+    p {
+      margin-bottom: 1.15rem;
+      color: var(--text-secondary);
+      line-height: 1.75;
+    }
+
+    p strong, li strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* ==========================================================================
+       SECTION 2 FOCUS: The 5 Gates of CodeGuard (#the-5-gates)
+       MUJI Aesthetic: Architectural, calm, sequential specification cards
+       ========================================================================== */
+    .gates-container {
+      margin: 2rem 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .gate-card {
+      display: grid;
+      grid-template-columns: 80px 180px 1fr 200px;
+      align-items: center;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.15rem 1.5rem;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+      box-shadow: var(--shadow-subtle);
+    }
+
+    .gate-card:hover {
+      border-color: var(--brand-border);
+      background: var(--bg-surface-subtle);
+    }
+
+    @media (max-width: 860px) {
+      .gate-card {
+        grid-template-columns: 60px 1fr;
+        gap: 0.75rem;
+        padding: 1.25rem;
+      }
+      .gate-col-trigger, .gate-col-outcome {
+        grid-column: span 2;
+      }
+    }
+
+    .gate-num-badge {
+      font-family: 'Fira Code', monospace;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--brand-primary);
+      letter-spacing: 0.05em;
+    }
+
+    .gate-info-title {
+      font-size: 0.96rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .gate-info-stage {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 0.02em;
+      margin-top: 0.15rem;
+    }
+
+    .gate-outcome-text {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.55;
+      padding-right: 1.5rem;
+    }
+
+    .gate-cmd-pill {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.76rem;
+      color: var(--text-primary);
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-color);
+      padding: 0.35rem 0.65rem;
+      border-radius: var(--radius-sm);
+      display: inline-block;
+      word-break: break-all;
+    }
+
+    /* Minimalist Comparison Table */
+    .table-container {
+      margin: 1.75rem 0;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+      background: var(--bg-surface);
+      box-shadow: var(--shadow-subtle);
+    }
+
+    table.styled-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.86rem;
+    }
+
+    table.styled-table thead tr {
+      background: var(--table-header-bg);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    table.styled-table th {
+      padding: 0.75rem 1.15rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    table.styled-table td {
+      padding: 0.85rem 1.15rem;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      vertical-align: middle;
+      line-height: 1.6;
+    }
+
+    table.styled-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    table.styled-table tbody tr:hover {
+      background: var(--bg-surface-elevated);
+    }
+
+    /* Severity Stamps in MUJI Aesthetics (Crisp, quiet, fine-line) */
+    .stamp {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.15rem 0.5rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-family: 'Fira Code', monospace;
+      border: 1px solid transparent;
+    }
+
+    .stamp-high {
+      background: var(--severity-high-bg);
+      color: var(--severity-high-text);
+      border-color: var(--severity-high-border);
+    }
+
+    .stamp-medium {
+      background: var(--severity-med-bg);
+      color: var(--severity-med-text);
+      border-color: var(--severity-med-border);
+    }
+
+    .stamp-low {
+      background: var(--severity-low-bg);
+      color: var(--severity-low-text);
+      border-color: var(--severity-low-border);
+    }
+
+    .stamp-meta {
+      background: var(--severity-meta-bg);
+      color: var(--severity-meta-text);
+      border-color: var(--severity-meta-border);
+    }
+
+    .stamp-cwe {
+      background: var(--bg-surface-elevated);
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .stamp-brand {
+      background: var(--brand-surface);
+      color: var(--brand-primary);
+      border: 1px solid var(--brand-border);
+    }
+
+    /* ==========================================================================
+       Diagram Containers (ASCII & Mermaid)
+       ========================================================================== */
+    .diagram-container {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      margin: 1.75rem 0;
+      overflow-x: auto;
+      box-shadow: var(--shadow-subtle);
+    }
+
+    .diagram-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .diagram-title {
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: 0.02em;
+    }
+
+    .diagram-tag {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-family: 'Fira Code', monospace;
+    }
+
+    pre.ascii-box {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      line-height: 1.45;
+      color: var(--brand-primary);
+      overflow-x: auto;
+      padding: 1.25rem;
+      background: var(--code-bg);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+    }
+
+    .mermaid {
+      margin: 0.5rem auto;
+      text-align: center;
+    }
+
+    /* Visual 4-Stage Flow Grid */
+    .flow-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    @media (max-width: 768px) {
+      .flow-cards-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .flow-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      position: relative;
+      transition: all 0.15s ease;
+      box-shadow: var(--shadow-subtle);
+    }
+
+    .flow-card:hover {
+      border-color: var(--brand-border);
+      background: var(--bg-surface-subtle);
+    }
+
+    .flow-card-num {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--brand-primary);
+      font-family: 'Fira Code', monospace;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+      display: block;
+    }
+
+    .flow-card-title {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.45rem;
+    }
+
+    .flow-card-desc {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 0.75rem;
+    }
+
+    .flow-card-code {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      background: var(--code-bg);
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      display: inline-block;
+      border: 1px solid var(--border-color);
+    }
+
+    /* ==========================================================================
+       Value Proposition Modular Cards
+       ========================================================================== */
+    .value-cards-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      margin: 2rem 0;
+    }
+
+    .value-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: var(--shadow-subtle);
+    }
+
+    .value-card-header {
+      padding: 1rem 1.5rem;
+      background: var(--bg-surface-elevated);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .value-card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .value-card-body {
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr 1.25fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .value-card-body {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .problem-box {
+      background: var(--bg-surface-subtle);
+      border: 1px solid var(--border-color);
+      border-left: 3px solid var(--severity-high-border);
+      border-radius: var(--radius-sm);
+      padding: 1.15rem;
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .problem-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--severity-high-text);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.45rem;
+      font-family: 'Fira Code', monospace;
+    }
+
+    .solution-box {
+      background: var(--brand-surface);
+      border: 1px solid var(--brand-border);
+      border-left: 3px solid var(--brand-primary);
+      border-radius: var(--radius-sm);
+      padding: 1.15rem;
+      font-size: 0.88rem;
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    .solution-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--brand-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.45rem;
+      font-family: 'Fira Code', monospace;
+    }
+
+    /* ==========================================================================
+       Code Blocks & Syntax Highlighting
+       ========================================================================== */
+    .code-block-wrapper {
+      position: relative;
+      margin: 1.5rem 0;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--code-border);
+      background: var(--code-bg);
+      box-shadow: var(--shadow-subtle);
+    }
+
+    .code-block-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 1rem;
+      background: var(--bg-surface-elevated);
+      border-bottom: 1px solid var(--border-color);
+      font-family: 'Fira Code', monospace;
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    .btn-copy {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      border-radius: var(--radius-sm);
+      padding: 0.2rem 0.55rem;
+      font-size: 0.72rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.15s ease;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-copy:hover {
+      color: var(--text-primary);
+      background: var(--bg-surface);
+      border-color: var(--border-highlight);
+    }
+
+    pre[class*="language-"] {
+      margin: 0 !important;
+      padding: 1.25rem !important;
+      background: transparent !important;
+      font-family: 'Fira Code', monospace !important;
+      font-size: 0.84rem !important;
+      line-height: 1.6 !important;
+      border: none !important;
+    }
+
+    code {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.84em;
+      background: var(--bg-surface-elevated);
+      padding: 0.15rem 0.35rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      color: var(--brand-primary);
+    }
+
+    /* ==========================================================================
+       Interactive Filter Toolbar
+       ========================================================================== */
+    .filter-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 0.35rem 0.75rem;
+      width: 250px;
+    }
+
+    .search-box input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-size: 0.82rem;
+      width: 100%;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .filter-chips {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      border-radius: var(--radius-sm);
+      padding: 0.25rem 0.65rem;
+      font-size: 0.76rem;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.15s ease;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .chip.active {
+      background: var(--brand-primary);
+      color: #ffffff;
+      border-color: var(--brand-primary);
+    }
+
+    /* ==========================================================================
+       Quickstart Stepper
+       ========================================================================== */
+    .stepper {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+
+    .step-item {
+      display: flex;
+      gap: 1.25rem;
+    }
+
+    .step-indicator {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      background: var(--brand-surface);
+      border: 1px solid var(--brand-border);
+      color: var(--brand-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+      font-family: 'Fira Code', monospace;
+    }
+
+    .step-content {
+      flex: 1;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.5rem;
+      box-shadow: var(--shadow-subtle);
+    }
+
+    .step-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.35rem;
+    }
+
+    /* ==========================================================================
+       Stakeholder Modular Grid
+       ========================================================================== */
+    .persona-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      margin: 2rem 0;
+    }
+
+    @media (max-width: 800px) {
+      .persona-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .persona-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-subtle);
+    }
+
+    .persona-tag {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--brand-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-family: 'Fira Code', monospace;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .persona-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.75rem;
+    }
+
+    .persona-card p {
+      font-size: 0.88rem;
+      margin-bottom: 0;
+      line-height: 1.6;
+    }
+
+    /* ==========================================================================
+       Minimal Footer
+       ========================================================================== */
+    footer {
+      border-top: 1px solid var(--border-color);
+      padding: 3rem 0;
+      margin-top: 5rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      letter-spacing: 0.02em;
+    }
+
+    footer a {
+      color: var(--brand-primary);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Print Styles */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #111111 !important;
+      }
+      .top-nav, .sidebar, .btn-minimal, .btn-copy, .filter-toolbar {
+        display: none !important;
+      }
+      .content-area {
+        padding: 0 !important;
+        max-width: 100% !important;
+      }
+      .gate-card, .spec-box, .value-card, .step-content, .table-container {
+        box-shadow: none !important;
+        border: 1px solid #d5d0c8 !important;
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="codeguard-report-theme.css">
+</head>
+<body>
+
+  <!-- Minimalist Top Navigation Header -->
+  <header class="top-nav">
+    <a href="#" class="brand">
+      <span class="brand-mark">&lt;&gt;</span>
+      <span class="brand-title">CodeGuard</span>
+      <span class="brand-version">v2.0 SAST</span>
+    </a>
+
+    <div class="nav-actions">
+      <button class="btn-minimal" id="theme-toggle" title="Toggle Natural / Dark Sumi Theme">
+        <svg id="theme-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+        <span id="theme-label">Dark Ink</span>
+      </button>
+
+      <button class="btn-minimal" onclick="window.print()" title="Print Specification">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+        </svg>
+        <span>Print</span>
+      </button>
+
+      <a href="https://github.com/mevichitra/codeguard" target="_blank" rel="noopener" class="btn-minimal">
+        <svg fill="currentColor" viewBox="0 0 24 24">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+        </svg>
+        <span>GitHub</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Application Layout -->
+  <div class="app-layout">
+
+    <!-- Minimal Left Sidebar -->
+    <aside class="sidebar">
+      <div>
+        <div class="sidebar-heading">Contents</div>
+        <ul class="sidebar-menu">
+          <li><a href="#executive-summary" class="sidebar-link active">01. Executive Summary</a></li>
+          <li><a href="#workflow-integration" class="sidebar-link">02. Development Workflow</a></li>
+          <li><a href="#the-5-gates" class="sidebar-link sidebar-subitem">• The 5 SDLC Gates</a></li>
+          <li><a href="#value-proposition" class="sidebar-link">03. Core Value Model</a></li>
+          <li><a href="#feature-catalog" class="sidebar-link">04. Feature Catalog (v2.0)</a></li>
+          <li><a href="#rules-catalog" class="sidebar-link sidebar-subitem">• Security & Meta Rules</a></li>
+          <li><a href="#cli-commands" class="sidebar-link sidebar-subitem">• CLI Commands</a></li>
+          <li><a href="#configuration" class="sidebar-link sidebar-subitem">• Configuration</a></li>
+          <li><a href="#quickstart" class="sidebar-link">05. Quickstart Guide</a></li>
+          <li><a href="#stakeholders" class="sidebar-link">06. Stakeholder Alignment</a></li>
+        </ul>
+      </div>
+
+      <div style="margin-top: auto; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+        <div class="sidebar-heading">Architecture</div>
+        <div style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.6;">
+          Zero cloud dependencies.<br>
+          Deterministic AST semantics.<br>
+          Unified policy contract.
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="content-area">
+
+      <!-- Hero Header -->
+      <section class="hero-section">
+        <div class="hero-pretitle">
+          <span>● Product & Workflow Specification</span>
+        </div>
+        <h1 class="hero-title">CodeGuard</h1>
+        <p class="hero-desc">
+          Fast, offline, zero-infrastructure static security analysis engineered to eliminate anti-patterns before code reaches production. Native support for <strong>Python, JavaScript, and TypeScript</strong> with single-configuration governance across your entire SDLC.
+        </p>
+
+        <!-- Spec Grid (MUJI Minimalist Metrics) -->
+        <div class="spec-grid">
+          <div class="spec-box">
+            <div class="spec-num">&lt; 100ms</div>
+            <div class="spec-label">Execution latency per cycle</div>
+          </div>
+          <div class="spec-box">
+            <div class="spec-num">100%</div>
+            <div class="spec-label">Offline & air-gapped privacy</div>
+          </div>
+          <div class="spec-box">
+            <div class="spec-num">3 Targets</div>
+            <div class="spec-label">Python, JavaScript & TypeScript</div>
+          </div>
+          <div class="spec-box">
+            <div class="spec-num">5 Gates</div>
+            <div class="spec-label">Continuous SDLC checkpoints</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 1: Executive Summary & Product Vision -->
+      <section id="executive-summary">
+        <h2 class="section-header">
+          <span class="section-num-stamp">01</span>
+          Executive Summary & Product Vision
+        </h2>
+
+        <p>
+          <strong>CodeGuard</strong> is a fast, developer-friendly static application security testing (SAST) tool engineered to eliminate security anti-patterns <em>before</em> code reaches production.
+        </p>
+        <p>
+          Following its <strong>v2.0 makeover</strong>, CodeGuard bridges the gap between lightweight linters and heavy enterprise SAST suites. It requires <strong>no server infrastructure, no database, no Docker daemon, and zero cloud API keys</strong>. Everything runs 100% offline, executing deterministic AST and Tree-sitter semantic analysis in milliseconds.
+        </p>
+
+        <!-- Unified Policy SDLC Architecture Diagram -->
+        <div class="diagram-container">
+          <div class="diagram-header">
+            <span class="diagram-title">SDLC Architecture & Single-Policy Governance</span>
+            <span class="diagram-tag">Unified Gates</span>
+          </div>
+
+          <pre class="ascii-box">
+       ┌────────────────────────────────────────────────────────────────────────┐
+       │                             CodeGuard                                  │
+       │   Fast • 100% Offline • Zero Noise • Unified Policy Across All Gates   │
+       └───────────────────────────────────┬────────────────────────────────────┘
+                                           │
+         ┌───────────────────┬─────────────┴───────┬────────────────────┐
+         ▼                   ▼                     ▼                    ▼
+   [Local Editor]      [Pre-Commit]          [PR / CI Gate]      [Audit & Baseline]
+   Sub-second scan     Block bad code        Diff-aware PR       Manage tech debt &
+   while coding        before commit         checks & SARIF      track suppressions</pre>
+        </div>
+      </section>
+
+      <!-- Section 2: Where CodeGuard Fits in Your Development Workflow -->
+      <section id="workflow-integration">
+        <h2 class="section-header">
+          <span class="section-num-stamp">02</span>
+          Where CodeGuard Fits in Your Development Workflow
+        </h2>
+
+        <p>
+          CodeGuard is designed around a <strong>multi-gated security model</strong>, ensuring that security validation happens continuously throughout the developer workflow rather than as a delayed gate at release time.
+        </p>
+
+        <!-- Dynamic Mermaid Flowchart -->
+        <div class="diagram-container">
+          <div class="diagram-header">
+            <span class="diagram-title">Multi-Stage SDLC Pipeline Flowchart</span>
+            <span class="diagram-tag">Continuous Validation</span>
+          </div>
+
+          <div class="mermaid">
+flowchart TD
+    subgraph S1["1. Local Development"]
+        A["Developer writes code<br>(Python, JS, TS)"] --> B["Instant CLI scan / editor<br>codeguard scan src/"]
+        B -->|Findings detected| C["Inline remediation with<br>plain-English suggestions"]
+        C --> A
+    end
+
+    subgraph S2["2. Git Hooks"]
+        A -->|git commit| D["pre-commit hook<br>(staged files only)"]
+        D -->|Fail| E["Commit rejected locally"]
+        D -->|Pass| F["git push / pre-push hook<br>(full tree check)"]
+    end
+
+    subgraph S3["3. Pull Request & CI Gate"]
+        F --> G["Open Pull Request"]
+        G --> H["codeguard ci / GitHub Action<br>(Diff-aware scan against base branch)"]
+        H --> I{"Are there new findings<br>above fail-on threshold?"}
+        I -->|Yes| J["Post inline PR annotations<br>Fail CI status check"]
+        I -->|No / Baselined| K["CI check passes<br>Upload SARIF to Security Tab"]
+    end
+
+    subgraph S4["4. Continuous Audit & Debt Management"]
+        K --> L["Merge to main"]
+        L --> M["Scheduled nightly/weekly audit"]
+        M --> N["codeguard baseline prune<br>(Track & ratchets down debt)"]
+        M --> O["codeguard suppressions list --expired<br>(Enforce temporary waiver expiry)"]
+    end
+          </div>
+        </div>
+
+        <!-- Visual 4-Stage SDLC Cards Breakdown -->
+        <div class="flow-cards-grid">
+          <div class="flow-card">
+            <span class="flow-card-num">Stage 01</span>
+            <div class="flow-card-title">Inner Loop</div>
+            <div class="flow-card-desc">Sub-second scan while coding with direct terminal carets & remediation snippets.</div>
+            <div class="flow-card-code">codeguard scan src/</div>
+          </div>
+          <div class="flow-card">
+            <span class="flow-card-num">Stage 02</span>
+            <div class="flow-card-title">Git Pre-Commit</div>
+            <div class="flow-card-desc">Fails commits locally if vulnerabilities are introduced in staged changes.</div>
+            <div class="flow-card-code">pre-commit run codeguard</div>
+          </div>
+          <div class="flow-card">
+            <span class="flow-card-num">Stage 03</span>
+            <div class="flow-card-title">PR & CI Gate</div>
+            <div class="flow-card-desc">Diff-aware scan ignores untouched legacy code; posts annotations & SARIF.</div>
+            <div class="flow-card-code">codeguard ci --sarif</div>
+          </div>
+          <div class="flow-card">
+            <span class="flow-card-num">Stage 04</span>
+            <div class="flow-card-title">Audit & Debt</div>
+            <div class="flow-card-desc">Ratchets down baselined debt over time and flags expired temporary waivers.</div>
+            <div class="flow-card-code">codeguard baseline prune</div>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             TARGET ANCHOR: The 5 Gates of CodeGuard (#the-5-gates)
+             Redesigned in MUJI Style: Minimal, sequential, clear specifications
+             ================================================================== -->
+        <h3 id="the-5-gates" class="sub-header">
+          The 5 Gates of CodeGuard
+        </h3>
+        <p>
+          Security as continuous craft — five discrete validation thresholds eliminating risk at each phase of authoring, integration, and governance:
+        </p>
+
+        <div class="gates-container">
+          
+          <!-- Gate 1 -->
+          <div class="gate-card">
+            <div class="gate-num-badge">01</div>
+            <div>
+              <div class="gate-info-title">Inner Loop</div>
+              <div class="gate-info-stage">Local Dev & IDE</div>
+            </div>
+            <div class="gate-outcome-text">
+              Developers receive sub-second feedback in their terminal with exact line numbers, code carets, and direct remediation snippets before committing.
+            </div>
+            <div class="gate-col-trigger">
+              <span class="gate-cmd-pill">codeguard scan &lt;path&gt;</span>
+            </div>
+          </div>
+
+          <!-- Gate 2 -->
+          <div class="gate-card">
+            <div class="gate-num-badge">02</div>
+            <div>
+              <div class="gate-info-title">Pre-Commit</div>
+              <div class="gate-info-stage">Git Commit Trigger</div>
+            </div>
+            <div class="gate-outcome-text">
+              Catches mistakes before they enter git history; scans strictly modified/staged files in milliseconds to keep commits clean.
+            </div>
+            <div class="gate-col-trigger">
+              <span class="gate-cmd-pill">id: codeguard</span>
+            </div>
+          </div>
+
+          <!-- Gate 3 -->
+          <div class="gate-card">
+            <div class="gate-num-badge">03</div>
+            <div>
+              <div class="gate-info-title">Pull Request</div>
+              <div class="gate-info-stage">CI Diff Pipeline</div>
+            </div>
+            <div class="gate-outcome-text">
+              Scans <strong>only changed files/lines</strong> against the PR base branch. Baselined legacy issues are ignored; only newly introduced vulnerabilities fail the build.
+            </div>
+            <div class="gate-col-trigger">
+              <span class="gate-cmd-pill">codeguard ci</span>
+            </div>
+          </div>
+
+          <!-- Gate 4 -->
+          <div class="gate-card">
+            <div class="gate-num-badge">04</div>
+            <div>
+              <div class="gate-info-title">Platform Security</div>
+              <div class="gate-info-stage">Scanning Dashboard</div>
+            </div>
+            <div class="gate-outcome-text">
+              Emits OASIS SARIF 2.1.0 to feed directly into GitHub Code Scanning, GitLab Security Dashboard, Reviewdog, or JUnit test reporters.
+            </div>
+            <div class="gate-col-trigger">
+              <span class="gate-cmd-pill">--format sarif</span>
+            </div>
+          </div>
+
+          <!-- Gate 5 -->
+          <div class="gate-card">
+            <div class="gate-num-badge">05</div>
+            <div>
+              <div class="gate-info-title">Governance & Audit</div>
+              <div class="gate-info-stage">Scheduled CI / Periodic</div>
+            </div>
+            <div class="gate-outcome-text">
+              Ensures technical debt is ratcheted down over time and temporary waivers (<code>until=YYYY-MM-DD</code>) cannot be silently forgotten.
+            </div>
+            <div class="gate-col-trigger">
+              <span class="gate-cmd-pill">baseline prune</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Reference Table -->
+        <div class="table-container">
+          <table class="styled-table">
+            <thead>
+              <tr>
+                <th>Gate</th>
+                <th>Stage</th>
+                <th>Trigger / Command</th>
+                <th>User Experience & Outcome</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Gate 1: Inner Loop</strong></td>
+                <td>Local Dev & IDE</td>
+                <td><code>codeguard scan &lt;path&gt;</code></td>
+                <td>Sub-second feedback in terminal with code carets and direct remediation snippets.</td>
+              </tr>
+              <tr>
+                <td><strong>Gate 2: Pre-Commit</strong></td>
+                <td>Git Commit</td>
+                <td><code>pre-commit</code> hook (<code>id: codeguard</code>)</td>
+                <td>Catches mistakes before committing to git history; scans only modified files.</td>
+              </tr>
+              <tr>
+                <td><strong>Gate 3: Pull Request</strong></td>
+                <td>CI Pipeline</td>
+                <td><code>codeguard ci</code> or GitHub Action</td>
+                <td>Scans only changed files/lines. Baselined issues are ignored; only new vulnerabilities fail.</td>
+              </tr>
+              <tr>
+                <td><strong>Gate 4: Platform Security</strong></td>
+                <td>Code Scanning Dashboard</td>
+                <td><code>--format sarif</code></td>
+                <td>Feeds directly into GitHub Code Scanning, GitLab Dashboard, Reviewdog, or JUnit.</td>
+              </tr>
+              <tr>
+                <td><strong>Gate 5: Governance & Audit</strong></td>
+                <td>Scheduled CI / Maintenance</td>
+                <td><code>codeguard baseline prune</code><br><code>codeguard suppressions list</code></td>
+                <td>Ratchets down debt over time and ensures temporary waivers cannot expire unnoticed.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Section 3: How CodeGuard Creates Value -->
+      <section id="value-proposition">
+        <h2 class="section-header">
+          <span class="section-num-stamp">03</span>
+          How CodeGuard Creates Value
+        </h2>
+
+        <div class="value-cards-container">
+
+          <!-- Value 1 -->
+          <div class="value-card">
+            <div class="value-card-header">
+              <div class="value-card-title">1. Shift-Left Without Developer Friction</div>
+              <span class="stamp stamp-brand">Inner Loop Velocity</span>
+            </div>
+            <div class="value-card-body">
+              <div class="problem-box">
+                <div class="problem-label">The Problem</div>
+                Traditional enterprise SAST tools take 15–45 minutes to run in CI, spit out hundreds of false positives, and deliver reports to security teams weeks after the code was written.
+              </div>
+              <div class="solution-box">
+                <div class="solution-label">The CodeGuard Solution</div>
+                CodeGuard runs in <strong>&lt; 100 milliseconds</strong> locally or in CI. It gives developers immediate, deterministic feedback directly in their terminal and PR diffs, with concrete code fixes.
+              </div>
+            </div>
+          </div>
+
+          <!-- Value 2 -->
+          <div class="value-card">
+            <div class="value-card-header">
+              <div class="value-card-title">2. "Stop the Bleeding" Baseline Adoption</div>
+              <span class="stamp stamp-medium">Zero Day-1 Friction</span>
+            </div>
+            <div class="value-card-body">
+              <div class="problem-box">
+                <div class="problem-label">The Problem</div>
+                Adding a new security tool to a legacy codebase often creates 500+ immediate alerts, causing teams to abandon the tool or disable critical rules entirely.
+              </div>
+              <div class="solution-box">
+                <div class="solution-label">The CodeGuard Solution</div>
+                Run <code>codeguard baseline create</code>. CodeGuard fingerprints existing issues into <code>.codeguard-baseline.json</code>. CI will <strong>never break on existing legacy code</strong>—it only blocks <em>new</em> vulnerabilities in active PRs. Teams prune debt incrementally over time.
+              </div>
+            </div>
+          </div>
+
+          <!-- Value 3 -->
+          <div class="value-card">
+            <div class="value-card-header">
+              <div class="value-card-title">3. Governed, Accountable Suppressions</div>
+              <span class="stamp stamp-meta">No Rotting Waivers</span>
+            </div>
+            <div class="value-card-body">
+              <div class="problem-box">
+                <div class="problem-label">The Problem</div>
+                Developers routinely bypass security warnings with unmonitored <code># noqa</code> or <code># ignore</code> comments without justification, creating permanent, untracked security blind spots.
+              </div>
+              <div class="solution-box">
+                <div class="solution-label">The CodeGuard Solution</div>
+                <ul style="padding-left: 1.15rem;">
+                  <li>Every suppression requires an explicit reason:
+                    <div style="margin: 0.35rem 0;"><code># codeguard: ignore[CG-SEC-001] reason: sanitized by custom validator</code></div>
+                    <em>(Omitting a reason raises rule <code>CG-META-001</code>).</em>
+                  </li>
+                  <li style="margin-top: 0.45rem;">Suppressions can carry expiration dates: <code>until=2026-12-31</code>.
+                    <em>(Once expired, the finding reactivates and raises <code>CG-META-002</code>).</em>
+                  </li>
+                  <li style="margin-top: 0.45rem;">Security leads can audit all waivers at any time with <code>codeguard suppressions list</code>.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Value 4 -->
+          <div class="value-card">
+            <div class="value-card-header">
+              <div class="value-card-title">4. 100% Offline, Privacy-First Architecture</div>
+              <span class="stamp stamp-brand">Air-Gapped & Compliant</span>
+            </div>
+            <div class="value-card-body" style="grid-template-columns: 1fr;">
+              <div class="solution-box">
+                <div class="solution-label">Enterprise Privacy Guarantee</div>
+                <ul style="padding-left: 1.15rem;">
+                  <li><strong>Zero Data Ingestion:</strong> No source code or AST payload is ever sent over the internet or passed to an external LLM endpoint.</li>
+                  <li><strong>Regulatory Ready:</strong> Engineered specifically for air-gapped environments, strict compliance regimes (<strong>HIPAA, SOC2, FedRAMP, ISO 27001</strong>), and IP-sensitive proprietary codebases.</li>
+                  <li><strong>Zero Runtime Dependencies:</strong> No background daemons, external databases, or heavy container prerequisites required on worker nodes.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Value 5 -->
+          <div class="value-card">
+            <div class="value-card-header">
+              <div class="value-card-title">5. Predictable CI Contracts & Multi-Ecosystem Formats</div>
+              <span class="stamp stamp-brand">Strict Exit Codes</span>
+            </div>
+            <div class="value-card-body" style="grid-template-columns: 1fr;">
+              <div class="solution-box">
+                <div class="solution-label">Deterministic Pipeline Contract</div>
+                <p>Built with strict, semantic exit codes for battle-tested automation scripting:</p>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+                  <span class="stamp" style="background: var(--clean-bg); color: var(--clean-text); border: 1px solid var(--clean-border);">Exit 0: Clean</span>
+                  <span class="stamp stamp-high">Exit 1: Findings</span>
+                  <span class="stamp stamp-medium">Exit 2: Usage Error</span>
+                  <span class="stamp stamp-medium">Exit 3: Config Error</span>
+                  <span class="stamp stamp-high">Exit 4: Internal Error</span>
+                </div>
+                <p>First-class native formatters: <code>human</code>, <code>json</code> (v1 schema envelope), <code>sarif</code> (OASIS 2.1.0), <code>github</code> (Actions workflow annotations), <code>rdjson</code> (Reviewdog), and <code>junit</code> (CI test runners).</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Section 4: Current Feature Catalog (v2.0) -->
+      <section id="feature-catalog">
+        <h2 class="section-header">
+          <span class="section-num-stamp">04</span>
+          Current Feature Catalog (v2.0)
+        </h2>
+
+        <!-- 4.1 Multi-Language Engine -->
+        <h3 class="sub-header">4.1 Multi-Language Engine</h3>
+        <p>CodeGuard features a unified, highly optimized analysis pipeline supporting:</p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin: 1rem 0 2rem 0;">
+          <div class="spec-box" style="border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+            <span class="stamp stamp-brand" style="margin-bottom: 0.5rem;">Python AST</span>
+            <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">Python Engine</div>
+            <p style="font-size: 0.82rem; margin-bottom: 0; line-height: 1.55;">Standard deterministic AST analysis across <code>.py</code> and <code>.pyi</code> files with deep expression tracking.</p>
+          </div>
+          <div class="spec-box" style="border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+            <span class="stamp stamp-meta" style="margin-bottom: 0.5rem;">Tree-sitter</span>
+            <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">JavaScript & TypeScript</div>
+            <p style="font-size: 0.82rem; margin-bottom: 0; line-height: 1.55;">High-performance semantic tree analysis supporting <code>.js</code>, <code>.jsx</code>, <code>.mjs</code>, <code>.cjs</code>, <code>.ts</code>, <code>.tsx</code>, <code>.mts</code>, and <code>.cts</code>.</p>
+          </div>
+          <div class="spec-box" style="border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+            <span class="stamp stamp-medium" style="margin-bottom: 0.5rem;">Discovery</span>
+            <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">Smart Filtering</div>
+            <p style="font-size: 0.82rem; margin-bottom: 0; line-height: 1.55;">Automatically respects <code>.gitignore</code>, skips vendor trees (<code>node_modules/</code>, <code>.venv/</code>, <code>dist/</code>), and ignores minified code.</p>
+          </div>
+          <div class="spec-box" style="border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+            <span class="stamp stamp-low" style="margin-bottom: 0.5rem;">Parallelism</span>
+            <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">Multi-Core Pool</div>
+            <p style="font-size: 0.82rem; margin-bottom: 0; line-height: 1.55;">Worker process pool (<code>--jobs / -j</code>) for saturating multiple CPU cores across massive monorepos.</p>
+          </div>
+        </div>
+
+        <!-- 4.2 Security & Meta Rules -->
+        <h3 id="rules-catalog" class="sub-header">4.2 Security & Meta Rules</h3>
+        <p>Every rule in CodeGuard has a permanent ID, standardized severity, CWE/OWASP classification, and actionable remediation guide:</p>
+
+        <!-- Minimal Search & Filter Toolbar -->
+        <div class="filter-toolbar">
+          <div class="search-box">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" id="rule-search" placeholder="Search rule ID, CWE, text...">
+          </div>
+          <div class="filter-chips">
+            <button class="chip active" data-filter="all">All Rules</button>
+            <button class="chip" data-filter="python">Python</button>
+            <button class="chip" data-filter="js-ts">JS & TS</button>
+            <button class="chip" data-filter="meta">Governance</button>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="styled-table" id="rules-table">
+            <thead>
+              <tr>
+                <th>Rule ID</th>
+                <th>Description</th>
+                <th>Severity</th>
+                <th>CWE / Ref</th>
+                <th>Languages</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-lang="python" data-severity="high">
+                <td><code>CG-SEC-001</code></td>
+                <td>SQL query constructed via f-strings, %, or .format()</td>
+                <td><span class="stamp stamp-high">HIGH</span></td>
+                <td><span class="stamp-cwe">CWE-89</span></td>
+                <td>Python</td>
+              </tr>
+              <tr data-lang="python" data-severity="high">
+                <td><code>CG-SEC-002</code></td>
+                <td>Hardcoded passwords, API keys, tokens, or credentials</td>
+                <td><span class="stamp stamp-high">HIGH</span></td>
+                <td><span class="stamp-cwe">CWE-798</span></td>
+                <td>Python</td>
+              </tr>
+              <tr data-lang="python" data-severity="high">
+                <td><code>CG-SEC-003</code></td>
+                <td>eval() or exec() execution on dynamic/non-literal input</td>
+                <td><span class="stamp stamp-high">HIGH</span></td>
+                <td><span class="stamp-cwe">CWE-95</span></td>
+                <td>Python</td>
+              </tr>
+              <tr data-lang="python" data-severity="high">
+                <td><code>CG-SEC-004</code></td>
+                <td>Unsafe deserialization (pickle.loads, yaml.load)</td>
+                <td><span class="stamp stamp-high">HIGH</span></td>
+                <td><span class="stamp-cwe">CWE-502</span></td>
+                <td>Python</td>
+              </tr>
+              <tr data-lang="python" data-severity="high">
+                <td><code>CG-SEC-005</code></td>
+                <td>subprocess() invoked with shell=True on dynamic args</td>
+                <td><span class="stamp stamp-high">HIGH</span></td>
+                <td><span class="stamp-cwe">CWE-78</span></td>
+                <td>Python</td>
+              </tr>
+              <tr data-lang="js-ts" data-severity="high">
+                <td><code>CG-SEC-101</code></td>
+                <td>Dynamic evaluation: eval(), new Function, string timer</td>
+                <td><span class="stamp stamp-high">HIGH</span></td>
+                <td><span class="stamp-cwe">CWE-95</span></td>
+                <td>JS, TS</td>
+              </tr>
+              <tr data-lang="js-ts" data-severity="high">
+                <td><code>CG-SEC-102</code></td>
+                <td>child_process.exec() invoked with a dynamic command</td>
+                <td><span class="stamp stamp-high">HIGH</span></td>
+                <td><span class="stamp-cwe">CWE-78</span></td>
+                <td>JS, TS</td>
+              </tr>
+              <tr data-lang="js-ts" data-severity="high">
+                <td><code>CG-SEC-103</code></td>
+                <td>DOM XSS sink assignment (innerHTML, document.write)</td>
+                <td><span class="stamp stamp-high">HIGH</span></td>
+                <td><span class="stamp-cwe">CWE-79</span></td>
+                <td>JS, TS</td>
+              </tr>
+              <tr data-lang="js-ts" data-severity="high">
+                <td><code>CG-SEC-104</code></td>
+                <td>React dangerouslySetInnerHTML with dynamic values</td>
+                <td><span class="stamp stamp-high">HIGH</span></td>
+                <td><span class="stamp-cwe">CWE-79</span></td>
+                <td>JS, TS</td>
+              </tr>
+              <tr data-lang="js-ts" data-severity="high">
+                <td><code>CG-SEC-105</code></td>
+                <td>Hardcoded credentials, private keys, high-entropy API</td>
+                <td><span class="stamp stamp-high">HIGH</span></td>
+                <td><span class="stamp-cwe">CWE-798</span></td>
+                <td>JS, TS</td>
+              </tr>
+              <tr data-lang="js-ts" data-severity="medium">
+                <td><code>CG-SEC-106</code></td>
+                <td>Insecure randomness: Math.random() used for security</td>
+                <td><span class="stamp stamp-medium">MEDIUM</span></td>
+                <td><span class="stamp-cwe">CWE-338</span></td>
+                <td>JS, TS</td>
+              </tr>
+              <tr data-lang="meta" data-severity="low">
+                <td><code>CG-META-001</code></td>
+                <td>Governance: Suppression comment is missing reason:</td>
+                <td><span class="stamp stamp-low">LOW</span></td>
+                <td><span class="stamp-cwe">Meta</span></td>
+                <td>All</td>
+              </tr>
+              <tr data-lang="meta" data-severity="medium">
+                <td><code>CG-META-002</code></td>
+                <td>Governance: Suppression comment until= date expired</td>
+                <td><span class="stamp stamp-medium">MEDIUM</span></td>
+                <td><span class="stamp-cwe">Meta</span></td>
+                <td>All</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 4.3 CLI Commands -->
+        <h3 id="cli-commands" class="sub-header">4.3 CLI Commands & Tooling Capabilities</h3>
+        <div class="table-container">
+          <table class="styled-table">
+            <thead>
+              <tr>
+                <th>Command</th>
+                <th>Purpose</th>
+                <th>Example Usage</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>codeguard scan</code></td>
+                <td>General scan of files, directories, or stdin</td>
+                <td><code>codeguard scan src/ --fail-on high</code></td>
+              </tr>
+              <tr>
+                <td><code>codeguard ci</code></td>
+                <td>Diff-aware PR scanning (auto-detects base branch)</td>
+                <td><code>codeguard ci --sarif codeguard.sarif</code></td>
+              </tr>
+              <tr>
+                <td><code>codeguard baseline create</code></td>
+                <td>Freeze all existing findings into a baseline JSON</td>
+                <td><code>codeguard baseline create</code></td>
+              </tr>
+              <tr>
+                <td><code>codeguard baseline update</code></td>
+                <td>Add newly found findings to existing baseline</td>
+                <td><code>codeguard baseline update</code></td>
+              </tr>
+              <tr>
+                <td><code>codeguard baseline prune</code></td>
+                <td>Clean out resolved findings to ratchet down debt</td>
+                <td><code>codeguard baseline prune</code></td>
+              </tr>
+              <tr>
+                <td><code>codeguard suppressions list</code></td>
+                <td>Audit and inspect suppression comments across repo</td>
+                <td><code>codeguard suppressions list --expired</code></td>
+              </tr>
+              <tr>
+                <td><code>codeguard init</code></td>
+                <td>Scaffold a fresh <code>codeguard.toml</code> configuration</td>
+                <td><code>codeguard init</code></td>
+              </tr>
+              <tr>
+                <td><code>codeguard validate</code></td>
+                <td>Validate <code>codeguard.toml</code> or <code>pyproject.toml</code> syntax</td>
+                <td><code>codeguard validate</code></td>
+              </tr>
+              <tr>
+                <td><code>codeguard list-rules</code></td>
+                <td>List available rules with language & category filters</td>
+                <td><code>codeguard list-rules --language python</code></td>
+              </tr>
+              <tr>
+                <td><code>codeguard explain &lt;ID&gt;</code></td>
+                <td>View full explanation, CWE references, and fix guides</td>
+                <td><code>codeguard explain CG-SEC-001</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 4.4 Centralized Configuration -->
+        <h3 id="configuration" class="sub-header">4.4 Centralized Configuration (<code>codeguard.toml</code>)</h3>
+        <p>CodeGuard can be configured via <code>codeguard.toml</code>, <code>.codeguard.toml</code>, or <code>[tool.codeguard]</code> inside <code>pyproject.toml</code>:</p>
+
+        <div class="code-block-wrapper">
+          <div class="code-block-header">
+            <span>codeguard.toml</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code class="language-toml">[codeguard]
+include   = ["src/**", "lib/**"]
+exclude   = ["**/*.min.js", "tests/fixtures/**"]
+languages = ["python", "javascript", "typescript"]
+gitignore = true
+fail_on   = "high"              # exit 1 on "high" or "critical" findings
+output    = "human"             # default output format
+jobs      = 0                   # 0 = auto-detect CPU cores
+baseline  = ".codeguard-baseline.json"
+
+[codeguard.rules]
+disable = []                    # disable specific rule IDs
+enable  = []                    # specify an allowlist of rule IDs
+
+[codeguard.rules.CG-SEC-001]
+severity = "critical"          # remap rule severity
+
+[[codeguard.overrides]]
+path    = "legacy_scripts/**"   # monorepo path-specific override
+disable = ["CG-SEC-002"]</code></pre>
+        </div>
+
+        <!-- 4.5 Packaging & Distribution -->
+        <h3 class="sub-header">4.5 Packaging & Distribution Formats</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0;">
+          <div class="spec-box" style="border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+            <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">PyPI Package</div>
+            <p style="font-size: 0.82rem; margin-bottom: 0;"><code>pipx install codeguard-cli</code> or <code>pip install codeguard-cli</code></p>
+          </div>
+          <div class="spec-box" style="border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+            <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">GitHub Action</div>
+            <p style="font-size: 0.82rem; margin-bottom: 0;">Official reusable action: <code>uses: mevichitra/codeguard/action@v2</code></p>
+          </div>
+          <div class="spec-box" style="border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+            <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">Pre-Commit Hook</div>
+            <p style="font-size: 0.82rem; margin-bottom: 0;">Ready hooks in <code>.pre-commit-hooks.yaml</code> for commit and push</p>
+          </div>
+          <div class="spec-box" style="border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+            <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">Container Image</div>
+            <p style="font-size: 0.82rem; margin-bottom: 0;">OCI image for GitLab CI, Tekton, CircleCI, and Jenkins</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 5: Quickstart: Rolling Out CodeGuard to Your Team in 3 Steps -->
+      <section id="quickstart">
+        <h2 class="section-header">
+          <span class="section-num-stamp">05</span>
+          Quickstart: Rolling Out CodeGuard in 3 Steps
+        </h2>
+
+        <div class="stepper">
+
+          <!-- Step 1 -->
+          <div class="step-item">
+            <div class="step-indicator">01</div>
+            <div class="step-content">
+              <div class="step-title">Initialize Configuration & Freeze Legacy Baseline</div>
+              <p>Install CodeGuard via pipx, generate the starter configuration, and snapshot any pre-existing issues so that CI remains green on Day 1.</p>
+              <div class="code-block-wrapper">
+                <div class="code-block-header">
+                  <span>Terminal</span>
+                  <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code class="language-bash"># 1. Install CodeGuard globally
+pipx install codeguard-cli
+
+# 2. Generate configuration
+codeguard init
+
+# 3. Snapshot existing findings so CI doesn't block on day 1
+codeguard baseline create</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="step-item">
+            <div class="step-indicator">02</div>
+            <div class="step-content">
+              <div class="step-title">Add Pre-Commit Protection (Local Gate)</div>
+              <p>Block vulnerable code before it is committed to local git history by adding the hook to <code>.pre-commit-config.yaml</code>:</p>
+              <div class="code-block-wrapper">
+                <div class="code-block-header">
+                  <span>.pre-commit-config.yaml</span>
+                  <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code class="language-yaml">repos:
+  - repo: https://github.com/mevichitra/codeguard
+    rev: v2.0.0
+    hooks:
+      - id: codeguard</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="step-item">
+            <div class="step-indicator">03</div>
+            <div class="step-content">
+              <div class="step-title">Add Pull Request Gate (GitHub Actions)</div>
+              <p>Create <code>.github/workflows/codeguard.yml</code> to run diff-aware scans on every PR against <code>main</code>:</p>
+              <div class="code-block-wrapper">
+                <div class="code-block-header">
+                  <span>.github/workflows/codeguard.yml</span>
+                  <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code class="language-yaml">name: Security Scan (CodeGuard)
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for diff-aware scanning
+
+      - name: Run CodeGuard
+        uses: mevichitra/codeguard/action@v2
+        with:
+          fail-on: high</code></pre>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Section 6: Summary: Why Developers & Security Teams Love CodeGuard -->
+      <section id="stakeholders">
+        <h2 class="section-header">
+          <span class="section-num-stamp">06</span>
+          Why Developers & Security Teams Love CodeGuard
+        </h2>
+
+        <div class="persona-grid">
+          <div class="persona-card">
+            <span class="persona-tag">Developers</span>
+            <div class="persona-title">Instant Clarity</div>
+            <p>Sub-second feedback, zero cloud lag, no broken builds on untouched legacy code, and clear remediation suggestions directly in terminal.</p>
+          </div>
+
+          <div class="persona-card">
+            <span class="persona-tag">Managers</span>
+            <div class="persona-title">Velocity Preserved</div>
+            <p>Rapid onboarding without slowing down delivery velocity or drowning engineering sprints in false-alarm triage and alert fatigue.</p>
+          </div>
+
+          <div class="persona-card">
+            <span class="persona-tag">Security</span>
+            <div class="persona-title">Rigorous Policy</div>
+            <p>Continuous enforcement across Python, JS, and TS, transparent suppression audits with mandatory reasons, and native SARIF 2.1.0 dashboards.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Minimal Footer -->
+      <footer>
+        <div>
+          CodeGuard v2.0 • Static Application Security Testing (SAST)
+        </div>
+        <div style="margin-top: 0.4rem;">
+          Released under <a href="https://github.com/mevichitra/codeguard/blob/main/LICENSE" target="_blank">Apache-2.0</a> • 
+          <a href="https://github.com/mevichitra/codeguard" target="_blank">Repository</a> • 
+          <a href="workflow.md">Markdown Source</a>
+        </div>
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- PrismJS Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-toml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+
+  <!-- Mermaid.js for Dynamic Interactive Flowchart -->
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    
+    let rawDiagram = '';
+    const mEl = document.querySelector('.mermaid');
+    if (mEl) {
+      rawDiagram = mEl.textContent;
+    }
+
+    async function initMermaid() {
+      if (!mEl || !rawDiagram) return;
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: isDark ? 'dark' : 'neutral',
+        themeVariables: {
+          darkMode: isDark,
+          primaryColor: isDark ? '#203129' : '#dcefe6',
+          primaryTextColor: isDark ? '#eef5f1' : '#15211d',
+          primaryBorderColor: isDark ? '#65d6a8' : '#0f6b4f',
+          lineColor: isDark ? '#82988e' : '#66756e',
+          secondaryColor: isDark ? '#17241e' : '#fffefa',
+          tertiaryColor: isDark ? '#26372f' : '#eceee9'
+        },
+        securityLevel: 'loose'
+      });
+      mEl.removeAttribute('data-processed');
+      mEl.textContent = rawDiagram;
+      await mermaid.run({ nodes: [mEl] });
+    }
+
+    window.addEventListener('DOMContentLoaded', initMermaid);
+    window._reinitMermaid = initMermaid;
+  </script>
+
+  <!-- Interactive Features: Theme Switcher, Search, Copy Code, Scrollspy -->
+  <script>
+    // 1. Theme Switcher with localStorage persistence
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+    const themeLabel = document.getElementById('theme-label');
+    const htmlEl = document.documentElement;
+
+    function applyTheme(theme) {
+      htmlEl.setAttribute('data-theme', theme);
+      localStorage.setItem('cg-theme', theme);
+      if (theme === 'dark') {
+        themeLabel.textContent = 'Natural Paper';
+        themeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />';
+      } else {
+        themeLabel.textContent = 'Dark Ink';
+        themeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />';
+      }
+      if (window._reinitMermaid) {
+        window._reinitMermaid();
+      }
+    }
+
+    const savedTheme = localStorage.getItem('cg-theme') || 'light';
+    applyTheme(savedTheme);
+
+    themeToggleBtn.addEventListener('click', () => {
+      const current = htmlEl.getAttribute('data-theme');
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    });
+
+    // 2. Copy to Clipboard Functionality
+    function copyCode(button) {
+      const wrapper = button.closest('.code-block-wrapper');
+      const code = wrapper.querySelector('pre code').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        const originalText = button.innerHTML;
+        button.innerHTML = 'Copied';
+        button.style.borderColor = 'var(--brand-primary)';
+        button.style.color = 'var(--brand-primary)';
+        setTimeout(() => {
+          button.innerHTML = originalText;
+          button.style.borderColor = '';
+          button.style.color = '';
+        }, 1800);
+      });
+    }
+
+    // 3. Security Rules Search and Filter
+    const searchInput = document.getElementById('rule-search');
+    const filterChips = document.querySelectorAll('.filter-chips .chip');
+    const tableRows = document.querySelectorAll('#rules-table tbody tr');
+
+    let activeFilter = 'all';
+
+    function filterTable() {
+      const query = searchInput.value.toLowerCase().trim();
+      tableRows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        const lang = row.getAttribute('data-lang');
+        const matchesQuery = !query || text.includes(query);
+        let matchesFilter = true;
+        if (activeFilter === 'python') matchesFilter = (lang === 'python');
+        else if (activeFilter === 'js-ts') matchesFilter = (lang === 'js-ts');
+        else if (activeFilter === 'meta') matchesFilter = (lang === 'meta');
+        
+        row.style.display = (matchesQuery && matchesFilter) ? '' : 'none';
+      });
+    }
+
+    searchInput.addEventListener('input', filterTable);
+
+    filterChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        filterChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        activeFilter = chip.getAttribute('data-filter');
+        filterTable();
+      });
+    });
+
+    // 4. Sidebar Active ScrollSpy
+    const sections = document.querySelectorAll('main section[id], main h3[id]');
+    const navLinks = document.querySelectorAll('.sidebar-link');
+
+    window.addEventListener('scroll', () => {
+      let currentSectionId = '';
+      sections.forEach(section => {
+        const top = section.offsetTop - 100;
+        if (window.pageYOffset >= top) {
+          currentSectionId = section.getAttribute('id');
+        }
+      });
+
+      if (currentSectionId) {
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === `#${currentSectionId}`) {
+            link.classList.add('active');
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

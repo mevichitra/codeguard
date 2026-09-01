@@ -4,11 +4,13 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 
 from click.testing import CliRunner
 
 from codeguard.cli.main import cli
+from codeguard.cli import commands
 
 
 class TestListRules:
@@ -75,6 +77,36 @@ class TestInit:
         assert (tmp_path / "codeguard.toml").exists()
         # and it round-trips through validate
         assert runner.invoke(cli, ["validate"]).exit_code == 0
+
+
+class TestRunDemo:
+    def test_run_invokes_html_demo_suite(self, monkeypatch, tmp_path: Path) -> None:
+        script = tmp_path / "demos" / "run_demo.sh"
+        script.parent.mkdir()
+        script.write_text("#!/usr/bin/env bash\n", encoding="utf-8")
+        calls: list[list[str]] = []
+
+        monkeypatch.setattr(commands, "_find_demo_script", lambda: script)
+
+        def fake_run(command: list[str], *, check: bool) -> subprocess.CompletedProcess[str]:
+            calls.append(command)
+            assert check is False
+            return subprocess.CompletedProcess(command, 0)
+
+        monkeypatch.setattr(commands.subprocess, "run", fake_run)
+
+        result = CliRunner().invoke(cli, ["run"])
+
+        assert result.exit_code == 0
+        assert calls == [["bash", str(script), "--html", "all"]]
+
+    def test_run_reports_missing_demo_suite(self, monkeypatch) -> None:
+        monkeypatch.setattr(commands, "_find_demo_script", lambda: None)
+
+        result = CliRunner().invoke(cli, ["run"])
+
+        assert result.exit_code == 1
+        assert "demo suite not found" in result.output
 
     def test_refuses_overwrite(self, tmp_path: Path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
         monkeypatch.chdir(tmp_path)

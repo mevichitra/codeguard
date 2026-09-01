@@ -1,0 +1,16 @@
+[codeguard]
+include = [
+  ".workspace/NodeGoat/app/**/*.js",
+  ".workspace/NodeGoat/config/**/*.js",
+  ".workspace/NodeGoat/server.js",
+]
+exclude = [
+  ".workspace/NodeGoat/app/assets/vendor/**",
+  ".workspace/NodeGoat/artifacts/**",
+  ".workspace/NodeGoat/test/**",
+  ".workspace/NodeGoat/node_modules/**",
+]
+languages = ["javascript"]
+gitignore = true
+fail_on = "high"
+jobs = 1

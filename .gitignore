@@ -238,6 +238,11 @@ dist
 # DynamoDB Local files
 .dynamodb/
 
+# Real-world demo checkouts and generated scan artifacts
+/demos/06_real_world_nodegoat/.workspace/
+/demos/06_real_world_nodegoat/reports/*
+!/demos/06_real_world_nodegoat/reports/.gitignore
+
 # TernJS port file
 .tern-port
 

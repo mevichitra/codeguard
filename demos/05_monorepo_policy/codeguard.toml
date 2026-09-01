@@ -1,0 +1,11 @@
+[codeguard]
+fail_on = "high"
+gitignore = true
+
+[codeguard.rules.CG-SEC-001]
+severity = "critical"
+
+# Override for internal maintenance scripts: disable CG-SEC-005 (shell commands)
+[[codeguard.overrides]]
+path = "scripts/**"
+disable = ["CG-SEC-005"]

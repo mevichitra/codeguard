@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -31,12 +32,41 @@ disable = []
 
 
 def register(group: click.Group) -> None:
+    group.add_command(_run_demo)
     group.add_command(_list_rules)
     group.add_command(_explain)
     group.add_command(_validate)
     group.add_command(_init)
     group.add_command(_baseline)
     group.add_command(_suppressions)
+
+
+def _find_demo_script() -> Path | None:
+    """Find the showcase runner from a source checkout or nested working directory."""
+    package_root = Path(__file__).resolve().parents[3]
+    roots = [Path.cwd(), *Path.cwd().parents, package_root]
+    seen: set[Path] = set()
+    for root in roots:
+        candidate = (root / "demos" / "run_demo.sh").resolve()
+        if candidate in seen:
+            continue
+        seen.add(candidate)
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+@click.command("run")
+def _run_demo() -> None:
+    """Run all bundled showcases and open the generated HTML report."""
+    script = _find_demo_script()
+    if script is None:
+        raise click.ClickException(
+            "demo suite not found; run this command from a CodeGuard source checkout"
+        )
+    completed = subprocess.run(["bash", str(script), "--html", "all"], check=False)
+    if completed.returncode:
+        raise click.exceptions.Exit(completed.returncode)
 
 
 @click.command("list-rules")
