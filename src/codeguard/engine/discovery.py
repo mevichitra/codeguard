@@ -79,6 +79,34 @@ def _spec(patterns: Iterable[str]) -> pathspec.PathSpec[Any] | None:
     return pathspec.PathSpec.from_lines("gitignore", patterns) if patterns else None
 
 
+def is_path_included(
+    path: str | Path,
+    config: DiscoveryConfig | None = None,
+    *,
+    root: str | Path | None = None,
+) -> bool:
+    """Return whether one file is eligible for a normal directory scan."""
+    cfg = config or DiscoveryConfig()
+    file_path = Path(path)
+    base = Path(root or os.getcwd()).resolve()
+    if language_for_path(file_path) is None or file_path.is_symlink():
+        return False
+    try:
+        relative = file_path.resolve().relative_to(base).as_posix()
+    except ValueError:
+        relative = file_path.name
+    if any(part in cfg.skip_dirs for part in Path(relative).parts[:-1]):
+        return False
+    exclude_spec = _spec([*cfg.exclude, *cfg.skip_files])
+    if exclude_spec and exclude_spec.match_file(relative):
+        return False
+    include_spec = _spec(cfg.include)
+    if include_spec and not include_spec.match_file(relative):
+        return False
+    gitignore = _load_gitignore(base) if cfg.respect_gitignore else None
+    return not (gitignore and gitignore.match_file(relative))
+
+
 def discover(
     paths: Sequence[str | Path],
     config: DiscoveryConfig | None = None,

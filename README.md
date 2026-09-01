@@ -131,6 +131,27 @@ _(Config file support is on the roadmap; not yet implemented.)_
     sarif_file: codeguard.sarif
 ```
 
+## Zed editor integration
+
+CodeGuard includes a development extension for Zed that displays findings as
+native editor diagnostics while keeping all analysis local.
+
+```bash
+# Install this checkout so Zed can find the command.
+pipx install -e .
+# or: uv tool install -e .
+```
+
+In Zed, open **Extensions**, select **Install Dev Extension**, and choose the
+[`editors/zed`](editors/zed) directory. The extension starts `codeguard lsp`,
+scans the workspace on startup, and refreshes open files after edits.
+
+The LSP can also be started directly by any compatible editor:
+
+```bash
+codeguard lsp
+```
+
 ---
 
 ## Contributing

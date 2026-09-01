@@ -19,6 +19,10 @@ discovery  →  language adapter (parse)  →  rules (analyze)  →  findings
   frozen dataclass and the atomic unit of output.
 - **`engine/runner.py`** — `AnalysisRunner` walks the filesystem, parses each file, runs
   the active rules, applies suppressions, and returns findings.
+- **`analysis.py`** — project-level configuration, discovery, baseline, and policy orchestration
+  shared by editor integrations and CLI behavior.
+- **`lsp/`** — a dependency-free stdio language server that publishes CodeGuard findings as
+  native editor diagnostics for saved and in-memory source.
 - **`cli/`** — the `codeguard` command (`click`) and the output formatters.
 - **`rules/`** — built-in rules, grouped by category. Each is one file plus a
   vulnerable/safe fixture pair under `tests/fixtures/`.

@@ -1,0 +1,18 @@
+id = "codeguard"
+name = "CodeGuard"
+version = "0.1.0"
+schema_version = 1
+authors = ["CodeGuard Contributors"]
+description = "Live CodeGuard security diagnostics for Python, JavaScript, and TypeScript"
+repository = "https://github.com/mevichitra/codeguard"
+
+[language_servers.codeguard]
+name = "CodeGuard"
+languages = ["Python", "JavaScript", "JSX", "TypeScript", "TSX"]
+
+[language_servers.codeguard.language_ids]
+Python = "python"
+JavaScript = "javascript"
+JSX = "javascriptreact"
+TypeScript = "typescript"
+TSX = "typescriptreact"

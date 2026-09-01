@@ -45,6 +45,14 @@ def cli() -> None:
     """CodeGuard -- fast, offline static analysis for security anti-patterns."""
 
 
+@cli.command("lsp")
+def lsp() -> None:
+    """Run the CodeGuard language server over standard input/output."""
+    from codeguard.lsp.server import run_stdio
+
+    run_stdio()
+
+
 # ---------------------------------------------------------------------------
 # Options shared by `scan` and `ci`
 # ---------------------------------------------------------------------------

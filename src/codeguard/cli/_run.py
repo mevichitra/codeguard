@@ -12,13 +12,14 @@ import click
 from rich.console import Console
 
 from codeguard import __version__
+from codeguard.analysis import active_rule_ids, apply_project_policy, discovery_config
 from codeguard.cli import formatters as fmt
 from codeguard.config import ConfigError, find_config, load_config
-from codeguard.engine.baseline import Baseline, apply_baseline
+from codeguard.engine.baseline import Baseline
 from codeguard.engine.discovery import DiscoveryConfig, discover
 from codeguard.engine.finding import Finding
 from codeguard.engine.gitdiff import changed_files, default_base, is_git_repo
-from codeguard.engine.policy import apply_config, gating_findings
+from codeguard.engine.policy import gating_findings
 from codeguard.engine.registry import REGISTRY
 from codeguard.engine.runner import AnalysisRunner
 
@@ -94,12 +95,7 @@ def execute(opt: RunOptions) -> int:
         if bad:
             err.print(f"[bold red]Error:[/bold red] unknown rule ID(s): {', '.join(bad)}.")
             return EXIT_USAGE
-    disabled = set(config.disable)
-    active_ids = [
-        r.id
-        for r in REGISTRY.all()
-        if (selected is None or r.id in selected) and r.id not in disabled
-    ]
+    active_ids = active_rule_ids(config, selected)
     now = None
     if opt.now:
         from datetime import date
@@ -111,10 +107,11 @@ def execute(opt: RunOptions) -> int:
             return EXIT_USAGE
     runner = AnalysisRunner(rule_ids=active_ids, now=now)
 
-    disc = DiscoveryConfig(
-        include=[*config.include, *opt.includes],
-        exclude=[*config.exclude, *opt.excludes],
-        respect_gitignore=config.gitignore and not opt.no_gitignore,
+    disc = discovery_config(
+        config,
+        includes=opt.includes,
+        excludes=opt.excludes,
+        no_gitignore=opt.no_gitignore,
     )
 
     # --- collect --------------------------------------------------------
@@ -135,8 +132,6 @@ def execute(opt: RunOptions) -> int:
         err.print(f"[bold red]Internal error:[/bold red] {exc}")
         return EXIT_INTERNAL
 
-    findings = apply_config(findings, config, root=str(root))
-
     # --- baseline ------------------------------------------------------
     baseline_path = opt.baseline_path
     if baseline_path is None and config.baseline:
@@ -149,8 +144,10 @@ def execute(opt: RunOptions) -> int:
         except ValueError as exc:
             err.print(f"[bold red]Config error:[/bold red] {exc}")
             return EXIT_CONFIG
-        findings = apply_baseline(findings, baseline)
+    else:
+        baseline = None
 
+    findings = apply_project_policy(findings, config, root=root, baseline=baseline)
     findings.sort(key=lambda f: (f.location.file, f.location.line, f.location.col, f.rule_id))
 
     # --- render -------------------------------------------------------

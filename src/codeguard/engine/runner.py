@@ -42,11 +42,13 @@ class AnalysisRunner:
         rule_ids: list[str] | None = None,
         *,
         now: date | None = None,
+        fingerprint_root: str | Path | None = None,
     ) -> None:
         self._registry = registry if registry is not None else REGISTRY
         self._filter: set[str] | None = set(rule_ids) if rule_ids is not None else None
         #: Date used for `until=` suppression expiry (default: today, per run).
         self._now = now
+        self._fingerprint_root = str(fingerprint_root) if fingerprint_root is not None else None
 
     @property
     def _active_rules(self) -> list[Rule]:
@@ -114,7 +116,7 @@ class AnalysisRunner:
         )
         today = now or self._now or date.today()
         suppset = SuppressionSet.parse(source)
-        rel = _fp.relative_path(filename)
+        rel = _fp.relative_path(filename, root=self._fingerprint_root)
         py_tree = ctx.python_ast if lang is Language.PYTHON else None
         enabled_ids = {r.id for r in self._active_rules}
 
@@ -224,7 +226,7 @@ class AnalysisRunner:
             with ProcessPoolExecutor(
                 max_workers=jobs,
                 initializer=_init_worker,
-                initargs=(filter_ids, now_iso),
+                initargs=(filter_ids, now_iso, self._fingerprint_root),
             ) as pool:
                 for result in pool.map(_scan_one, (str(p) for p in files)):
                     findings.extend(result)
@@ -252,12 +254,16 @@ class AnalysisRunner:
 _WORKER_RUNNER: AnalysisRunner | None = None
 
 
-def _init_worker(rule_ids: list[str] | None, now_iso: str | None) -> None:
+def _init_worker(
+    rule_ids: list[str] | None, now_iso: str | None, fingerprint_root: str | None
+) -> None:
     global _WORKER_RUNNER
     import codeguard.rules  # noqa: F401  -- register built-in rules in the child
 
     now = date.fromisoformat(now_iso) if now_iso else None
-    _WORKER_RUNNER = AnalysisRunner(rule_ids=rule_ids, now=now)
+    _WORKER_RUNNER = AnalysisRunner(
+        rule_ids=rule_ids, now=now, fingerprint_root=fingerprint_root
+    )
 
 
 def _scan_one(path_str: str) -> list[Finding]:
