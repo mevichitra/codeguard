@@ -31,4 +31,5 @@ def test_zed_extension_starts_lsp_subcommand() -> None:
     source = (root / "editors/zed/src/lib.rs").read_text(encoding="utf-8")
 
     assert 'worktree.which("codeguard")' in source
+    assert 'let relative = ".venv/bin/codeguard"' in source
     assert 'args: vec!["lsp".to_string()]' in source

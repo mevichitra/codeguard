@@ -12,9 +12,16 @@ impl zed::Extension for CodeGuardExtension {
         _language_server_id: &zed::LanguageServerId,
         worktree: &zed::Worktree,
     ) -> zed::Result<zed::Command> {
-        let command = worktree.which("codeguard").ok_or_else(|| {
-            "CodeGuard was not found on PATH. Install it with `pipx install codeguard-cli` \
-             or `uv tool install codeguard-cli`, then restart Zed."
+        let command = worktree.which("codeguard").or_else(|| {
+            let relative = ".venv/bin/codeguard";
+            worktree
+                .read_text_file(relative)
+                .ok()
+                .map(|_| format!("{}/{relative}", worktree.root_path()))
+        });
+        let command = command.ok_or_else(|| {
+            "CodeGuard was not found on PATH or at .venv/bin/codeguard. Install it with \
+             `pipx install codeguard-cli` or `uv tool install codeguard-cli`, then restart Zed."
                 .to_string()
         })?;
 
