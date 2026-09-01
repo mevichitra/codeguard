@@ -1,0 +1,1789 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Fast, offline multi-language static analysis for security anti-patterns">
+      
+      
+      
+        <link rel="canonical" href="https://mevichitra.github.io/codeguard/workflow/">
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../install/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Workflow & Value - CodeGuard</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#codeguard-product-workflow-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="CodeGuard" class="md-header__button md-logo" aria-label="CodeGuard" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            CodeGuard
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Workflow & Value
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/mevichitra/codeguard" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mevichitra/codeguard
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="CodeGuard" class="md-nav__button md-logo" aria-label="CodeGuard" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    CodeGuard
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/mevichitra/codeguard" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mevichitra/codeguard
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workflow & Value
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workflow & Value
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-executive-summary-product-vision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Executive Summary &amp; Product Vision
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-where-codeguard-fits-in-your-development-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Where CodeGuard Fits in Your Development Workflow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Where CodeGuard Fits in Your Development Workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-5-gates-of-codeguard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The 5 Gates of CodeGuard
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-how-codeguard-creates-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. How CodeGuard Creates Value
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. How CodeGuard Creates Value">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-shift-left-without-developer-friction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Shift-Left Without Developer Friction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-stop-the-bleeding-baseline-adoption-zero-day-1-friction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. "Stop the Bleeding" Baseline Adoption (Zero Day-1 Friction)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-governed-accountable-suppressions-no-rotting-waivers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Governed, Accountable Suppressions (No Rotting Waivers)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-100-offline-privacy-first-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 100% Offline, Privacy-First Architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-predictable-ci-contracts-multi-ecosystem-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Predictable CI Contracts &amp; Multi-Ecosystem Formats
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-current-feature-catalog-v20" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Current Feature Catalog (v2.0)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Current Feature Catalog (v2.0)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-multi-language-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Multi-Language Engine
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-security-meta-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Security &amp; Meta Rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-cli-commands-tooling-capabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 CLI Commands &amp; Tooling Capabilities
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-centralized-configuration-codeguardtoml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 Centralized Configuration (codeguard.toml)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#45-packaging-distribution-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.5 Packaging &amp; Distribution Formats
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-quickstart-rolling-out-codeguard-to-your-team-in-3-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Quickstart: Rolling Out CodeGuard to Your Team in 3 Steps
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Quickstart: Rolling Out CodeGuard to Your Team in 3 Steps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-initialize-configuration-freeze-legacy-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1: Initialize Configuration &amp; Freeze Legacy Baseline
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-add-pre-commit-protection-local-gate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2: Add Pre-Commit Protection (Local Gate)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-add-pull-request-gate-github-actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3: Add Pull Request Gate (GitHub Actions)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-summary-why-developers-security-teams-love-codeguard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Summary: Why Developers &amp; Security Teams Love CodeGuard
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../baseline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Baseline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../suppressions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Suppressions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../exit-codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exit codes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../output-formats/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output formats
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Rules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rules/CG-SEC-001/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-001 SQL injection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rules/CG-SEC-002/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-002 Hardcoded secrets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rules/CG-SEC-003/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-003 eval / exec
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rules/CG-SEC-004/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-004 Unsafe deserialization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rules/CG-SEC-005/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-005 Shell injection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../migration-v2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migrating to v2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-executive-summary-product-vision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Executive Summary &amp; Product Vision
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-where-codeguard-fits-in-your-development-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Where CodeGuard Fits in Your Development Workflow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Where CodeGuard Fits in Your Development Workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-5-gates-of-codeguard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The 5 Gates of CodeGuard
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-how-codeguard-creates-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. How CodeGuard Creates Value
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. How CodeGuard Creates Value">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-shift-left-without-developer-friction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Shift-Left Without Developer Friction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-stop-the-bleeding-baseline-adoption-zero-day-1-friction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. "Stop the Bleeding" Baseline Adoption (Zero Day-1 Friction)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-governed-accountable-suppressions-no-rotting-waivers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Governed, Accountable Suppressions (No Rotting Waivers)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-100-offline-privacy-first-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 100% Offline, Privacy-First Architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-predictable-ci-contracts-multi-ecosystem-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Predictable CI Contracts &amp; Multi-Ecosystem Formats
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-current-feature-catalog-v20" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Current Feature Catalog (v2.0)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Current Feature Catalog (v2.0)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-multi-language-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Multi-Language Engine
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-security-meta-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Security &amp; Meta Rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-cli-commands-tooling-capabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 CLI Commands &amp; Tooling Capabilities
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-centralized-configuration-codeguardtoml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 Centralized Configuration (codeguard.toml)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#45-packaging-distribution-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.5 Packaging &amp; Distribution Formats
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-quickstart-rolling-out-codeguard-to-your-team-in-3-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Quickstart: Rolling Out CodeGuard to Your Team in 3 Steps
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Quickstart: Rolling Out CodeGuard to Your Team in 3 Steps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-initialize-configuration-freeze-legacy-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1: Initialize Configuration &amp; Freeze Legacy Baseline
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-add-pre-commit-protection-local-gate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2: Add Pre-Commit Protection (Local Gate)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-add-pull-request-gate-github-actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3: Add Pull Request Gate (GitHub Actions)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-summary-why-developers-security-teams-love-codeguard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Summary: Why Developers &amp; Security Teams Love CodeGuard
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/mevichitra/codeguard/edit/main/docs/workflow.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="codeguard-product-workflow-guide">CodeGuard Product &amp; Workflow Guide<a class="headerlink" href="#codeguard-product-workflow-guide" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>Fast, offline, zero-infrastructure static security analysis for modern engineering teams.</strong><br />
+Native support for <strong>Python, JavaScript, and TypeScript</strong> with single-configuration governance across your entire SDLC.</p>
+</blockquote>
+<hr />
+<h2 id="1-executive-summary-product-vision">1. Executive Summary &amp; Product Vision<a class="headerlink" href="#1-executive-summary-product-vision" title="Permanent link">&para;</a></h2>
+<p><strong>CodeGuard</strong> is a fast, developer-friendly static application security testing (SAST) tool engineered to eliminate security anti-patterns <em>before</em> code reaches production. </p>
+<p>Following its <strong>v2.0 makeover</strong>, CodeGuard bridges the gap between lightweight linters and heavy enterprise SAST suites. It requires <strong>no server infrastructure, no database, no Docker daemon, and zero cloud API keys</strong>. Everything runs 100% offline, executing deterministic AST and Tree-sitter semantic analysis in milliseconds.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>       ┌────────────────────────────────────────────────────────────────────────┐
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>       │                             CodeGuard                                  │
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>       │   Fast • 100% Offline • Zero Noise • Unified Policy Across All Gates   │
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>       └───────────────────────────────────┬────────────────────────────────────┘
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>                                           │
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>         ┌───────────────────┬─────────────┴───────┬────────────────────┐
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>         ▼                   ▼                     ▼                    ▼
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>   [Local Editor]      [Pre-Commit]          [PR / CI Gate]      [Audit &amp; Baseline]
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>   Sub-second scan     Block bad code        Diff-aware PR       Manage tech debt &amp;
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>   while coding        before commit         checks &amp; SARIF      track suppressions
+</code></pre></div>
+<hr />
+<h2 id="2-where-codeguard-fits-in-your-development-workflow">2. Where CodeGuard Fits in Your Development Workflow<a class="headerlink" href="#2-where-codeguard-fits-in-your-development-workflow" title="Permanent link">&para;</a></h2>
+<p>CodeGuard is designed around a <strong>multi-gated security model</strong>, ensuring that security validation happens continuously throughout the developer workflow rather than as a delayed gate at release time.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>flowchart TD
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    subgraph S1["1. Local Development"]
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        A["Developer writes code\n(Python, JS, TS)"] --&gt; B["Instant CLI scan / editor\ncodeguard scan src/"]
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        B --&gt;|Findings detected| C["Inline remediation with\nplain-English suggestions"]
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        C --&gt; A
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    end
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    subgraph S2["2. Git Hooks"]
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>        A --&gt;|git commit| D["pre-commit hook\n(staged files only)"]
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>        D --&gt;|Fail| E["Commit rejected locally"]
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>        D --&gt;|Pass| F["git push / pre-push hook\n(full tree check)"]
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    end
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    subgraph S3["3. Pull Request &amp; CI Gate"]
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>        F --&gt; G["Open Pull Request"]
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>        G --&gt; H["codeguard ci / GitHub Action\n(Diff-aware scan against base branch)"]
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>        H --&gt; I{"Are there new findings\nabove fail-on threshold?"}
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>        I --&gt;|Yes| J["Post inline PR annotations\nFail CI status check"]
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>        I --&gt;|No / Baselined| K["CI check passes\nUpload SARIF to Security Tab"]
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    end
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>    subgraph S4["4. Continuous Audit &amp; Debt Management"]
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>        K --&gt; L["Merge to main"]
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>        L --&gt; M["Scheduled nightly/weekly audit"]
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>        M --&gt; N["codeguard baseline prune\n(Track &amp; ratchets down debt)"]
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>        M --&gt; O["codeguard suppressions list --expired\n(Enforce temporary waiver expiry)"]
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>    end
+</code></pre></div>
+<hr />
+<h3 id="the-5-gates-of-codeguard">The 5 Gates of CodeGuard<a class="headerlink" href="#the-5-gates-of-codeguard" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Gate</th>
+<th style="text-align: left;">Stage</th>
+<th style="text-align: left;">Trigger / Command</th>
+<th style="text-align: left;">User Experience &amp; Outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Gate 1: Inner Loop</strong></td>
+<td style="text-align: left;">Local Dev &amp; IDE</td>
+<td style="text-align: left;"><code>codeguard scan &lt;path&gt;</code></td>
+<td style="text-align: left;">Developers get sub-second feedback in their terminal with exact line numbers, code carets, and direct remediation snippets.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Gate 2: Pre-Commit</strong></td>
+<td style="text-align: left;">Git Commit</td>
+<td style="text-align: left;"><code>pre-commit</code> hook (<code>id: codeguard</code>)</td>
+<td style="text-align: left;">Catches mistakes before they are committed to git history; scans only modified files in milliseconds.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Gate 3: Pull Request</strong></td>
+<td style="text-align: left;">CI Pipeline</td>
+<td style="text-align: left;"><code>codeguard ci</code> or GitHub Action</td>
+<td style="text-align: left;">Scans <strong>only changed files/lines</strong> against the PR base branch. Baselined legacy issues are ignored; only <strong>newly introduced vulnerabilities</strong> fail the build.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Gate 4: Platform Security</strong></td>
+<td style="text-align: left;">Code Scanning Dashboard</td>
+<td style="text-align: left;"><code>--format sarif</code></td>
+<td style="text-align: left;">Feeds directly into GitHub Code Scanning, GitLab Security Dashboard, Reviewdog, or JUnit test reporters.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Gate 5: Governance &amp; Audit</strong></td>
+<td style="text-align: left;">Scheduled CI / Maintenance</td>
+<td style="text-align: left;"><code>codeguard baseline prune</code><br><code>codeguard suppressions list</code></td>
+<td style="text-align: left;">Ensures technical debt is reduced over time and temporary waivers (<code>until=YYYY-MM-DD</code>) cannot be silently forgotten.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-how-codeguard-creates-value">3. How CodeGuard Creates Value<a class="headerlink" href="#3-how-codeguard-creates-value" title="Permanent link">&para;</a></h2>
+<h3 id="1-shift-left-without-developer-friction">1. Shift-Left Without Developer Friction<a class="headerlink" href="#1-shift-left-without-developer-friction" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>The Problem:</strong> Traditional enterprise SAST tools take 15–45 minutes to run in CI, spit out hundreds of false positives, and deliver reports to security teams weeks after the code was written.</li>
+<li><strong>The CodeGuard Solution:</strong> CodeGuard runs in <strong>&lt; 100 milliseconds</strong> locally or in CI. It gives developers immediate, deterministic feedback directly in their terminal and PR diffs, with concrete code fixes.</li>
+</ul>
+<h3 id="2-stop-the-bleeding-baseline-adoption-zero-day-1-friction">2. "Stop the Bleeding" Baseline Adoption (Zero Day-1 Friction)<a class="headerlink" href="#2-stop-the-bleeding-baseline-adoption-zero-day-1-friction" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>The Problem:</strong> Adding a new security tool to a legacy codebase often creates 500+ immediate alerts, causing teams to abandon the tool or disable rules.</li>
+<li><strong>The CodeGuard Solution:</strong> Run <code>codeguard baseline create</code>. CodeGuard fingerprints existing issues and stores them in <code>.codeguard-baseline.json</code>. From that moment on, CI will <strong>never break on existing legacy code</strong>—it only blocks <em>new</em> vulnerabilities introduced in active PRs. Teams can then prune debt incrementally.</li>
+</ul>
+<h3 id="3-governed-accountable-suppressions-no-rotting-waivers">3. Governed, Accountable Suppressions (No Rotting Waivers)<a class="headerlink" href="#3-governed-accountable-suppressions-no-rotting-waivers" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>The Problem:</strong> Developers routinely bypass linter/security warnings with <code># noqa</code> or <code># ignore</code> comments without justification, creating permanent blind spots.</li>
+<li><strong>The CodeGuard Solution:</strong> </li>
+<li>Every suppression requires an explicit reason:<br />
+<code># codeguard: ignore[CG-SEC-001] reason: sanitized by custom validator</code><br />
+<em>(Omitting a reason raises rule <code>CG-META-001</code>).</em></li>
+<li>Suppressions can carry expiration dates: <code>until=2026-12-31</code>.<br />
+<em>(Once expired, the finding reactivates and raises <code>CG-META-002</code>).</em></li>
+<li>Security leads can audit all waivers with <code>codeguard suppressions list</code>.</li>
+</ul>
+<h3 id="4-100-offline-privacy-first-architecture">4. 100% Offline, Privacy-First Architecture<a class="headerlink" href="#4-100-offline-privacy-first-architecture" title="Permanent link">&para;</a></h3>
+<ul>
+<li>No source code is ever sent over the internet or passed to an external LLM endpoint.</li>
+<li>Ideal for air-gapped environments, strict compliance regimes (HIPAA, SOC2, FedRAMP, ISO 27001), and IP-sensitive proprietary codebases.</li>
+</ul>
+<h3 id="5-predictable-ci-contracts-multi-ecosystem-formats">5. Predictable CI Contracts &amp; Multi-Ecosystem Formats<a class="headerlink" href="#5-predictable-ci-contracts-multi-ecosystem-formats" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Built with strict semantic exit codes (<code>0</code> clean, <code>1</code> findings, <code>2</code> usage error, <code>3</code> config error, <code>4</code> internal error).</li>
+<li>First-class formatters for any pipeline: <code>human</code>, <code>json</code> (v1 schema envelope), <code>sarif</code> (OASIS 2.1.0), <code>github</code> (Actions workflow commands), <code>rdjson</code> (Reviewdog), and <code>junit</code> (CI test runners).</li>
+</ul>
+<hr />
+<h2 id="4-current-feature-catalog-v20">4. Current Feature Catalog (v2.0)<a class="headerlink" href="#4-current-feature-catalog-v20" title="Permanent link">&para;</a></h2>
+<h3 id="41-multi-language-engine">4.1 Multi-Language Engine<a class="headerlink" href="#41-multi-language-engine" title="Permanent link">&para;</a></h3>
+<p>CodeGuard features a unified analysis pipeline supporting:
+* <strong>Python</strong>: Standard AST analysis across <code>.py</code> and <code>.pyi</code> files.
+* <strong>JavaScript &amp; TypeScript</strong>: High-performance Tree-sitter semantic tree analysis supporting <code>.js</code>, <code>.jsx</code>, <code>.mjs</code>, <code>.cjs</code>, <code>.ts</code>, <code>.tsx</code>, <code>.mts</code>, and <code>.cts</code>.
+* <strong>Smart File Discovery</strong>: Automatically respects <code>.gitignore</code>, skips vendor/build artifacts (<code>node_modules/</code>, <code>.venv/</code>, <code>dist/</code>, <code>__pycache__/</code>), and ignores minified assets (<code>*.min.js</code>, <code>*.d.ts</code>).
+* <strong>Multi-Core Parallelism</strong>: Built-in worker process pool (<code>--jobs / -j</code>) for multi-core scanning across large repositories.</p>
+<hr />
+<h3 id="42-security-meta-rules">4.2 Security &amp; Meta Rules<a class="headerlink" href="#42-security-meta-rules" title="Permanent link">&para;</a></h3>
+<p>Every rule in CodeGuard has a permanent ID, standardized severity, CWE/OWASP classification, and actionable remediation guide:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>┌─────────────┬────────────────────────────────────────────────────────┬──────────┬───────────┬────────────┐
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>│ Rule ID     │ Description                                            │ Severity │ CWE / Ref │ Languages  │
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>├─────────────┼────────────────────────────────────────────────────────┼──────────┼───────────┼────────────┤
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>│ CG-SEC-001  │ SQL query constructed via f-strings, %, or .format()  │ HIGH     │ CWE-89    │ Python     │
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>│ CG-SEC-002  │ Hardcoded passwords, API keys, tokens, or credentials  │ HIGH     │ CWE-798   │ Python     │
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>│ CG-SEC-003  │ eval() or exec() execution on dynamic/non-literal input│ HIGH     │ CWE-95    │ Python     │
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>│ CG-SEC-004  │ Unsafe deserialization (pickle.loads, yaml.load)       │ HIGH     │ CWE-502   │ Python     │
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>│ CG-SEC-005  │ subprocess() invoked with shell=True on dynamic args   │ HIGH     │ CWE-78    │ Python     │
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>│ CG-SEC-101  │ Dynamic evaluation: eval(), new Function, string timer │ HIGH     │ CWE-95    │ JS, TS     │
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>│ CG-SEC-102  │ child_process.exec() invoked with a dynamic command    │ HIGH     │ CWE-78    │ JS, TS     │
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>│ CG-SEC-103  │ DOM XSS sink assignment (innerHTML, document.write)   │ HIGH     │ CWE-79    │ JS, TS     │
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>│ CG-SEC-104  │ React dangerouslySetInnerHTML with dynamic values      │ HIGH     │ CWE-79    │ JS, TS     │
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>│ CG-SEC-105  │ Hardcoded credentials, private keys, high-entropy API  │ HIGH     │ CWE-798   │ JS, TS     │
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>│ CG-SEC-106  │ Insecure randomness: Math.random() used for security   │ MEDIUM   │ CWE-338   │ JS, TS     │
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>│ CG-META-001 │ Governance: Suppression comment is missing reason:     │ LOW      │ Meta      │ All        │
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>│ CG-META-002 │ Governance: Suppression comment until= date expired    │ MEDIUM   │ Meta      │ All        │
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>└─────────────┴────────────────────────────────────────────────────────┴──────────┴───────────┴────────────┘
+</code></pre></div>
+<hr />
+<h3 id="43-cli-commands-tooling-capabilities">4.3 CLI Commands &amp; Tooling Capabilities<a class="headerlink" href="#43-cli-commands-tooling-capabilities" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Command</th>
+<th style="text-align: left;">Purpose</th>
+<th style="text-align: left;">Example Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>codeguard scan</code></td>
+<td style="text-align: left;">General scan of files, directories, or stdin</td>
+<td style="text-align: left;"><code>codeguard scan src/ --fail-on high</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>codeguard ci</code></td>
+<td style="text-align: left;">Diff-aware PR scanning (auto-detects base branch)</td>
+<td style="text-align: left;"><code>codeguard ci --sarif codeguard.sarif</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>codeguard baseline create</code></td>
+<td style="text-align: left;">Freeze all existing findings into a baseline JSON</td>
+<td style="text-align: left;"><code>codeguard baseline create</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>codeguard baseline update</code></td>
+<td style="text-align: left;">Add newly found findings to existing baseline</td>
+<td style="text-align: left;"><code>codeguard baseline update</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>codeguard baseline prune</code></td>
+<td style="text-align: left;">Clean out resolved findings to ratchet down debt</td>
+<td style="text-align: left;"><code>codeguard baseline prune</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>codeguard suppressions list</code></td>
+<td style="text-align: left;">Audit and inspect suppression comments across repo</td>
+<td style="text-align: left;"><code>codeguard suppressions list --expired</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>codeguard init</code></td>
+<td style="text-align: left;">Scaffold a fresh <code>codeguard.toml</code> configuration</td>
+<td style="text-align: left;"><code>codeguard init</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>codeguard validate</code></td>
+<td style="text-align: left;">Validate <code>codeguard.toml</code> or <code>pyproject.toml</code> syntax</td>
+<td style="text-align: left;"><code>codeguard validate</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>codeguard list-rules</code></td>
+<td style="text-align: left;">List available rules with language &amp; category filters</td>
+<td style="text-align: left;"><code>codeguard list-rules --language python</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>codeguard explain &lt;ID&gt;</code></td>
+<td style="text-align: left;">View full explanation, CWE references, and fix guides</td>
+<td style="text-align: left;"><code>codeguard explain CG-SEC-001</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="44-centralized-configuration-codeguardtoml">4.4 Centralized Configuration (<code>codeguard.toml</code>)<a class="headerlink" href="#44-centralized-configuration-codeguardtoml" title="Permanent link">&para;</a></h3>
+<p>CodeGuard can be configured via <code>codeguard.toml</code>, <code>.codeguard.toml</code>, or <code>[tool.codeguard]</code> inside <code>pyproject.toml</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">[codeguard]</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">include</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"src/**"</span><span class="p">,</span><span class="w"> </span><span class="s2">"lib/**"</span><span class="p">]</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">exclude</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"**/*.min.js"</span><span class="p">,</span><span class="w"> </span><span class="s2">"tests/fixtures/**"</span><span class="p">]</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">languages</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"python"</span><span class="p">,</span><span class="w"> </span><span class="s2">"javascript"</span><span class="p">,</span><span class="w"> </span><span class="s2">"typescript"</span><span class="p">]</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">gitignore</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="n">fail_on</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="s2">"high"</span><span class="w">              </span><span class="c1"># exit 1 on "high" or "critical" findings</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="n">output</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">"human"</span><span class="w">             </span><span class="c1"># default output format</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">jobs</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w">                   </span><span class="c1"># 0 = auto-detect CPU cores</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="n">baseline</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="s2">".codeguard-baseline.json"</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="k">[codeguard.rules]</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="n">disable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span><span class="w">                    </span><span class="c1"># disable specific rule IDs</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="n">enable</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span><span class="w">                    </span><span class="c1"># specify an allowlist of rule IDs</span>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="k">[codeguard.rules.CG-SEC-001]</span>
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="n">severity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"critical"</span><span class="w">          </span><span class="c1"># remap rule severity</span>
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="k">[[codeguard.overrides]]</span>
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="n">path</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">"legacy_scripts/**"</span><span class="w">   </span><span class="c1"># monorepo path-specific override</span>
+<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="n">disable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"CG-SEC-002"</span><span class="p">]</span>
+</code></pre></div>
+<hr />
+<h3 id="45-packaging-distribution-formats">4.5 Packaging &amp; Distribution Formats<a class="headerlink" href="#45-packaging-distribution-formats" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>PyPI Package</strong>: <code>pipx install codeguard-cli</code> or <code>pip install codeguard-cli</code> (CLI command is <code>codeguard</code>).</li>
+<li><strong>Official GitHub Action</strong>: <code>uses: mevichitra/codeguard/action@v2</code>.</li>
+<li><strong>Pre-commit Hooks</strong>: Ready-to-use hooks in <code>.pre-commit-hooks.yaml</code> for commit-time and push-time gates.</li>
+<li><strong>Container Image</strong>: Lightweight Docker image (<code>Dockerfile</code>) for generic containerized runners (GitLab CI, CircleCI, Tekton, Jenkins).</li>
+</ul>
+<hr />
+<h2 id="5-quickstart-rolling-out-codeguard-to-your-team-in-3-steps">5. Quickstart: Rolling Out CodeGuard to Your Team in 3 Steps<a class="headerlink" href="#5-quickstart-rolling-out-codeguard-to-your-team-in-3-steps" title="Permanent link">&para;</a></h2>
+<h3 id="step-1-initialize-configuration-freeze-legacy-baseline">Step 1: Initialize Configuration &amp; Freeze Legacy Baseline<a class="headerlink" href="#step-1-initialize-configuration-freeze-legacy-baseline" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># 1. Install CodeGuard</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>pipx<span class="w"> </span>install<span class="w"> </span>codeguard-cli
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># 2. Generate configuration</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>codeguard<span class="w"> </span>init
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># 3. Snapshot existing findings so CI doesn't block on day 1</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>codeguard<span class="w"> </span>baseline<span class="w"> </span>create
+</code></pre></div>
+<h3 id="step-2-add-pre-commit-protection-local-gate">Step 2: Add Pre-Commit Protection (Local Gate)<a class="headerlink" href="#step-2-add-pre-commit-protection-local-gate" title="Permanent link">&para;</a></h3>
+<p>Add to your <code>.pre-commit-config.yaml</code>:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">repos</span><span class="p">:</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/mevichitra/codeguard</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="nt">rev</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v2.0.0</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="nt">hooks</span><span class="p">:</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">codeguard</span>
+</code></pre></div></p>
+<h3 id="step-3-add-pull-request-gate-github-actions">Step 3: Add Pull Request Gate (GitHub Actions)<a class="headerlink" href="#step-3-add-pull-request-gate-github-actions" title="Permanent link">&para;</a></h3>
+<p>Add <code>.github/workflows/codeguard.yml</code>:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Security Scan (CodeGuard)</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nt">on</span><span class="p">:</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nt">pull_request</span><span class="p">:</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="nt">branches</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">main</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="nt">permissions</span><span class="p">:</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">  </span><span class="nt">contents</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">read</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span><span class="nt">security-events</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">write</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="nt">jobs</span><span class="p">:</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">  </span><span class="nt">security-scan</span><span class="p">:</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">    </span><span class="nt">runs-on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ubuntu-latest</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/checkout@v4</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">        </span><span class="nt">with</span><span class="p">:</span>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="w">          </span><span class="nt">fetch-depth</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w">  </span><span class="c1"># Required for diff-aware scanning</span>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run CodeGuard</span>
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="w">        </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mevichitra/codeguard/action@v2</span>
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="w">        </span><span class="nt">with</span><span class="p">:</span>
+<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="w">          </span><span class="nt">fail-on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">high</span>
+</code></pre></div></p>
+<hr />
+<h2 id="6-summary-why-developers-security-teams-love-codeguard">6. Summary: Why Developers &amp; Security Teams Love CodeGuard<a class="headerlink" href="#6-summary-why-developers-security-teams-love-codeguard" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>For Developers</strong>: Instant local feedback, zero cloud lag, no broken builds on untouched legacy code, and clear, copy-pasteable remediation suggestions.</li>
+<li><strong>For Engineering Managers</strong>: Rapid onboarding without slowing down delivery velocity or drowning sprint backlogs in false-alarm triage.</li>
+<li><strong>For Security Teams</strong>: Continuous policy enforcement across Python, JavaScript, and TypeScript, transparent suppression audits with mandatory justifications, and native integration into centralized security dashboards via SARIF 2.1.0.</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Apache-2.0
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "content.code.copy", "content.action.edit"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
