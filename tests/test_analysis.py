@@ -6,6 +6,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from codeguard.analysis import ProjectAnalyzer
+from codeguard.engine.baseline import Baseline
 
 VULNERABLE = 'password = "secret-value"\n'
 
@@ -43,3 +44,22 @@ def test_document_fingerprint_is_relative_to_workspace(tmp_path: Path) -> None:
 
     assert {item.fingerprint for item in workspace} == {item.fingerprint for item in document}
 
+
+def test_document_applies_inline_suppression_and_baseline(tmp_path: Path) -> None:
+    (tmp_path / ".git").mkdir()
+    source = tmp_path / "bad.py"
+    source.write_text(VULNERABLE, encoding="utf-8")
+    initial = ProjectAnalyzer(tmp_path).scan_document(VULNERABLE, source)
+    Baseline.from_findings(initial).save(tmp_path / ".codeguard-baseline.json")
+    (tmp_path / "codeguard.toml").write_text(
+        '[codeguard]\nbaseline = ".codeguard-baseline.json"\n', encoding="utf-8"
+    )
+
+    baselined = ProjectAnalyzer(tmp_path).scan_document(VULNERABLE, source)
+    suppressed = ProjectAnalyzer(tmp_path).scan_document(
+        'password = "secret-value"  # codeguard: ignore[CG-SEC-002] reason: test\n',
+        source,
+    )
+
+    assert baselined and all(item.baselined for item in baselined)
+    assert suppressed and all(item.suppressed for item in suppressed)

@@ -6,6 +6,10 @@ authors = ["CodeGuard Contributors"]
 description = "Live CodeGuard security diagnostics for Python, JavaScript, and TypeScript"
 repository = "https://github.com/mevichitra/codeguard"
 
+[lib]
+kind = "Rust"
+version = "0.7.0"
+
 [language_servers.codeguard]
 name = "CodeGuard"
 languages = ["Python", "JavaScript", "JSX", "TypeScript", "TSX"]

@@ -77,13 +77,13 @@ class CodeGuardLanguageServer:
     def __init__(self, reader: BinaryIO | None = None, writer: BinaryIO | None = None) -> None:
         self.transport = JsonRpcTransport(reader or sys.stdin.buffer, writer or sys.stdout.buffer)
         self.workspace_root = Path.cwd().resolve()
-        self.analyzer: ProjectAnalyzer | None = None
         self.documents: dict[str, Document] = {}
         self._timers: dict[str, threading.Timer] = {}
         self._executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="codeguard-lsp")
         self._lock = threading.RLock()
-        self._shutdown = False
         self._workspace_uris: set[str] = set()
+        self._client_capabilities: dict[str, Any] = {}
+        self._next_request_id = 1
 
     def run(self) -> None:
         while True:
@@ -105,12 +105,15 @@ class CodeGuardLanguageServer:
         method = message.get("method")
         params = message.get("params") or {}
         request_id = message.get("id")
+        if method is None and "id" in message:
+            return False
         try:
             if method == "initialize":
                 self._initialize(params)
                 self.transport.respond(request_id, self._initialize_result())
             elif method == "initialized":
-                self._executor.submit(self._scan_workspace)
+                self._register_config_watchers()
+                self._executor.submit(self._refresh_all)
             elif method == "textDocument/didOpen":
                 self._did_open(params)
             elif method == "textDocument/didChange":
@@ -120,13 +123,16 @@ class CodeGuardLanguageServer:
             elif method == "textDocument/didClose":
                 self._did_close(params)
             elif method == "shutdown":
-                self._shutdown = True
                 self.transport.respond(request_id, None)
             elif method == "exit":
                 return True
-            elif method in ("$/cancelRequest", "workspace/didChangeConfiguration"):
-                if method == "workspace/didChangeConfiguration":
-                    self._executor.submit(self._scan_workspace)
+            elif method in (
+                "$/cancelRequest",
+                "workspace/didChangeConfiguration",
+                "workspace/didChangeWatchedFiles",
+            ):
+                if method != "$/cancelRequest":
+                    self._executor.submit(self._refresh_all)
             elif request_id is not None:
                 self.transport.error(request_id, -32601, f"Method not found: {method}")
         except Exception as exc:  # pragma: no cover - defensive protocol boundary
@@ -144,7 +150,8 @@ class CodeGuardLanguageServer:
             root_uri = folders[0]["uri"]
         if root_uri:
             self.workspace_root = uri_to_path(root_uri).resolve()
-        self.analyzer = ProjectAnalyzer(self.workspace_root)
+        self._client_capabilities = params.get("capabilities") or {}
+        ProjectAnalyzer(self.workspace_root)  # validate project configuration during startup
 
     def _initialize_result(self) -> dict[str, Any]:
         return {
@@ -157,6 +164,46 @@ class CodeGuardLanguageServer:
             },
             "serverInfo": {"name": "CodeGuard", "version": __version__},
         }
+
+    def _register_config_watchers(self) -> None:
+        workspace = self._client_capabilities.get("workspace") or {}
+        watched = workspace.get("didChangeWatchedFiles") or {}
+        if not watched.get("dynamicRegistration"):
+            return
+        request_id = self._next_request_id
+        self._next_request_id += 1
+        watchers = [
+            {"globPattern": pattern}
+            for pattern in (
+                "**/codeguard.toml",
+                "**/.codeguard.toml",
+                "**/pyproject.toml",
+                "**/.codeguard-baseline.json",
+            )
+        ]
+        self.transport.send(
+            {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "method": "client/registerCapability",
+                "params": {
+                    "registrations": [
+                        {
+                            "id": "codeguard-config-watchers",
+                            "method": "workspace/didChangeWatchedFiles",
+                            "registerOptions": {"watchers": watchers},
+                        }
+                    ]
+                },
+            }
+        )
+
+    def _refresh_all(self) -> None:
+        self._scan_workspace()
+        with self._lock:
+            open_uris = list(self.documents)
+        for uri in open_uris:
+            self._scan_open_document(uri)
 
     def _did_open(self, params: dict[str, Any]) -> None:
         item = params["textDocument"]

@@ -173,7 +173,7 @@ On the roadmap:
 2. A Semgrep-compatible YAML rule subset for custom rules
 3. Autofix (`--fix`) for the safe-fix rules
 4. Standalone single-file binaries and a Homebrew tap
-5. An LSP server for editor integration
+5. Published editor extensions and managed standalone language-server binaries
 6. Optional, offline AI-assisted triage (confidence + rationale, no code leaves the machine)
 
 ---

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import threading
 import time
 from io import BytesIO
@@ -13,7 +14,8 @@ from click.testing import CliRunner
 
 from codeguard.cli.main import cli
 from codeguard.engine.finding import Category, Finding, Location, Severity
-from codeguard.lsp.server import CodeGuardLanguageServer, finding_to_diagnostic
+from codeguard.lsp.protocol import JsonRpcTransport
+from codeguard.lsp.server import CodeGuardLanguageServer, Document, finding_to_diagnostic
 
 VULNERABLE = 'password = "secret-value"\n'
 
@@ -26,6 +28,10 @@ class RecordingTransport:
     def notify(self, method: str, params: dict[str, Any]) -> None:
         with self._lock:
             self.notifications.append((method, params))
+
+    def send(self, message: dict[str, Any]) -> None:
+        with self._lock:
+            self.notifications.append((message["method"], message["params"]))
 
 
 def _server(tmp_path: Path) -> tuple[CodeGuardLanguageServer, RecordingTransport]:
@@ -105,7 +111,72 @@ def test_live_changes_publish_only_latest_generation(tmp_path: Path, monkeypatch
     assert not any(params["diagnostics"] for params in published)
 
 
+def test_invalid_intermediate_syntax_clears_codeguard_diagnostics(tmp_path: Path) -> None:
+    source = tmp_path / "broken.py"
+    source.write_text(VULNERABLE, encoding="utf-8")
+    server, transport = _server(tmp_path)
+    uri = source.as_uri()
+    server.documents[uri] = Document(source, "def broken(:\n", 1)
+
+    server._scan_open_document(uri)
+    server.close()
+
+    assert transport.notifications[-1][1]["diagnostics"] == []
+
+
+def test_registers_config_watchers_when_client_supports_them(tmp_path: Path) -> None:
+    server, transport = _server(tmp_path)
+    server._client_capabilities = {
+        "workspace": {"didChangeWatchedFiles": {"dynamicRegistration": True}}
+    }
+
+    server._register_config_watchers()
+    server.close()
+
+    method, params = transport.notifications[-1]
+    assert method == "client/registerCapability"
+    patterns = {
+        watcher["globPattern"]
+        for watcher in params["registrations"][0]["registerOptions"]["watchers"]
+    }
+    assert "**/codeguard.toml" in patterns
+
+
 def test_lsp_command_is_registered() -> None:
     result = CliRunner().invoke(cli, ["lsp", "--help"])
     assert result.exit_code == 0
     assert "language server" in result.output.lower()
+
+
+def test_stdio_protocol_initialize_shutdown_round_trip(tmp_path: Path) -> None:
+    def frame(message: dict[str, Any]) -> bytes:
+        payload = json.dumps(message).encode("utf-8")
+        return f"Content-Length: {len(payload)}\r\n\r\n".encode("ascii") + payload
+
+    incoming = BytesIO(
+        b"".join(
+            [
+                frame(
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "method": "initialize",
+                        "params": {"rootUri": tmp_path.as_uri()},
+                    }
+                ),
+                frame({"jsonrpc": "2.0", "id": 2, "method": "shutdown"}),
+                frame({"jsonrpc": "2.0", "method": "exit"}),
+            ]
+        )
+    )
+    outgoing = BytesIO()
+
+    CodeGuardLanguageServer(incoming, outgoing).run()
+    output_reader = JsonRpcTransport(BytesIO(outgoing.getvalue()), BytesIO())
+
+    initialize = output_reader.read()
+    shutdown = output_reader.read()
+    assert initialize is not None
+    assert initialize["id"] == 1
+    assert initialize["result"]["serverInfo"]["name"] == "CodeGuard"
+    assert shutdown == {"jsonrpc": "2.0", "id": 2, "result": None}
