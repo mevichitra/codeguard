@@ -15,7 +15,12 @@ from click.testing import CliRunner
 from codeguard.cli.main import cli
 from codeguard.engine.finding import Category, Finding, Location, Severity
 from codeguard.lsp.protocol import JsonRpcTransport
-from codeguard.lsp.server import CodeGuardLanguageServer, Document, finding_to_diagnostic
+from codeguard.lsp.server import (
+    CodeGuardLanguageServer,
+    Document,
+    finding_to_diagnostic,
+    uri_to_path,
+)
 
 VULNERABLE = 'password = "secret-value"\n'
 
@@ -199,7 +204,7 @@ def test_open_dashboard_requests_local_markdown_document(tmp_path: Path, monkeyp
         params for method, params in transport.notifications if method == "window/showDocument"
     ]
     assert show_requests
-    report_path = Path(show_requests[-1]["uri"].removeprefix("file://"))
+    report_path = uri_to_path(show_requests[-1]["uri"])
     assert report_path.is_file()
     assert "CodeGuard Dashboard" in report_path.read_text(encoding="utf-8")
 

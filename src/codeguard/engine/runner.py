@@ -261,9 +261,7 @@ def _init_worker(
     import codeguard.rules  # noqa: F401  -- register built-in rules in the child
 
     now = date.fromisoformat(now_iso) if now_iso else None
-    _WORKER_RUNNER = AnalysisRunner(
-        rule_ids=rule_ids, now=now, fingerprint_root=fingerprint_root
-    )
+    _WORKER_RUNNER = AnalysisRunner(rule_ids=rule_ids, now=now, fingerprint_root=fingerprint_root)
 
 
 def _scan_one(path_str: str) -> list[Finding]:

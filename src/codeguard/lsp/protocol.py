@@ -47,10 +47,7 @@ class JsonRpcTransport:
         self.send({"jsonrpc": "2.0", "id": request_id, "result": result})
 
     def error(self, request_id: object, code: int, message: str) -> None:
-        self.send(
-            {"jsonrpc": "2.0", "id": request_id, "error": {"code": code, "message": message}}
-        )
+        self.send({"jsonrpc": "2.0", "id": request_id, "error": {"code": code, "message": message}})
 
     def notify(self, method: str, params: Mapping[str, Any]) -> None:
         self.send({"jsonrpc": "2.0", "method": method, "params": params})
-

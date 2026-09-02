@@ -115,16 +115,12 @@ class ProjectAnalyzer:
         with self._lock:
             self.reload()
             path = Path(filename)
-            if not path.is_file() or not is_path_included(
-                path, self.discovery, root=self.root
-            ):
+            if not path.is_file() or not is_path_included(path, self.discovery, root=self.root):
                 return []
             return self._apply_policy(self.runner.run_file(path))
 
     def _apply_policy(self, findings: list[Finding]) -> list[Finding]:
-        return apply_project_policy(
-            findings, self.config, root=self.root, baseline=self.baseline
-        )
+        return apply_project_policy(findings, self.config, root=self.root, baseline=self.baseline)
 
 
 def active_rule_ids(config: Config, selected: list[str] | None = None) -> list[str]:

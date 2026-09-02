@@ -4,4 +4,3 @@
 from .server import CodeGuardLanguageServer
 
 __all__ = ["CodeGuardLanguageServer"]
-
