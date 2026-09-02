@@ -39,6 +39,7 @@ def register(group: click.Group) -> None:
     group.add_command(_init)
     group.add_command(_baseline)
     group.add_command(_suppressions)
+    group.add_command(_dashboard)
 
 
 def _find_demo_script() -> Path | None:
@@ -179,6 +180,33 @@ def _init(force: bool) -> None:
         sys.exit(2)
     target.write_text(_STARTER_TOML, encoding="utf-8")
     click.echo(f"Wrote {target}")
+
+
+@click.command("dashboard")
+@click.argument(
+    "path",
+    type=click.Path(exists=True, path_type=Path),
+    default=Path("."),
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(dir_okay=False, path_type=Path),
+    default=None,
+    help="Write the Markdown dashboard here instead of the user cache.",
+)
+def _dashboard(path: Path, output: Path | None) -> None:
+    """Generate a local Markdown security dashboard."""
+    from codeguard.analysis import ProjectAnalyzer
+    from codeguard.dashboard import write_dashboard
+
+    root = path if path.is_dir() else path.parent
+    try:
+        findings = ProjectAnalyzer(root).scan_workspace()
+        target = write_dashboard(findings, root, output=output)
+    except (ConfigError, OSError, ValueError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(str(target))
 
 
 # ---------------------------------------------------------------------------

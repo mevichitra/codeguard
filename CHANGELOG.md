@@ -17,6 +17,14 @@ diff-aware CI, baselines, packaged distribution). See
 
 <!-- towncrier release notes start -->
 
+## [2.1.0] - 2026-09-02
+
+### Added
+
+- Added a local Language Server Protocol command and a Zed development extension with workspace
+  scanning, live warning diagnostics, and a local Markdown security dashboard for Python,
+  JavaScript, JSX, TypeScript, and TSX.
+
 ## [2.0.0] - 2026-08-31
 
 ### Breaking changes

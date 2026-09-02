@@ -2,7 +2,7 @@
 
 Fast, offline static analysis that finds security anti-patterns in **Python, JavaScript, and TypeScript** — and drops into every gate of your workflow (editor, pre-commit, PR/CI, scheduled audit) from a single config file.
 
-**Status: 2.0 (beta).** Rule IDs, the `Finding`/JSON schema, config keys, and exit codes are a stable contract from 2.0. See [migration notes](docs/migration-v2.md) if you used the 0.1 alpha.
+**Status: 2.1.0 (beta).** Rule IDs, the `Finding`/JSON schema, config keys, and exit codes are a stable contract from 2.0. See [migration notes](docs/migration-v2.md) if you used the 0.1 alpha.
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://python.org)
@@ -144,7 +144,17 @@ pipx install -e .
 
 In Zed, open **Extensions**, select **Install Dev Extension**, and choose the
 [`editors/zed`](editors/zed) directory. The extension starts `codeguard lsp`,
-scans the workspace on startup, and refreshes open files after edits.
+scans the workspace on startup, and refreshes open files after edits. Findings
+appear as warnings. Clicking a CodeGuard rule link opens the local dashboard;
+the **🛡 Open CodeGuard Dashboard** quick action provides an additional route.
+
+The dashboard is a local Markdown report stored in the user cache rather than
+the analyzed repository. It can also be generated directly:
+
+```bash
+codeguard dashboard .
+codeguard dashboard . --output codeguard-report.md
+```
 
 The LSP can also be started directly by any compatible editor:
 

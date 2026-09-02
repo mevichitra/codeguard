@@ -17,6 +17,7 @@ from codeguard import __version__
 from codeguard.analysis import ProjectAnalyzer
 from codeguard.cli.formatters import finding_help_uri
 from codeguard.config import ConfigError
+from codeguard.dashboard import write_dashboard
 from codeguard.engine.finding import Finding
 
 from .protocol import JsonRpcTransport
@@ -45,19 +46,14 @@ def path_to_uri(path: Path) -> str:
     return path.resolve().as_uri()
 
 
-_SEVERITY = {"critical": 1, "high": 1, "medium": 2, "low": 3, "info": 4}
-
-
-def finding_to_diagnostic(finding: Finding) -> dict[str, Any]:
+def finding_to_diagnostic(finding: Finding, *, dashboard_uri: str | None = None) -> dict[str, Any]:
     start_line = finding.location.line - 1
     start_col = finding.location.col - 1
     end_line = (finding.location.end_line or finding.location.line) - 1
     end_col = (
-        finding.location.end_col - 1
-        if finding.location.end_col is not None
-        else start_col + 1
+        finding.location.end_col - 1 if finding.location.end_col is not None else start_col + 1
     )
-    message = f"{finding.title}\n{finding.description}"
+    message = f"🛡 {finding.title}\n{finding.description}"
     if finding.fix_suggestion:
         message += f"\n\nFix: {finding.fix_suggestion}"
     return {
@@ -65,9 +61,9 @@ def finding_to_diagnostic(finding: Finding) -> dict[str, Any]:
             "start": {"line": start_line, "character": start_col},
             "end": {"line": end_line, "character": max(end_col, start_col + 1)},
         },
-        "severity": _SEVERITY[finding.severity.value],
+        "severity": 2,
         "code": finding.rule_id,
-        "codeDescription": {"href": finding_help_uri(finding.rule_id)},
+        "codeDescription": {"href": dashboard_uri or finding_help_uri(finding.rule_id)},
         "source": "CodeGuard",
         "message": message,
     }
@@ -82,6 +78,8 @@ class CodeGuardLanguageServer:
         self._executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="codeguard-lsp")
         self._lock = threading.RLock()
         self._workspace_uris: set[str] = set()
+        self._published_findings: dict[str, list[Finding]] = {}
+        self._dashboard_file: Path | None = None
         self._client_capabilities: dict[str, Any] = {}
         self._next_request_id = 1
 
@@ -122,6 +120,14 @@ class CodeGuardLanguageServer:
                 self._did_save(params)
             elif method == "textDocument/didClose":
                 self._did_close(params)
+            elif method == "textDocument/codeLens":
+                self.transport.respond(request_id, self._code_lenses(params))
+            elif method == "textDocument/codeAction":
+                self.transport.respond(request_id, self._code_actions(params))
+            elif method == "workspace/executeCommand":
+                self.transport.respond(request_id, None)
+                if params.get("command") == "codeguard.openDashboard":
+                    self._executor.submit(self._open_dashboard)
             elif method == "shutdown":
                 self.transport.respond(request_id, None)
             elif method == "exit":
@@ -160,7 +166,10 @@ class CodeGuardLanguageServer:
                     "openClose": True,
                     "change": 1,
                     "save": {"includeText": True},
-                }
+                },
+                "codeLensProvider": {"resolveProvider": False},
+                "codeActionProvider": True,
+                "executeCommandProvider": {"commands": ["codeguard.openDashboard"]},
             },
             "serverInfo": {"name": "CodeGuard", "version": __version__},
         }
@@ -204,6 +213,47 @@ class CodeGuardLanguageServer:
             open_uris = list(self.documents)
         for uri in open_uris:
             self._scan_open_document(uri)
+
+    def _code_lenses(self, params: dict[str, Any]) -> list[dict[str, Any]]:
+        uri = params["textDocument"]["uri"]
+        with self._lock:
+            count = sum(
+                1
+                for findings in self._published_findings.values()
+                for finding in findings
+                if not finding.suppressed and not finding.baselined
+            )
+        noun = "warning" if count == 1 else "warnings"
+        return [
+            {
+                "range": {
+                    "start": {"line": 0, "character": 0},
+                    "end": {"line": 0, "character": 0},
+                },
+                "command": {
+                    "title": f"🛡 CodeGuard · {count} workspace {noun} · Open dashboard",
+                    "command": "codeguard.openDashboard",
+                    "arguments": [uri],
+                },
+            }
+        ]
+
+    def _code_actions(self, params: dict[str, Any]) -> list[dict[str, Any]]:
+        diagnostics = params.get("context", {}).get("diagnostics", [])
+        if diagnostics and not any(item.get("source") == "CodeGuard" for item in diagnostics):
+            return []
+        uri = params["textDocument"]["uri"]
+        return [
+            {
+                "title": "🛡 Open CodeGuard Dashboard",
+                "kind": "source.codeguard.dashboard",
+                "command": {
+                    "title": "🛡 Open CodeGuard Dashboard",
+                    "command": "codeguard.openDashboard",
+                    "arguments": [uri],
+                },
+            }
+        ]
 
     def _did_open(self, params: dict[str, Any]) -> None:
         item = params["textDocument"]
@@ -268,9 +318,12 @@ class CodeGuardLanguageServer:
         try:
             analyzer = ProjectAnalyzer(self.workspace_root)
             findings = analyzer.scan_workspace()
+            dashboard_file = write_dashboard(findings, self.workspace_root)
         except (ConfigError, OSError, ValueError) as exc:
             self._show_error(str(exc))
             return
+
+        self._dashboard_file = dashboard_file
 
         grouped: dict[str, list[Finding]] = {path_to_uri(path): [] for path in analyzer.files()}
         for finding in findings:
@@ -282,12 +335,13 @@ class CodeGuardLanguageServer:
             with self._lock:
                 if uri in self.documents:
                     continue
-            self._publish(uri, [])
+            self._publish(uri, [], refresh_code_lenses=False, update_dashboard=False)
         for uri, file_findings in grouped.items():
             with self._lock:
                 if uri in self.documents:
                     continue
-            self._publish(uri, file_findings)
+            self._publish(uri, file_findings, refresh_code_lenses=False, update_dashboard=False)
+        self._refresh_code_lenses()
 
     def _scan_open_document(self, uri: str) -> None:
         with self._lock:
@@ -320,11 +374,69 @@ class CodeGuardLanguageServer:
             return
         self._publish(uri, findings)
 
-    def _publish(self, uri: str, findings: list[Finding]) -> None:
+    def _publish(
+        self,
+        uri: str,
+        findings: list[Finding],
+        *,
+        refresh_code_lenses: bool = True,
+        update_dashboard: bool = True,
+    ) -> None:
         active = [item for item in findings if not item.suppressed and not item.baselined]
+        with self._lock:
+            self._published_findings[uri] = list(findings)
+            all_findings = [
+                item for published in self._published_findings.values() for item in published
+            ]
+        if update_dashboard:
+            try:
+                self._dashboard_file = write_dashboard(all_findings, self.workspace_root)
+            except OSError as exc:
+                self._show_error(str(exc))
+        dashboard_uri = self._dashboard_file.as_uri() if self._dashboard_file else None
         self.transport.notify(
             "textDocument/publishDiagnostics",
-            {"uri": uri, "diagnostics": [finding_to_diagnostic(item) for item in active]},
+            {
+                "uri": uri,
+                "diagnostics": [
+                    finding_to_diagnostic(item, dashboard_uri=dashboard_uri) for item in active
+                ],
+            },
+        )
+        if refresh_code_lenses:
+            self._refresh_code_lenses()
+
+    def _refresh_code_lenses(self) -> None:
+        workspace = self._client_capabilities.get("workspace") or {}
+        code_lens = workspace.get("codeLens") or {}
+        if not code_lens.get("refreshSupport"):
+            return
+        self._send_request("workspace/codeLens/refresh", {})
+
+    def _open_dashboard(self) -> None:
+        try:
+            analyzer = ProjectAnalyzer(self.workspace_root)
+            findings = analyzer.scan_workspace()
+            target = write_dashboard(findings, self.workspace_root)
+        except (ConfigError, OSError, ValueError) as exc:
+            self._show_error(str(exc))
+            return
+        self._dashboard_file = target
+        self._send_request(
+            "window/showDocument",
+            {"uri": target.as_uri(), "external": False, "takeFocus": True},
+        )
+        self.transport.notify(
+            "window/showMessage",
+            {"type": 3, "message": f"CodeGuard dashboard updated: {target}"},
+        )
+
+    def _send_request(self, method: str, params: dict[str, Any]) -> None:
+        with self._lock:
+            request_id = self._next_request_id
+            self._next_request_id += 1
+        self.transport.send(
+            {"jsonrpc": "2.0", "id": request_id, "method": method, "params": params}
         )
 
     def _show_error(self, message: str) -> None:

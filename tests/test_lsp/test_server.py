@@ -58,9 +58,10 @@ def test_finding_maps_to_native_diagnostic() -> None:
 
     assert diagnostic["range"]["start"] == {"line": 2, "character": 4}
     assert diagnostic["range"]["end"] == {"line": 2, "character": 9}
-    assert diagnostic["severity"] == 1
+    assert diagnostic["severity"] == 2
     assert diagnostic["code"] == "CG-SEC-001"
     assert diagnostic["source"] == "CodeGuard"
+    assert diagnostic["message"].startswith("🛡 Unsafe query")
     assert "Fix: Use parameters." in diagnostic["message"]
     assert diagnostic["codeDescription"]["href"].endswith("cg-sec-001/")
 
@@ -79,6 +80,12 @@ def test_workspace_scan_publishes_findings_for_unopened_files(tmp_path: Path) ->
         if method.endswith("publishDiagnostics")
     ]
     assert any(params["uri"] == source.as_uri() and params["diagnostics"] for params in published)
+    diagnostic = next(
+        params["diagnostics"][0]
+        for params in published
+        if params["uri"] == source.as_uri() and params["diagnostics"]
+    )
+    assert diagnostic["codeDescription"]["href"].startswith("file://")
 
 
 def test_live_changes_publish_only_latest_generation(tmp_path: Path, monkeypatch: Any) -> None:
@@ -89,9 +96,7 @@ def test_live_changes_publish_only_latest_generation(tmp_path: Path, monkeypatch
     source.write_text("x = 1\n", encoding="utf-8")
     server, transport = _server(tmp_path)
     uri = source.as_uri()
-    server._did_open(
-        {"textDocument": {"uri": uri, "text": VULNERABLE, "version": 1}}
-    )
+    server._did_open({"textDocument": {"uri": uri, "text": VULNERABLE, "version": 1}})
     server._did_change(
         {
             "textDocument": {"uri": uri, "version": 2},
@@ -140,6 +145,63 @@ def test_registers_config_watchers_when_client_supports_them(tmp_path: Path) -> 
         for watcher in params["registrations"][0]["registerOptions"]["watchers"]
     }
     assert "**/codeguard.toml" in patterns
+
+
+def test_code_lens_summarizes_workspace_warnings(tmp_path: Path) -> None:
+    source = tmp_path / "bad.py"
+    source.write_text(VULNERABLE, encoding="utf-8")
+    server, _ = _server(tmp_path)
+    uri = source.as_uri()
+    server._scan_workspace()
+
+    lenses = server._code_lenses({"textDocument": {"uri": uri}})
+    server.close()
+
+    command = lenses[0]["command"]
+    assert command["command"] == "codeguard.openDashboard"
+    assert "🛡 CodeGuard" in command["title"]
+    assert "1 workspace warning" in command["title"]
+
+
+def test_code_action_opens_dashboard_for_codeguard_warning(tmp_path: Path) -> None:
+    server, _ = _server(tmp_path)
+    uri = (tmp_path / "bad.py").as_uri()
+
+    actions = server._code_actions(
+        {
+            "textDocument": {"uri": uri},
+            "context": {"diagnostics": [{"source": "CodeGuard"}]},
+        }
+    )
+    server.close()
+
+    assert actions[0]["title"] == "🛡 Open CodeGuard Dashboard"
+    assert actions[0]["command"]["command"] == "codeguard.openDashboard"
+
+
+def test_open_dashboard_requests_local_markdown_document(tmp_path: Path, monkeypatch: Any) -> None:
+    import codeguard.lsp.server as server_module
+
+    source = tmp_path / "bad.py"
+    source.write_text(VULNERABLE, encoding="utf-8")
+    server, transport = _server(tmp_path)
+    original_write = server_module.write_dashboard
+    monkeypatch.setattr(
+        server_module,
+        "write_dashboard",
+        lambda findings, root: original_write(findings, root, output=tmp_path / "dashboard.md"),
+    )
+
+    server._open_dashboard()
+    server.close()
+
+    show_requests = [
+        params for method, params in transport.notifications if method == "window/showDocument"
+    ]
+    assert show_requests
+    report_path = Path(show_requests[-1]["uri"].removeprefix("file://"))
+    assert report_path.is_file()
+    assert "CodeGuard Dashboard" in report_path.read_text(encoding="utf-8")
 
 
 def test_lsp_command_is_registered() -> None:
