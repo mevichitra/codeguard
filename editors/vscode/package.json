@@ -5,7 +5,6 @@
   "version": "0.1.0",
   "publisher": "codeguard",
   "license": "Apache-2.0",
-  "icon": "icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/mevichitra/codeguard.git"
