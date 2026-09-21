@@ -131,10 +131,27 @@ _(Config file support is on the roadmap; not yet implemented.)_
     sarif_file: codeguard.sarif
 ```
 
-## Zed editor integration
+## Editor integrations
 
-CodeGuard includes a development extension for Zed that displays findings as
-native editor diagnostics while keeping all analysis local.
+CodeGuard includes editor extensions for Visual Studio Code and Zed that display findings as native editor diagnostics while keeping all analysis 100% local.
+
+### Visual Studio Code
+
+The VS Code extension ([`editors/vscode`](editors/vscode)) starts `codeguard lsp`, supports Python, JavaScript, JSX, TypeScript, and TSX, and provides live diagnostics, code lenses, quick actions, and settings.
+
+```bash
+# Build the extension from source:
+cd editors/vscode
+npm install
+npm run compile
+```
+
+- Press `F5` in VS Code to launch the extension in a development host.
+- Or package into a `.vsix` file using `npx @vscode/vsce package` and install via **Install from VSIX...**.
+
+### Zed editor
+
+CodeGuard includes a development extension for Zed in [`editors/zed`](editors/zed).
 
 ```bash
 # Install this checkout so Zed can find the command.
@@ -147,6 +164,8 @@ In Zed, open **Extensions**, select **Install Dev Extension**, and choose the
 scans the workspace on startup, and refreshes open files after edits. Findings
 appear as warnings. Clicking a CodeGuard rule link opens the local dashboard;
 the **🛡 Open CodeGuard Dashboard** quick action provides an additional route.
+
+### Standalone LSP and Dashboard
 
 The dashboard is a local Markdown report stored in the user cache rather than
 the analyzed repository. It can also be generated directly:

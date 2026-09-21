@@ -1,0 +1,92 @@
+{
+  "name": "codeguard",
+  "displayName": "CodeGuard",
+  "description": "Live CodeGuard security diagnostics for Python, JavaScript, and TypeScript",
+  "version": "0.1.0",
+  "publisher": "codeguard",
+  "license": "Apache-2.0",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mevichitra/codeguard.git"
+  },
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Linters",
+    "Programming Languages",
+    "Security"
+  ],
+  "keywords": [
+    "security",
+    "vulnerability",
+    "sast",
+    "linter",
+    "python",
+    "javascript",
+    "typescript"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onLanguage:python",
+    "onLanguage:javascript",
+    "onLanguage:javascriptreact",
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "codeguard.openDashboard",
+        "title": "Open CodeGuard Dashboard",
+        "category": "CodeGuard",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "codeguard.restartServer",
+        "title": "Restart Server",
+        "category": "CodeGuard"
+      }
+    ],
+    "configuration": {
+      "title": "CodeGuard",
+      "properties": {
+        "codeguard.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable or disable CodeGuard language server diagnostics."
+        },
+        "codeguard.path": {
+          "type": "string",
+          "default": "",
+          "description": "Custom path to the codeguard executable. If empty, searches workspace virtual environments (.venv/bin/codeguard) and system PATH."
+        },
+        "codeguard.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Traces the communication between VS Code and the CodeGuard language server."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "build": "npm run compile"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.75.0",
+    "typescript": "^5.4.5"
+  }
+}
