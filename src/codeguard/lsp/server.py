@@ -157,7 +157,10 @@ class CodeGuardLanguageServer:
         if root_uri:
             self.workspace_root = uri_to_path(root_uri).resolve()
         self._client_capabilities = params.get("capabilities") or {}
-        ProjectAnalyzer(self.workspace_root)  # validate project configuration during startup
+        try:
+            ProjectAnalyzer(self.workspace_root)  # validate project configuration during startup
+        except (ConfigError, OSError, ValueError) as exc:
+            LOG.warning("Initial config validation failed: %s", exc)
 
     def _initialize_result(self) -> dict[str, Any]:
         return {

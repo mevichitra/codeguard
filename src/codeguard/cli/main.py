@@ -46,7 +46,8 @@ def cli() -> None:
 
 
 @cli.command("lsp")
-def lsp() -> None:
+@click.option("--stdio", is_flag=True, default=True, help="Run language server over stdio (default).")
+def lsp(stdio: bool = True) -> None:
     """Run the CodeGuard language server over standard input/output."""
     from codeguard.lsp.server import run_stdio
 

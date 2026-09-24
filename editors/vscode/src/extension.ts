@@ -6,7 +6,7 @@ import {
   LanguageClientOptions,
   ServerOptions,
 } from "vscode-languageclient/node";
-import { findCodeGuardExecutable } from "./locate";
+import { findCodeGuardExecutable, getEnhancedEnv } from "./locate";
 
 let client: LanguageClient | undefined;
 let statusBarItem: vscode.StatusBarItem | undefined;
@@ -21,7 +21,8 @@ async function startLanguageServer(): Promise<void> {
     return;
   }
 
-  const command = findCodeGuardExecutable(vscode.workspace.workspaceFolders);
+  const workspaceFolders = vscode.workspace.workspaceFolders;
+  const command = findCodeGuardExecutable(workspaceFolders);
   if (!command) {
     if (statusBarItem) {
       statusBarItem.text = "$(shield) CodeGuard (not found)";
@@ -49,13 +50,13 @@ async function startLanguageServer(): Promise<void> {
     return;
   }
 
+  const workspaceRoot = workspaceFolders?.[0]?.uri.fsPath;
   const serverOptions: ServerOptions = {
     command,
     args: ["lsp"],
     options: {
-      env: {
-        ...process.env,
-      },
+      cwd: workspaceRoot,
+      env: getEnhancedEnv(workspaceFolders),
     },
   };
 
