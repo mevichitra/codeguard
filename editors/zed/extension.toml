@@ -1,9 +1,9 @@
 id = "codeguard"
 name = "CodeGuard"
-version = "0.1.0"
+version = "0.2.0"
 schema_version = 1
 authors = ["CodeGuard Contributors"]
-description = "Live CodeGuard security diagnostics for Python, JavaScript, and TypeScript"
+description = "Local security (with taint tracking), performance, and code-quality diagnostics with quick fixes for Python, JavaScript, and TypeScript"
 repository = "https://github.com/mevichitra/codeguard"
 
 [lib]
@@ -13,6 +13,7 @@ version = "0.7.0"
 [language_servers.codeguard]
 name = "CodeGuard"
 languages = ["Python", "JavaScript", "JSX", "TypeScript", "TSX"]
+code_action_kinds = ["quickfix", "source.fixAll.codeguard", "source.codeguard.dashboard"]
 
 [language_servers.codeguard.language_ids]
 Python = "python"
