@@ -34,6 +34,7 @@ nav:
   - CI integration: ci.md
   - Baseline: baseline.md
   - Suppressions: suppressions.md
+  - Taint tracking: taint.md
   - Exit codes: exit-codes.md
   - Output formats: output-formats.md
   - Rules:
@@ -43,6 +44,11 @@ nav:
       - CG-SEC-003 eval / exec: rules/CG-SEC-003.md
       - CG-SEC-004 Unsafe deserialization: rules/CG-SEC-004.md
       - CG-SEC-005 Shell injection: rules/CG-SEC-005.md
+      - CG-SEC-010 Tainted SQL: rules/CG-SEC-010.md
+      - CG-SEC-011 Tainted shell command: rules/CG-SEC-011.md
+      - CG-SEC-012 Tainted eval/exec: rules/CG-SEC-012.md
+      - CG-SEC-013 Path traversal: rules/CG-SEC-013.md
+      - CG-SEC-014 Open redirect: rules/CG-SEC-014.md
       - CG-SEC-101 Dynamic code execution: rules/CG-SEC-101.md
       - CG-SEC-102 child_process.exec: rules/CG-SEC-102.md
       - CG-SEC-103 DOM XSS sink: rules/CG-SEC-103.md
@@ -52,6 +58,7 @@ nav:
       - CG-META-001 Suppression without reason: rules/CG-META-001.md
       - CG-META-002 Expired suppression: rules/CG-META-002.md
   - Architecture: architecture.md
+  - Roadmap: roadmap.md
   - Migrating to v2: migration-v2.md
   - Contributing: contributing.md
 

@@ -45,6 +45,7 @@ def format_human(findings: list[Finding], *, show_suppressed: bool = False) -> s
     from io import StringIO
 
     from rich.console import Console
+    from rich.markup import escape
 
     buf = StringIO()
     console = Console(file=buf, highlight=False, markup=True)
@@ -90,8 +91,14 @@ def format_human(findings: list[Finding], *, show_suppressed: bool = False) -> s
         except OSError:
             pass
 
+        for rel in f.related:
+            console.print(
+                f"  [cyan]↳[/cyan] [dim]line {rel.location.line}:[/dim] {escape(rel.message)}"
+            )
+        if f.fix is not None and f.fix.safe:
+            console.print(f"  [green]✎ autofix:[/green] {escape(f.fix.description)} (--fix)")
         if f.fix_suggestion:
-            console.print(f"  [dim]→ {f.fix_suggestion}[/dim]")
+            console.print(f"  [dim]→ {escape(f.fix_suggestion)}[/dim]")
 
     notes = []
     if n_suppressed:

@@ -12,6 +12,11 @@ The `1xx` block covers JavaScript / TypeScript; `0xx` covers Python.
 | CG-SEC-003 | `eval()` / `exec()` on dynamic input | HIGH | CWE-95 | Python |
 | CG-SEC-004 | Unsafe deserialization | HIGH | CWE-502 | Python |
 | CG-SEC-005 | `subprocess` with `shell=True` and a dynamic command | HIGH | CWE-78 | Python |
+| CG-SEC-010 | Untrusted input reaches a SQL query (taint) | HIGH | CWE-89 | Python |
+| CG-SEC-011 | Untrusted input reaches a shell command (taint) | CRITICAL | CWE-78 | Python |
+| CG-SEC-012 | Untrusted input reaches `eval()` / `exec()` (taint) | CRITICAL | CWE-95 | Python |
+| CG-SEC-013 | Request data used as a file path (taint) | HIGH | CWE-22 | Python |
+| CG-SEC-014 | Request data used as a redirect target (taint) | MEDIUM | CWE-601 | Python |
 | CG-SEC-101 | Dynamic code execution (`eval` / `Function` / string timer) | HIGH | CWE-95 | JS, TS |
 | CG-SEC-102 | `child_process.exec` with a dynamic command | HIGH | CWE-78 | JS, TS |
 | CG-SEC-103 | DOM XSS sink assigned a non-literal (`innerHTML`, `document.write`, …) | HIGH | CWE-79 | JS, TS |

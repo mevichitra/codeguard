@@ -6,3 +6,8 @@ from . import cg_sec_002_hardcoded_secrets as _002  # noqa: F401
 from . import cg_sec_003_eval_exec as _003  # noqa: F401
 from . import cg_sec_004_unsafe_deserialization as _004  # noqa: F401
 from . import cg_sec_005_shell_injection as _005  # noqa: F401
+from . import cg_sec_010_taint_sql as _010  # noqa: F401
+from . import cg_sec_011_taint_shell as _011  # noqa: F401
+from . import cg_sec_012_taint_eval as _012  # noqa: F401
+from . import cg_sec_013_taint_path as _013  # noqa: F401
+from . import cg_sec_014_taint_redirect as _014  # noqa: F401

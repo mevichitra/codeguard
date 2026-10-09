@@ -154,10 +154,9 @@ def path_call_arg(call: ast.Call, imports: ImportMap) -> ast.expr | None:
     module, name = imports.resolve_call(call.func)
     if name is None:
         return None
+    # flask.send_from_directory is deliberately absent: it joins paths safely.
     if (module, name) in PATH_CALLS or (module is None and (None, name) in PATH_CALLS):
         return call.args[0] if call.args else None
-    if (module, name) == ("flask", "send_from_directory") and len(call.args) >= 2:
-        return call.args[1]
     return None
 
 

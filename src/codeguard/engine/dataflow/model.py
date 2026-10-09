@@ -15,13 +15,20 @@ MAX_HOPS = 6
 
 @dataclass(frozen=True)
 class TaintSource:
-    """Where untrusted data entered the program."""
+    """Where untrusted data entered the program.
+
+    ``kind`` is ``"web"`` for request data a remote attacker controls, or
+    ``"local"`` for process inputs (``sys.argv``, environment, stdin,
+    ``input()``) that only the invoking user controls.  Some rules (path
+    traversal, open redirect) only care about ``"web"`` sources.
+    """
 
     label: str
     line: int
     col: int
     end_line: int | None = None
     end_col: int | None = None
+    kind: str = "web"
 
 
 @dataclass(frozen=True)
