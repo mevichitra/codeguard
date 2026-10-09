@@ -12,12 +12,19 @@ import click
 from rich.console import Console
 
 from codeguard import __version__
-from codeguard.analysis import active_rule_ids, apply_project_policy, discovery_config
+from codeguard.analysis import (
+    active_rule_ids,
+    apply_project_policy,
+    discovery_config,
+    rule_options_from,
+    validate_rule_options,
+)
 from codeguard.cli import formatters as fmt
 from codeguard.config import ConfigError, find_config, load_config
 from codeguard.engine.baseline import Baseline
 from codeguard.engine.discovery import DiscoveryConfig, discover
 from codeguard.engine.finding import Finding
+from codeguard.engine.fixes import apply_fixes, unified_diff
 from codeguard.engine.gitdiff import changed_files, default_base, is_git_repo
 from codeguard.engine.policy import gating_findings
 from codeguard.engine.registry import REGISTRY
@@ -60,6 +67,9 @@ class RunOptions:
     diff_ref: str | None = None
     diff_auto: bool = False  # `ci` -- pick a base branch if diff_ref not given
     sarif_out: Path | None = None  # `ci` -- also write SARIF here
+    categories: tuple[str, ...] = ()  # only run rules in these categories
+    fix: bool = False  # apply safe autofixes in place
+    fix_dry_run: bool = False  # print the safe autofixes as a diff, change nothing
 
 
 def execute(opt: RunOptions) -> int:
@@ -72,6 +82,7 @@ def execute(opt: RunOptions) -> int:
     try:
         cfg_file = opt.config_path or find_config(scan_root)
         config = load_config(cfg_file)
+        validate_rule_options(config)
     except ConfigError as exc:
         err.print(f"[bold red]Config error:[/bold red] {exc}")
         return EXIT_CONFIG
@@ -95,7 +106,14 @@ def execute(opt: RunOptions) -> int:
         if bad:
             err.print(f"[bold red]Error:[/bold red] unknown rule ID(s): {', '.join(bad)}.")
             return EXIT_USAGE
-    active_ids = active_rule_ids(config, selected)
+    try:
+        active_ids = active_rule_ids(config, selected, categories=opt.categories)
+    except ConfigError as exc:
+        err.print(f"[bold red]Error:[/bold red] {exc}")
+        return EXIT_USAGE
+    if (opt.fix or opt.fix_dry_run) and any(str(p) == "-" for p in opt.paths):
+        err.print("[bold red]Error:[/bold red] --fix cannot be used with stdin ('-').")
+        return EXIT_USAGE
     now = None
     if opt.now:
         from datetime import date
@@ -105,7 +123,7 @@ def execute(opt: RunOptions) -> int:
         except ValueError:
             err.print(f"[bold red]Error:[/bold red] --now must be YYYY-MM-DD, got {opt.now!r}")
             return EXIT_USAGE
-    runner = AnalysisRunner(rule_ids=active_ids, now=now)
+    runner = AnalysisRunner(rule_ids=active_ids, now=now, rule_options=rule_options_from(config))
 
     disc = discovery_config(
         config,
@@ -149,6 +167,29 @@ def execute(opt: RunOptions) -> int:
 
     findings = apply_project_policy(findings, config, root=root, baseline=baseline)
     findings.sort(key=lambda f: (f.location.file, f.location.line, f.location.col, f.rule_id))
+
+    # --- autofix --------------------------------------------------------
+    if opt.fix_dry_run:
+        diff, fixed, files, skipped = _fix_files(findings, write=False)
+        click.echo(diff, nl=False)
+        if not opt.quiet:
+            err.print(_fix_summary("Would fix", fixed, files, skipped))
+        if opt.exit_zero:
+            return EXIT_OK
+        return EXIT_FINDINGS if gating_findings(findings, threshold) else EXIT_OK
+    if opt.fix:
+        _diff, fixed, changed, skipped = _fix_files(findings, write=True)
+        if changed:
+            rescanned = apply_project_policy(
+                runner.run_files(changed), config, root=root, baseline=baseline
+            )
+            changed_set = {str(p) for p in changed}
+            findings = [f for f in findings if f.location.file not in changed_set] + rescanned
+            findings.sort(
+                key=lambda f: (f.location.file, f.location.line, f.location.col, f.rule_id)
+            )
+        if not opt.quiet:
+            err.print(_fix_summary("Fixed", fixed, changed, skipped))
 
     # --- render -------------------------------------------------------
     text = _render(output_format, findings, opt, err)
@@ -225,3 +266,44 @@ def _render(output_format: str, findings: list[Finding], opt: RunOptions, err: C
     if output_format == "junit":
         return fmt.format_junit(findings, show_suppressed=ss)
     raise click.BadParameter(f"unknown format: {output_format}")
+
+
+def _fix_summary(verb: str, fixed: int, files: list[Path], skipped: int) -> str:
+    noun = "file" if len(files) == 1 else "files"
+    text = f"{verb} {fixed} finding(s) in {len(files)} {noun}"
+    if skipped:
+        text += f" ({skipped} skipped: overlapping edits)"
+    return text + "."
+
+
+def _fix_files(findings: list[Finding], *, write: bool) -> tuple[str, int, list[Path], int]:
+    """Apply (or preview) every safe fix, file by file.
+
+    Returns ``(unified diff, findings fixed, files changed, findings skipped)``.
+    Files that are not valid UTF-8 are left alone.
+    """
+    by_file: dict[str, list[Finding]] = {}
+    for f in findings:
+        if f.fix is not None and f.fix.safe and not f.suppressed and not f.baselined:
+            by_file.setdefault(f.location.file, []).append(f)
+
+    diffs: list[str] = []
+    fixed = skipped = 0
+    changed: list[Path] = []
+    for name in sorted(by_file):
+        path = Path(name)
+        try:
+            raw = path.read_bytes()
+            before = raw.decode("utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        result = apply_fixes(before, by_file[name])
+        skipped += len(result.skipped)
+        if not result.changed:
+            continue
+        fixed += len(result.applied)
+        changed.append(path)
+        diffs.append(unified_diff(path.as_posix(), before, result.source))
+        if write:
+            path.write_bytes(result.source.encode("utf-8"))
+    return "".join(diffs), fixed, changed, skipped

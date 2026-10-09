@@ -12,6 +12,7 @@ import click
 
 import codeguard.rules  # noqa: F401  -- register built-in rules
 from codeguard import __version__
+from codeguard.analysis import rule_options_from, validate_rule_options
 from codeguard.cli.formatters import finding_help_uri
 from codeguard.config import ConfigError, find_config, load_config
 from codeguard.engine.finding import Finding
@@ -75,7 +76,10 @@ def _run_demo() -> None:
 @click.option("--language", "language", default=None, help="Filter by language.")
 @click.option("--category", "category", default=None, help="Filter by category.")
 @click.option("--severity", "severity", default=None, help="Filter by severity.")
-def _list_rules(fmt: str, language: str | None, category: str | None, severity: str | None) -> None:
+@click.option("--fixable", is_flag=True, help="Only rules that provide safe autofixes.")
+def _list_rules(
+    fmt: str, language: str | None, category: str | None, severity: str | None, fixable: bool
+) -> None:
     """List every registered rule."""
     rows: list[dict[str, object]] = []
     for rule in REGISTRY.all():
@@ -86,6 +90,8 @@ def _list_rules(fmt: str, language: str | None, category: str | None, severity: 
             continue
         if severity and rule.severity.value != severity.lower():
             continue
+        if fixable and not rule.autofix:
+            continue
         rows.append(
             {
                 "id": rule.id,
@@ -94,6 +100,8 @@ def _list_rules(fmt: str, language: str | None, category: str | None, severity: 
                 "category": rule.category.value,
                 "languages": langs,
                 "cwe": rule.cwe,
+                "autofix": rule.autofix,
+                "options": dict(rule.default_options),
             }
         )
 
@@ -107,7 +115,11 @@ def _list_rules(fmt: str, language: str | None, category: str | None, severity: 
     width = max(len(str(row["id"])) for row in rows)
     for row in rows:
         langs_str = ",".join(row["languages"])  # type: ignore[arg-type]
-        click.echo(f"{row['id']:<{width}}  {row['severity']:<8}  {langs_str:<20}  {row['title']}")
+        fix = "fix" if row["autofix"] else "   "
+        click.echo(
+            f"{row['id']:<{width}}  {row['severity']:<8}  {row['category']:<11}  "
+            f"{langs_str:<22}  {fix}  {row['title']}"
+        )
 
 
 @click.command("explain")
@@ -127,6 +139,14 @@ def _explain(rule_id: str) -> None:
         click.echo(f"CWE:       {rule.cwe}")
     if rule.owasp:
         click.echo(f"OWASP:     {rule.owasp}")
+    click.echo(
+        f"Autofix:   {'safe (applied by --fix and editor Fix All)' if rule.autofix else 'none'}"
+    )
+    if rule.wants_dataflow:
+        click.echo("Analysis:  taint tracking (untrusted source -> sink)")
+    if rule.default_options:
+        opts = ", ".join(f"{k} = {v!r}" for k, v in rule.default_options.items())
+        click.echo(f"Options:   {opts}  (set under [rules.{rule.id}])")
     click.echo(f"Docs:      {rule.help_uri or finding_help_uri(rule.id)}\n")
     click.echo(rule.description)
 
@@ -158,6 +178,11 @@ def _validate(config_path: Path | None) -> None:
     ]
     if unknown:
         click.echo(f"Invalid: {path}: unknown rule ID(s): {', '.join(sorted(unknown))}", err=True)
+        sys.exit(3)
+    try:
+        validate_rule_options(cfg)
+    except ConfigError as exc:
+        click.echo(f"Invalid: {path}: {exc}", err=True)
         sys.exit(3)
     conflict = set(cfg.enable) & set(cfg.disable)
     if conflict:
@@ -234,7 +259,8 @@ def _scan_for_baseline(paths: tuple[Path, ...], config_path: Path | None) -> lis
         exclude=list(config.exclude),
         respect_gitignore=config.gitignore,
     )
-    findings = AnalysisRunner().run_files(discover(targets, disc, root=cfg_root))
+    runner = AnalysisRunner(rule_options=rule_options_from(config))
+    findings = runner.run_files(discover(targets, disc, root=cfg_root))
     findings = apply_config(findings, config, root=str(cfg_root))
     return [f for f in findings if not f.suppressed]
 

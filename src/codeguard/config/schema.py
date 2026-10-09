@@ -141,7 +141,15 @@ class Config:
                     _expect_severity(value, key)
                 out.fail_on = str(value)
             elif key == "output":
-                if value not in {"human", "json", "json-legacy", "sarif"}:
+                if value not in {
+                    "human",
+                    "json",
+                    "json-legacy",
+                    "sarif",
+                    "github",
+                    "rdjson",
+                    "junit",
+                }:
                     raise SchemaError(f"'output' must be a valid format, got {value!r}")
                 out.output = str(value)
             elif key == "jobs":
