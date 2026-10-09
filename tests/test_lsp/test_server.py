@@ -14,6 +14,7 @@ from click.testing import CliRunner
 
 from codeguard.cli.main import cli
 from codeguard.engine.finding import Category, Finding, Location, Severity
+from codeguard.lsp.actions import Settings
 from codeguard.lsp.protocol import JsonRpcTransport
 from codeguard.lsp.server import (
     CodeGuardLanguageServer,
@@ -63,18 +64,19 @@ def test_finding_maps_to_native_diagnostic() -> None:
 
     assert diagnostic["range"]["start"] == {"line": 2, "character": 4}
     assert diagnostic["range"]["end"] == {"line": 2, "character": 9}
-    assert diagnostic["severity"] == 2
+    assert diagnostic["severity"] == 1  # HIGH -> Error by default
     assert diagnostic["code"] == "CG-SEC-001"
     assert diagnostic["source"] == "CodeGuard"
     assert diagnostic["message"].startswith("🛡 Unsafe query")
     assert "Fix: Use parameters." in diagnostic["message"]
-    assert diagnostic["codeDescription"]["href"].endswith("cg-sec-001/")
+    assert diagnostic["codeDescription"]["href"].endswith("CG-SEC-001/")
 
 
 def test_workspace_scan_publishes_findings_for_unopened_files(tmp_path: Path) -> None:
     source = tmp_path / "bad.py"
     source.write_text(VULNERABLE, encoding="utf-8")
     server, transport = _server(tmp_path)
+    server.settings = Settings(code_description="dashboard")
 
     server._scan_workspace()
     server.close()
@@ -163,9 +165,10 @@ def test_code_lens_summarizes_workspace_warnings(tmp_path: Path) -> None:
     server.close()
 
     command = lenses[0]["command"]
-    assert command["command"] == "codeguard.openDashboard"
+    assert command["command"] == "codeguard.lsp.openDashboard"
     assert "🛡 CodeGuard" in command["title"]
-    assert "1 workspace warning" in command["title"]
+    assert "1 workspace issue" in command["title"]
+    assert "1 in this file" in command["title"]
 
 
 def test_code_action_opens_dashboard_for_codeguard_warning(tmp_path: Path) -> None:
@@ -180,8 +183,9 @@ def test_code_action_opens_dashboard_for_codeguard_warning(tmp_path: Path) -> No
     )
     server.close()
 
-    assert actions[0]["title"] == "🛡 Open CodeGuard Dashboard"
-    assert actions[0]["command"]["command"] == "codeguard.openDashboard"
+    dashboard = [a for a in actions if a["kind"] == "source.codeguard.dashboard"]
+    assert dashboard[0]["title"] == "🛡 Open CodeGuard Dashboard"
+    assert dashboard[0]["command"]["command"] == "codeguard.lsp.openDashboard"
 
 
 def test_open_dashboard_requests_local_markdown_document(tmp_path: Path, monkeypatch: Any) -> None:

@@ -37,6 +37,8 @@ class AnalysisOptions:
     categories: tuple[str, ...] = ()
     #: Categories used when neither *categories* nor the config chooses.
     default_categories: tuple[str, ...] = ("security",)
+    #: Per-category switches applied last (editor settings): ``{"quality": False}``.
+    category_overrides: tuple[tuple[str, bool], ...] = ()
     #: Extra rules to disable on top of the config (e.g. from editor settings).
     disabled_rule_ids: tuple[str, ...] = ()
     #: Re-read config and baseline on every scan.  Long-lived callers such as the
@@ -70,11 +72,14 @@ class ProjectAnalyzer:
         active_ids = active_rule_ids(
             config,
             selected,
-            categories=effective_categories(
-                config,
-                self.options.categories,
-                selected=selected,
-                default=self.options.default_categories,
+            categories=_apply_overrides(
+                effective_categories(
+                    config,
+                    self.options.categories,
+                    selected=selected,
+                    default=self.options.default_categories,
+                ),
+                self.options.category_overrides,
             ),
             extra_disabled=self.options.disabled_rule_ids,
         )
@@ -217,6 +222,22 @@ def active_rule_ids(
         and rule.id not in disabled
         and (not wanted or rule.category.value in wanted or rule.category.value == "meta")
     ]
+
+
+def _apply_overrides(
+    categories: tuple[str, ...], overrides: tuple[tuple[str, bool], ...]
+) -> tuple[str, ...]:
+    if not overrides:
+        return categories
+    if not categories:  # explicit rule selection: every category allowed
+        return categories
+    chosen = list(categories)
+    for name, enabled in overrides:
+        if enabled and name not in chosen:
+            chosen.append(name)
+        elif not enabled and name in chosen:
+            chosen.remove(name)
+    return tuple(chosen) or ("meta",)
 
 
 def rule_options_from(config: Config) -> dict[str, dict[str, Any]]:

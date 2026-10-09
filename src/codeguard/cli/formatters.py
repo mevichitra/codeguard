@@ -16,7 +16,8 @@ _HELP_URI_BASE = "https://mevichitra.github.io/codeguard/rules/"
 
 
 def finding_help_uri(rule_id: str) -> str:
-    return f"{_HELP_URI_BASE}{rule_id.lower()}/"
+    # MkDocs publishes docs/rules/CG-SEC-001.md at rules/CG-SEC-001/ (case-sensitive).
+    return f"{_HELP_URI_BASE}{rule_id}/"
 
 
 def _muted(f: Finding) -> bool:
