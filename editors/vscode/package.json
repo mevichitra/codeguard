@@ -1,8 +1,8 @@
 {
   "name": "codeguard",
   "displayName": "CodeGuard",
-  "description": "Live CodeGuard security diagnostics for Python, JavaScript, and TypeScript",
-  "version": "0.1.0",
+  "description": "Live security, performance, and code-quality analysis for Python, JavaScript, and TypeScript, with quick fixes and a findings sidebar. Runs 100% locally.",
+  "version": "0.2.0",
   "publisher": "codeguard",
   "license": "Apache-2.0",
   "repository": {
@@ -10,21 +10,25 @@
     "url": "https://github.com/mevichitra/codeguard.git"
   },
   "engines": {
-    "vscode": "^1.75.0"
+    "vscode": "^1.82.0"
   },
   "categories": [
     "Linters",
     "Programming Languages",
-    "Security"
+    "Other"
   ],
   "keywords": [
     "security",
-    "vulnerability",
     "sast",
+    "taint",
+    "vulnerability",
+    "performance",
+    "code quality",
     "linter",
     "python",
     "javascript",
-    "typescript"
+    "typescript",
+    "autofix"
   ],
   "main": "./out/extension.js",
   "activationEvents": [
@@ -32,34 +36,379 @@
     "onLanguage:javascript",
     "onLanguage:javascriptreact",
     "onLanguage:typescript",
-    "onLanguage:typescriptreact"
+    "onLanguage:typescriptreact",
+    "workspaceContains:**/codeguard.toml",
+    "workspaceContains:**/.codeguard.toml"
   ],
   "contributes": {
     "commands": [
       {
-        "command": "codeguard.openDashboard",
-        "title": "Open CodeGuard Dashboard",
+        "command": "codeguard.showOverview",
+        "title": "Show Security Overview",
         "category": "CodeGuard",
         "icon": "$(shield)"
       },
       {
+        "command": "codeguard.focusFindings",
+        "title": "Show Findings",
+        "category": "CodeGuard",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "codeguard.scanWorkspace",
+        "title": "Rescan Workspace",
+        "category": "CodeGuard",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "codeguard.fixAllInFile",
+        "title": "Fix All Safe Issues in File",
+        "category": "CodeGuard",
+        "icon": "$(wrench)"
+      },
+      {
+        "command": "codeguard.fixAllInWorkspace",
+        "title": "Fix All Safe Issues in Workspace",
+        "category": "CodeGuard",
+        "icon": "$(wrench)"
+      },
+      {
+        "command": "codeguard.setGrouping",
+        "title": "Group Findings By…",
+        "category": "CodeGuard",
+        "icon": "$(group-by-ref-type)"
+      },
+      {
+        "command": "codeguard.filterSeverity",
+        "title": "Filter Findings by Severity…",
+        "category": "CodeGuard",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "codeguard.exportSarif",
+        "title": "Export SARIF Report…",
+        "category": "CodeGuard",
+        "icon": "$(export)"
+      },
+      {
+        "command": "codeguard.openDashboard",
+        "title": "Open Markdown Dashboard",
+        "category": "CodeGuard",
+        "icon": "$(markdown)"
+      },
+      {
         "command": "codeguard.restartServer",
         "title": "Restart Server",
-        "category": "CodeGuard"
+        "category": "CodeGuard",
+        "icon": "$(debug-restart)"
+      },
+      {
+        "command": "codeguard.showOutput",
+        "title": "Show Output",
+        "category": "CodeGuard",
+        "icon": "$(output)"
+      },
+      {
+        "command": "codeguard.showSetup",
+        "title": "Setup Help",
+        "category": "CodeGuard",
+        "icon": "$(question)"
+      },
+      {
+        "command": "codeguard.openSample",
+        "title": "Open Sample File",
+        "category": "CodeGuard",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "codeguard.revealFinding",
+        "title": "Go to Finding",
+        "category": "CodeGuard",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "codeguard.fixFinding",
+        "title": "Apply Quick Fix",
+        "category": "CodeGuard",
+        "icon": "$(wrench)"
+      },
+      {
+        "command": "codeguard.suppressFinding",
+        "title": "Suppress on This Line",
+        "category": "CodeGuard",
+        "icon": "$(eye-closed)"
+      },
+      {
+        "command": "codeguard.explain",
+        "title": "Explain Rule",
+        "category": "CodeGuard",
+        "icon": "$(book)"
+      },
+      {
+        "command": "codeguard.copyFingerprint",
+        "title": "Copy Fingerprint",
+        "category": "CodeGuard",
+        "icon": "$(copy)"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "codeguard",
+          "title": "CodeGuard",
+          "icon": "media/shield.svg"
+        }
+      ]
+    },
+    "views": {
+      "codeguard": [
+        {
+          "id": "codeguard.findings",
+          "name": "Findings",
+          "contextualTitle": "CodeGuard",
+          "icon": "media/shield.svg"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "codeguard.findings",
+        "contents": "The `codeguard` command was not found.\n[Setup Help](command:codeguard.showSetup)\nInstall with `pipx install codeguard-cli`, then restart the server.\n[Restart Server](command:codeguard.restartServer)",
+        "when": "codeguard.state == missing"
+      },
+      {
+        "view": "codeguard.findings",
+        "contents": "The CodeGuard language server could not start.\n[Show Output](command:codeguard.showOutput)\n[Restart Server](command:codeguard.restartServer)",
+        "when": "codeguard.state == failed"
+      },
+      {
+        "view": "codeguard.findings",
+        "contents": "CodeGuard is turned off (`codeguard.enable`).",
+        "when": "codeguard.state == stopped"
+      },
+      {
+        "view": "codeguard.findings",
+        "contents": "Scanning the workspace…",
+        "when": "codeguard.state == starting"
+      },
+      {
+        "view": "codeguard.findings",
+        "contents": "No findings. Security, performance, and quality checks are clean.\n[Rescan Workspace](command:codeguard.scanWorkspace)\n[Show Security Overview](command:codeguard.showOverview)",
+        "when": "codeguard.state == running"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "codeguard.fixAllInWorkspace",
+          "when": "view == codeguard.findings",
+          "group": "navigation@1"
+        },
+        {
+          "command": "codeguard.filterSeverity",
+          "when": "view == codeguard.findings",
+          "group": "navigation@2"
+        },
+        {
+          "command": "codeguard.setGrouping",
+          "when": "view == codeguard.findings",
+          "group": "navigation@3"
+        },
+        {
+          "command": "codeguard.scanWorkspace",
+          "when": "view == codeguard.findings",
+          "group": "navigation@4"
+        },
+        {
+          "command": "codeguard.showOverview",
+          "when": "view == codeguard.findings",
+          "group": "navigation@5"
+        },
+        {
+          "command": "codeguard.exportSarif",
+          "when": "view == codeguard.findings",
+          "group": "more@1"
+        },
+        {
+          "command": "codeguard.openDashboard",
+          "when": "view == codeguard.findings",
+          "group": "more@2"
+        },
+        {
+          "command": "codeguard.restartServer",
+          "when": "view == codeguard.findings",
+          "group": "more@3"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "codeguard.fixFinding",
+          "when": "view == codeguard.findings && viewItem == finding.fixable",
+          "group": "inline@1"
+        },
+        {
+          "command": "codeguard.explain",
+          "when": "view == codeguard.findings && viewItem =~ /^finding/",
+          "group": "inline@2"
+        },
+        {
+          "command": "codeguard.fixFinding",
+          "when": "view == codeguard.findings && viewItem == finding.fixable",
+          "group": "1_fix@1"
+        },
+        {
+          "command": "codeguard.suppressFinding",
+          "when": "view == codeguard.findings && viewItem =~ /^finding/",
+          "group": "1_fix@2"
+        },
+        {
+          "command": "codeguard.explain",
+          "when": "view == codeguard.findings && viewItem =~ /^finding/",
+          "group": "2_info@1"
+        },
+        {
+          "command": "codeguard.copyFingerprint",
+          "when": "view == codeguard.findings && viewItem =~ /^finding/",
+          "group": "2_info@2"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "codeguard.showOverview",
+          "when": "codeguard.state == running && resourceLangId =~ /^(python|javascript|javascriptreact|typescript|typescriptreact)$/ && config.codeguard.showEditorTitleButton",
+          "group": "navigation@90"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "codeguard.revealFinding",
+          "when": "false"
+        },
+        {
+          "command": "codeguard.fixFinding",
+          "when": "false"
+        },
+        {
+          "command": "codeguard.suppressFinding",
+          "when": "false"
+        },
+        {
+          "command": "codeguard.copyFingerprint",
+          "when": "false"
+        }
+      ]
+    },
     "configuration": {
       "title": "CodeGuard",
       "properties": {
         "codeguard.enable": {
           "type": "boolean",
           "default": true,
-          "description": "Enable or disable CodeGuard language server diagnostics."
+          "description": "Run the CodeGuard language server."
         },
         "codeguard.path": {
           "type": "string",
           "default": "",
-          "description": "Custom path to the codeguard executable. If empty, searches workspace virtual environments (.venv/bin/codeguard) and system PATH."
+          "markdownDescription": "Path to the `codeguard` executable. When empty, CodeGuard looks in the workspace `.venv` / `venv` and then on `PATH`."
+        },
+        "codeguard.categories": {
+          "type": "object",
+          "default": {},
+          "markdownDescription": "Turn rule categories on or off in the editor, e.g. `{ \"quality\": false }`. Unset categories follow the project's `categories` in `codeguard.toml`; without that, security, performance, and quality are all shown.",
+          "properties": {
+            "security": {
+              "type": "boolean"
+            },
+            "performance": {
+              "type": "boolean"
+            },
+            "quality": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "codeguard.severity.map": {
+          "type": "object",
+          "default": {},
+          "markdownDescription": "How CodeGuard severities appear in the editor. Defaults: critical and high → `error`, medium → `warning`, low → `information`, info → `hint`. Use `off` to hide a level.",
+          "properties": {
+            "critical": {
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "information",
+                "hint",
+                "off"
+              ]
+            },
+            "high": {
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "information",
+                "hint",
+                "off"
+              ]
+            },
+            "medium": {
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "information",
+                "hint",
+                "off"
+              ]
+            },
+            "low": {
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "information",
+                "hint",
+                "off"
+              ]
+            },
+            "info": {
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "information",
+                "hint",
+                "off"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "codeguard.rules.disable": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^CG-[A-Z]+-[0-9]+$"
+          },
+          "default": [],
+          "markdownDescription": "Rule IDs to hide in the editor only (CI keeps using `codeguard.toml`), e.g. `[\"CG-QUAL-104\"]`."
+        },
+        "codeguard.scanWorkspaceOnStartup": {
+          "type": "boolean",
+          "default": true,
+          "description": "Scan every file in the workspace when the server starts, not only open files."
+        },
+        "codeguard.sarif.outputPath": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Default file name for **Export SARIF Report**, relative to the workspace folder."
+        },
+        "codeguard.showEditorTitleButton": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show a Security Overview button in the editor title bar."
         },
         "codeguard.trace.server": {
           "type": "string",
@@ -69,23 +418,67 @@
             "verbose"
           ],
           "default": "off",
-          "description": "Traces the communication between VS Code and the CodeGuard language server."
+          "description": "Trace communication between VS Code and the CodeGuard language server."
         }
       }
-    }
+    },
+    "walkthroughs": [
+      {
+        "id": "gettingStarted",
+        "title": "Get started with CodeGuard",
+        "description": "Local security, performance, and quality analysis with one-click fixes.",
+        "steps": [
+          {
+            "id": "install",
+            "title": "Install the CodeGuard CLI",
+            "description": "The extension runs the `codeguard` language server. Install it once:\n[Copy install command](command:codeguard.showSetup)\n[Restart server](command:codeguard.restartServer)",
+            "media": {
+              "markdown": "media/walkthrough/install.md"
+            },
+            "completionEvents": [
+              "onContext:codeguard.state == running"
+            ]
+          },
+          {
+            "id": "sample",
+            "title": "See findings in a sample file",
+            "description": "Open a deliberately vulnerable file and watch diagnostics, hovers, and the Findings view light up.\n[Open sample](command:codeguard.openSample)",
+            "media": {
+              "markdown": "media/walkthrough/sample.md"
+            },
+            "completionEvents": [
+              "onCommand:codeguard.openSample"
+            ]
+          },
+          {
+            "id": "fix",
+            "title": "Fix, suppress, and review",
+            "description": "Use quick fixes (`Ctrl+.` / `Cmd+.`), fix everything on save, and track progress in the Security Overview.\n[Show Security Overview](command:codeguard.showOverview)",
+            "media": {
+              "markdown": "media/walkthrough/fix.md"
+            },
+            "completionEvents": [
+              "onCommand:codeguard.showOverview"
+            ]
+          }
+        ]
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "build": "npm run compile"
+    "build": "npm run compile",
+    "package": "vsce package",
+    "test": "npm run compile && node --test test/unit.test.js"
   },
   "dependencies": {
     "vscode-languageclient": "^9.0.1"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
-    "@types/vscode": "^1.75.0",
+    "@types/vscode": "~1.82.0",
     "typescript": "^5.4.5"
   }
 }
