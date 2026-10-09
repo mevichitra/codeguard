@@ -9,9 +9,11 @@ what rules detect.
 from __future__ import annotations
 
 import warnings
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import date
 from pathlib import Path
+from types import MappingProxyType
+from typing import Any
 
 from codeguard.lang.base import Language
 from codeguard.lang.registry import language_for_path, support_for
@@ -34,6 +36,9 @@ class AnalysisRunner:
         :data:`~codeguard.engine.registry.REGISTRY` singleton.
     rule_ids:
         When provided, only rules whose IDs are in this collection are run.
+    rule_options:
+        Per-rule option overrides (``{rule_id: {option: value}}``) layered over
+        each rule's ``default_options``.
     """
 
     def __init__(
@@ -43,8 +48,18 @@ class AnalysisRunner:
         *,
         now: date | None = None,
         fingerprint_root: str | Path | None = None,
+        rule_options: Mapping[str, Mapping[str, Any]] | None = None,
     ) -> None:
         self._registry = registry if registry is not None else REGISTRY
+        self._rule_options_raw: dict[str, dict[str, Any]] = {
+            rid: dict(opts) for rid, opts in (rule_options or {}).items()
+        }
+        self._options: dict[str, Mapping[str, Any]] = {
+            r.id: MappingProxyType(
+                {**dict(r.default_options), **self._rule_options_raw.get(r.id, {})}
+            )
+            for r in self._registry.all()
+        }
         self._filter: set[str] | None = set(rule_ids) if rule_ids is not None else None
         #: Date used for `until=` suppression expiry (default: today, per run).
         self._now = now
@@ -129,7 +144,12 @@ class AnalysisRunner:
         findings: list[Finding] = []
         meta_lines: dict[str, set[int]] = {META_MISSING_REASON: set(), META_EXPIRED: set()}
 
-        for rule in self._rules_for(lang):
+        rules = self._rules_for(lang)
+        if py_tree is not None and any(r.wants_dataflow for r in rules):
+            ctx.dataflow = _safe_dataflow(py_tree, source, filename)
+
+        for rule in rules:
+            ctx.options = self._options.get(rule.id, _NO_OPTIONS)
             for finding in rule.analyze(ctx):
                 line = finding.location.line
                 verdict = suppset.outcome(finding.rule_id, line, today)
@@ -143,6 +163,7 @@ class AnalysisRunner:
                         meta_lines[META_EXPIRED].add(supp.line)
                 findings.append(_fingerprinted(finding))
 
+        findings = _drop_superseded(findings, rules)
         findings.extend(
             self._meta_findings(meta_lines, suppset, filename, source, rel, py_tree, enabled_ids)
         )
@@ -226,7 +247,7 @@ class AnalysisRunner:
             with ProcessPoolExecutor(
                 max_workers=jobs,
                 initializer=_init_worker,
-                initargs=(filter_ids, now_iso, self._fingerprint_root),
+                initargs=(filter_ids, now_iso, self._fingerprint_root, self._rule_options_raw),
             ) as pool:
                 for result in pool.map(_scan_one, (str(p) for p in files)):
                     findings.extend(result)
@@ -247,6 +268,40 @@ class AnalysisRunner:
         return self.run_files(discover([path]), jobs=jobs)
 
 
+_NO_OPTIONS: Mapping[str, Any] = MappingProxyType({})
+
+
+def _drop_superseded(findings: list[Finding], rules: list[Rule]) -> list[Finding]:
+    """Remove findings that a ``supersedes``-declaring rule replaced on the same line."""
+    superseding = {r.id: r.supersedes for r in rules if r.supersedes}
+    if not superseding:
+        return findings
+    replaced: set[tuple[str, int]] = {
+        (old_id, f.location.line)
+        for f in findings
+        if f.rule_id in superseding
+        for old_id in superseding[f.rule_id]
+    }
+    if not replaced:
+        return findings
+    return [f for f in findings if (f.rule_id, f.location.line) not in replaced]
+
+
+def _safe_dataflow(tree: object, source: str, filename: str) -> Any:
+    """Run the Python taint analysis, returning ``None`` (with a warning) on failure."""
+    import ast
+
+    from .dataflow.python import analyze_python
+
+    if not isinstance(tree, ast.Module):
+        return None
+    try:
+        return analyze_python(tree, source)
+    except (RecursionError, ValueError, TypeError, AttributeError, KeyError) as exc:
+        warnings.warn(f"{filename}: taint analysis skipped ({exc})", stacklevel=3)
+        return None
+
+
 # ---------------------------------------------------------------------------
 # Process-pool workers (module level so they pickle)
 # ---------------------------------------------------------------------------
@@ -255,13 +310,18 @@ _WORKER_RUNNER: AnalysisRunner | None = None
 
 
 def _init_worker(
-    rule_ids: list[str] | None, now_iso: str | None, fingerprint_root: str | None
+    rule_ids: list[str] | None,
+    now_iso: str | None,
+    fingerprint_root: str | None,
+    rule_options: dict[str, dict[str, Any]] | None = None,
 ) -> None:
     global _WORKER_RUNNER
     import codeguard.rules  # noqa: F401  -- register built-in rules in the child
 
     now = date.fromisoformat(now_iso) if now_iso else None
-    _WORKER_RUNNER = AnalysisRunner(rule_ids=rule_ids, now=now, fingerprint_root=fingerprint_root)
+    _WORKER_RUNNER = AnalysisRunner(
+        rule_ids=rule_ids, now=now, fingerprint_root=fingerprint_root, rule_options=rule_options
+    )
 
 
 def _scan_one(path_str: str) -> list[Finding]:

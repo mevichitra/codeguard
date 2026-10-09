@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import enum
 from dataclasses import dataclass, field, replace
+from typing import Any
 
 _SEVERITY_ORDER = ["critical", "high", "medium", "low", "info"]
 
@@ -67,7 +68,10 @@ class Location:
 class TextEdit:
     """A single replacement in a source file, for an autofix.
 
-    Reserved for the autofix milestone; no rule emits one today.
+    Positions use the same convention as :class:`Location`: 1-indexed lines and
+    1-indexed columns counted in **UTF-8 bytes** (exactly what ``ast`` and
+    tree-sitter report, plus one).  The end position is exclusive.  A
+    zero-width edit (start == end) is an insertion.
     """
 
     start_line: int
@@ -81,12 +85,48 @@ class TextEdit:
 class Fix:
     """A suggested code change that resolves a finding.
 
-    Reserved for the autofix milestone; ``Finding.fix`` is always ``None`` today.
+    ``safe`` fixes preserve program semantics and are applied by
+    ``codeguard scan --fix`` and the editor "Fix all" action.  The edits of one
+    fix are applied atomically (all or none).
     """
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "description": self.description,
+            "safe": self.safe,
+            "edits": [
+                {
+                    "start_line": e.start_line,
+                    "start_col": e.start_col,
+                    "end_line": e.end_line,
+                    "end_col": e.end_col,
+                    "replacement": e.replacement,
+                }
+                for e in self.edits
+            ],
+        }
 
     description: str
     edits: tuple[TextEdit, ...]
     safe: bool = True
+
+
+@dataclass(frozen=True)
+class RelatedLocation:
+    """A secondary location that explains a finding (e.g. a taint source or hop)."""
+
+    location: Location
+    message: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "file": self.location.file,
+            "line": self.location.line,
+            "col": self.location.col,
+            "end_line": self.location.end_line,
+            "end_col": self.location.end_col,
+            "message": self.message,
+        }
 
 
 @dataclass(frozen=True)
@@ -140,7 +180,10 @@ class Finding:
         Stable identity of this finding across reformatting and line moves,
         assigned by the runner.  Empty until assigned.
     fix:
-        A suggested autofix, or ``None``.  Reserved for a later milestone.
+        A suggested autofix, or ``None``.
+    related:
+        Secondary locations that explain the finding, e.g. where untrusted data
+        entered and the assignments it flowed through.
     triage:
         A true/false-positive verdict, or ``None``.  Reserved for a later
         milestone.
@@ -161,6 +204,7 @@ class Finding:
     fingerprint: str = ""
     fix: Fix | None = field(default=None)
     triage: Triage | None = field(default=None)
+    related: tuple[RelatedLocation, ...] = ()
 
     def __post_init__(self) -> None:
         if not self.rule_id:
@@ -180,7 +224,7 @@ class Finding:
         """Return a copy of this finding marked as present in the baseline."""
         return replace(self, baselined=True)
 
-    def to_dict(self) -> dict:  # type: ignore[type-arg]
+    def to_dict(self) -> dict[str, Any]:
         """Serialise to a plain dict suitable for JSON output."""
         return {
             "rule_id": self.rule_id,
@@ -202,4 +246,6 @@ class Finding:
             "suppressed": self.suppressed,
             "baselined": self.baselined,
             "fingerprint": self.fingerprint,
+            "fix": self.fix.to_dict() if self.fix is not None else None,
+            "related": [r.to_dict() for r in self.related],
         }

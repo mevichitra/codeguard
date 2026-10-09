@@ -18,6 +18,7 @@ from typing import Any
 
 import pathspec
 
+from codeguard.lang.base import Language
 from codeguard.lang.registry import language_for_path
 
 #: Directory names that never hold first-party source.  Pruned before globbing.
@@ -61,6 +62,12 @@ class DiscoveryConfig:
     respect_gitignore: bool = True
     skip_dirs: frozenset[str] = DEFAULT_SKIP_DIRS
     skip_files: tuple[str, ...] = DEFAULT_SKIP_FILES
+    #: Restrict to these languages (``None`` = every supported language).
+    languages: frozenset[Language] | None = None
+
+    def wants_language(self, path: str | Path) -> bool:
+        lang = language_for_path(path)
+        return lang is not None and (self.languages is None or lang in self.languages)
 
 
 def _load_gitignore(root: Path) -> pathspec.PathSpec[Any] | None:
@@ -89,7 +96,7 @@ def is_path_included(
     cfg = config or DiscoveryConfig()
     file_path = Path(path)
     base = Path(root or os.getcwd()).resolve()
-    if language_for_path(file_path) is None or file_path.is_symlink():
+    if not cfg.wants_language(file_path) or file_path.is_symlink():
         return False
     try:
         relative = file_path.resolve().relative_to(base).as_posix()
@@ -142,7 +149,7 @@ def discover(
             return p.name
 
     def want(p: Path) -> bool:
-        if language_for_path(p) is None:
+        if not cfg.wants_language(p):
             return False
         r = rel(p)
         if exclude_spec and exclude_spec.match_file(r):

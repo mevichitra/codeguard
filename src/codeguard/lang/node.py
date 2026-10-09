@@ -97,6 +97,21 @@ class SourceNode:
             return raw.decode("utf-8", "replace") if raw is not None else ""
         return ""
 
+    @property
+    def parent(self) -> SourceNode | None:
+        """The parent node (tree-sitter backend only; ``None`` for ``ast`` nodes)."""
+        if _is_ts_node(self.native):
+            native_parent = getattr(self.native, "parent", None)
+            return self._wrap(native_parent) if native_parent is not None else None
+        return None
+
+    def ancestors(self) -> Iterator[SourceNode]:
+        """Yield the parent, grandparent, ... (tree-sitter backend only)."""
+        node = self.parent
+        while node is not None:
+            yield node
+            node = node.parent
+
     def children(self) -> list[SourceNode]:
         if isinstance(self.native, ast.AST):
             return [self._wrap(c) for c in ast.iter_child_nodes(self.native)]

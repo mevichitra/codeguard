@@ -40,7 +40,13 @@ class TestJsonEnvelope:
         assert out["rules"][0]["help_uri"].endswith("/rules/cg-sec-001/")
         assert out["results"][0]["fingerprint"] == "deadbeefdeadbeef"
         assert out["results"][0]["location"]["col"] == 5
-        assert out["summary"] == {"findings": 1, "by_severity": {"high": 1}, "suppressed": 0}
+        assert out["summary"] == {
+            "findings": 1,
+            "by_severity": {"high": 1},
+            "by_category": {"security": 1},
+            "fixable": 0,
+            "suppressed": 0,
+        }
 
     def test_suppressed_excluded_by_default(self) -> None:
         out = json.loads(format_json([_finding(suppressed=True)]))

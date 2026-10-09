@@ -43,10 +43,17 @@ def _expect_severity(value: Any, key: str) -> str:
 
 @dataclass
 class RuleSettings:
-    """Per-rule tuning from ``[tool.codeguard.rules.<ID>]``."""
+    """Per-rule tuning from ``[tool.codeguard.rules.<ID>]``.
+
+    ``severity`` and ``confidence_min`` apply to every rule.  Any other key is a
+    rule option (e.g. ``max_complexity``); option names and types are checked
+    against the rule's ``default_options`` by
+    :func:`codeguard.analysis.validate_rule_options`.
+    """
 
     severity: str | None = None
     confidence_min: float | None = None
+    options: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_dict(cls, rule_id: str, data: dict[str, Any]) -> RuleSettings:
@@ -59,7 +66,7 @@ class RuleSettings:
                     raise SchemaError(f"rules.{rule_id}.confidence_min must be in [0.0, 1.0]")
                 out.confidence_min = float(v)
             else:
-                raise SchemaError(f"unknown key rules.{rule_id}.{k}")
+                out.options[k] = v
         return out
 
 

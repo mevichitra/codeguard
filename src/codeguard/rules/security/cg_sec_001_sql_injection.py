@@ -20,8 +20,7 @@ import ast
 from codeguard.engine.finding import Category, Finding, Severity
 from codeguard.engine.registry import REGISTRY
 from codeguard.engine.rule import AstRule
-
-_SQL_METHODS = frozenset({"execute", "executemany", "executescript"})
+from codeguard.rules._pysinks import is_dynamic_string, is_sql_execute
 
 _FIX = (
     "Use parameterized queries instead of string interpolation: "
@@ -51,9 +50,9 @@ class SQLStringFormattingRule(AstRule):
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):
                 continue
-            if not self._is_sql_call(node):
+            if not is_sql_execute(node):
                 continue
-            if node.args and self._is_dynamic_string(node.args[0]):
+            if node.args and is_dynamic_string(node.args[0]):
                 findings.append(
                     self._make_finding(
                         node=node,
@@ -63,48 +62,6 @@ class SQLStringFormattingRule(AstRule):
                 )
 
         return findings
-
-    # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
-
-    @staticmethod
-    def _is_sql_call(node: ast.Call) -> bool:
-        """Return True if the call is a known SQL-execution method."""
-        if isinstance(node.func, ast.Attribute):
-            return node.func.attr in _SQL_METHODS
-        return False
-
-    @staticmethod
-    def _is_dynamic_string(node: ast.AST) -> bool:
-        """Return True if *node* produces a string via formatting or concatenation."""
-        # f"SELECT ... {var} ..."
-        if isinstance(node, ast.JoinedStr):
-            return True
-        # "SELECT ..." % var
-        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Mod):
-            return True
-        # "SELECT ...".format(var)
-        if (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Attribute)
-            and node.func.attr == "format"
-        ):
-            return True
-        # "SELECT " + var  or  var + " FROM ..."  -- dynamic unless the whole
-        # concatenation tree is string literals (left-associative, so walk it).
-        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
-            return not _is_constant_concat(node)
-        return False
-
-
-def _is_constant_concat(node: ast.AST) -> bool:
-    """True if *node* is a string literal or an ``+`` tree of string literals."""
-    if isinstance(node, ast.Constant):
-        return isinstance(node.value, str)
-    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
-        return _is_constant_concat(node.left) and _is_constant_concat(node.right)
-    return False
 
 
 REGISTRY.register(SQLStringFormattingRule())

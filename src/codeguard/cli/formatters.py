@@ -155,6 +155,7 @@ def format_json(
         )
 
     counts = Counter(f.severity.value for f in emitted)
+    categories = Counter(f.category.value for f in emitted)
     envelope = {
         "schema_version": JSON_SCHEMA_VERSION,
         "tool": {"name": "CodeGuard", "version": tool_version},
@@ -163,6 +164,10 @@ def format_json(
         "summary": {
             "findings": len(emitted),
             "by_severity": {s: counts[s] for s in _SEVERITY_ORDER if counts.get(s)},
+            "by_category": dict(sorted(categories.items())),
+            "fixable": sum(
+                1 for f in emitted if f.fix is not None and f.fix.safe and not _muted(f)
+            ),
             "suppressed": sum(1 for f in findings if f.suppressed),
         },
     }
@@ -203,6 +208,15 @@ def _cwe_number(cwe: str) -> str | None:
     if cwe and cwe.upper().startswith("CWE-"):
         return cwe[4:]
     return None
+
+
+def _sarif_region(line: int, col: int, end_line: int | None, end_col: int | None) -> dict[str, int]:
+    region = {"startLine": line, "startColumn": col}
+    if end_line is not None:
+        region["endLine"] = end_line
+    if end_col is not None:
+        region["endColumn"] = end_col
+    return region
 
 
 def format_sarif(findings: list[Finding], *, tool_version: str = "0.0.0") -> str:
@@ -275,6 +289,40 @@ def format_sarif(findings: list[Finding], *, tool_version: str = "0.0.0") -> str
         }
         if f.fingerprint:
             result["partialFingerprints"] = {_FP_SCHEME: f.fingerprint}
+        if f.related:
+            result["relatedLocations"] = [
+                {
+                    "id": i,
+                    "physicalLocation": {
+                        "artifactLocation": {"uri": r.location.file, "uriBaseId": "%SRCROOT%"},
+                        "region": _sarif_region(
+                            r.location.line, r.location.col, r.location.end_line, r.location.end_col
+                        ),
+                    },
+                    "message": {"text": r.message},
+                }
+                for i, r in enumerate(f.related)
+            ]
+        if f.fix is not None and f.fix.edits:
+            result["fixes"] = [
+                {
+                    "description": {"text": f.fix.description},
+                    "artifactChanges": [
+                        {
+                            "artifactLocation": {"uri": f.location.file, "uriBaseId": "%SRCROOT%"},
+                            "replacements": [
+                                {
+                                    "deletedRegion": _sarif_region(
+                                        e.start_line, e.start_col, e.end_line, e.end_col
+                                    ),
+                                    "insertedContent": {"text": e.replacement},
+                                }
+                                for e in f.fix.edits
+                            ],
+                        }
+                    ],
+                }
+            ]
         if f.suppressed:
             result["suppressions"] = [{"kind": "inSource", "justification": "inline ignore"}]
         elif f.baselined:
