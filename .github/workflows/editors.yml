@@ -1,0 +1,77 @@
+name: Editors
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "editors/**"
+      - "src/codeguard/lsp/**"
+      - ".github/workflows/editors.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "editors/**"
+      - "src/codeguard/lsp/**"
+      - ".github/workflows/editors.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: editors-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  vscode:
+    name: VS Code extension
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: editors/vscode
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: editors/vscode/package-lock.json
+      - run: npm ci
+      - name: Compile and unit-test
+        run: npm test
+      - name: Package (includes runtime dependencies)
+        run: npx --yes @vscode/vsce@3 package -o codeguard-vscode.vsix
+      - uses: actions/upload-artifact@v4
+        with:
+          name: codeguard-vscode-vsix
+          path: editors/vscode/codeguard-vscode.vsix
+
+  zed:
+    name: Zed extension
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: editors/zed
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-wasip2
+          components: clippy, rustfmt
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            editors/zed/target
+          key: zed-${{ runner.os }}-${{ hashFiles('editors/zed/Cargo.lock') }}
+      - run: cargo fmt --check
+      - run: cargo clippy --target wasm32-wasip2 -- -D warnings
+      - name: Host unit tests
+        run: cargo test
+      - name: Build the extension (wasm32-wasip2, as Zed does)
+        run: cargo build --release --target wasm32-wasip2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: codeguard-zed-wasm
+          path: editors/zed/target/wasm32-wasip2/release/codeguard_zed.wasm

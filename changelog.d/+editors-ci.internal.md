@@ -1,0 +1,1 @@
+A new Editors workflow compiles, unit-tests, and packages the VS Code extension and lints, tests, and builds the Zed extension for `wasm32-wasip2` on every change under `editors/` or `src/codeguard/lsp/`.

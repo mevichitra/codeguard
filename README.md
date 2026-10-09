@@ -1,8 +1,15 @@
 # CodeGuard
 
-Fast, offline static analysis that finds security anti-patterns in **Python, JavaScript, and TypeScript** — and drops into every gate of your workflow (editor, pre-commit, PR/CI, scheduled audit) from a single config file.
+Fast, offline static analysis for **Python, JavaScript, and TypeScript**. It finds
+**security** vulnerabilities (with source-to-sink taint tracking), **performance**
+problems, and **code-quality** risks, fixes the safe ones for you, and works at every
+gate of your workflow: editor, pre-commit, PR/CI, and scheduled audit, all from one
+config file.
 
-**Status: 2.1.0 (beta).** Rule IDs, the `Finding`/JSON schema, config keys, and exit codes are a stable contract from 2.0. See [migration notes](docs/migration-v2.md) if you used the 0.1 alpha.
+**Status: 2.2.0 (beta).** Rule IDs, the `Finding` / JSON schema, config keys, and exit
+codes have been a stable contract since 2.0. Upgrading never changes a pipeline's exit
+code: `scan` and `ci` run security rules unless you opt into more. See the
+[migration notes](docs/migration-v2.md) if you used the 0.1 alpha.
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://python.org)
@@ -13,29 +20,26 @@ Fast, offline static analysis that finds security anti-patterns in **Python, Jav
 
 ## What it does
 
-CodeGuard scans **Python, JavaScript, and TypeScript** and reports security findings. Each finding has a stable rule ID, severity, CWE/OWASP mapping, and a plain-English fix suggestion.
+```text
+app.py:11:5  [CG-SEC-011] CRITICAL  Untrusted input reaches a shell command
+    11 |     os.system(cmd)
+             ^
+  ↳ line 9: Untrusted input: flask request.form
+  ↳ line 9: Flows through: host = request.form["host"]
+  ↳ line 10: Flows through: cmd = "ping -c 1 " + host
+  → Run the program with an argument list and shell=False ...
+```
 
-Current rules (see [docs/rules/](docs/rules/) for detail):
+Every finding has a stable rule ID, a severity, a CWE / OWASP mapping for security
+rules, a precise location, and a fix suggestion. Many also carry a **safe autofix**.
 
-| ID | What it catches | Severity | CWE | Languages |
-|---|---|---|---|---|
-| CG-SEC-001 | SQL built with f-strings / `%` / `.format()` | HIGH | CWE-89 | Python |
-| CG-SEC-002 | Hardcoded passwords, API keys, tokens | HIGH | CWE-798 | Python |
-| CG-SEC-003 | `eval()` / `exec()` on non-literal input | HIGH | CWE-95 | Python |
-| CG-SEC-004 | `pickle.loads` / `yaml.load` without SafeLoader | HIGH | CWE-502 | Python |
-| CG-SEC-005 | `subprocess(..., shell=True)` with non-literal args | HIGH | CWE-78 | Python |
-| CG-SEC-101 | `eval` / `new Function` / string timers on dynamic input | HIGH | CWE-95 | JS, TS |
-| CG-SEC-102 | `child_process.exec` with a dynamic command | HIGH | CWE-78 | JS, TS |
-| CG-SEC-103 | `innerHTML` / `document.write` assigned a non-literal | HIGH | CWE-79 | JS, TS |
-| CG-SEC-104 | `dangerouslySetInnerHTML` with a non-literal value | HIGH | CWE-79 | JS, TS |
-| CG-SEC-105 | Hardcoded passwords, API keys, tokens | HIGH | CWE-798 | JS, TS |
-| CG-SEC-106 | `Math.random()` used for a token / secret / id | MEDIUM | CWE-338 | JS, TS |
+| Category | Rules | Highlights |
+|---|---|---|
+| **Security** | 25 | Taint-tracked SQL / shell / `eval` / path traversal / open redirect (Python). Pattern rules for injection, XSS, unsafe deserialization, hardcoded secrets, weak hashes, disabled TLS verification, insecure randomness, Express open redirect / path traversal, prototype pollution. |
+| **Performance** | 10 | List-literal membership in loops, quadratic string building, regexes compiled in loops, `await` in loops, spread in `reduce`, JSON deep clones. |
+| **Quality** | 9 | Mutable defaults, swallowed exceptions, cyclomatic complexity, nesting depth, parameter count, loose equality, empty `catch`, `var`. |
 
-### What it does not do (yet)
-
-- Baseline / diff scanning, a CI-native command, packaged distribution (planned for v2.0)
-- AI-generated-code detection (deferred to a post-2.0 experimental module)
-- Web dashboard or REST API
+Full list: [docs/rules](docs/rules/index.md), or `codeguard list-rules`.
 
 ---
 
@@ -44,166 +48,111 @@ Current rules (see [docs/rules/](docs/rules/) for detail):
 ```bash
 pipx install codeguard-cli      # or: uv tool install codeguard-cli
 pip install codeguard-cli       # into the current environment
-
-# or from source:
-git clone https://github.com/mevichitra/codeguard
-cd codeguard
-pip install -e ".[dev]"
 ```
 
-The PyPI project is `codeguard-cli`; the installed command is `codeguard`.
+The PyPI project is `codeguard-cli`; the command is `codeguard`. It needs Python 3.10+.
+No database, no network, and no code leaves the machine.
 
-Requires Python 3.10+. No database, no Redis, no Docker needed.
+From source:
+
+```bash
+git clone https://github.com/mevichitra/codeguard && cd codeguard
+pip install -e ".[dev]"
+```
 
 ---
 
 ## Usage
 
 ```bash
-# Scan a file or directory
-codeguard scan myproject/
-
-# Output as JSON
-codeguard scan myproject/ --format json
-
-# Output as SARIF (for GitHub code scanning)
-codeguard scan myproject/ --format sarif > results.sarif
-
-# Only run specific rules
-codeguard scan myproject/ --rule CG-SEC-001 --rule CG-SEC-002
-
-# Only report HIGH and above
-codeguard scan myproject/ --severity high
+codeguard scan src/                                  # security rules (default)
+codeguard scan src/ --category performance           # or quality, or several
+codeguard scan src/ --fix-dry-run                    # preview safe autofixes as a diff
+codeguard scan src/ --fix                            # apply them
+codeguard scan src/ --format sarif -o results.sarif  # json, sarif, github, rdjson, junit
+codeguard scan src/ --fail-on high                   # exit 1 only for high or critical
+codeguard explain CG-SEC-011                         # what a rule catches and how to fix it
 ```
 
-Example output (human format):
+Exit codes: `0` clean, `1` findings at or above `--fail-on`, `2` usage error,
+`3` config error, `4` internal error.
 
-```
-myproject/auth.py:12:4  [CG-SEC-001] HIGH  SQL query built with string formatting
-  → Use parameterized queries: cursor.execute("SELECT ... WHERE id = %s", (user_id,))
-
-myproject/config.py:5:0  [CG-SEC-002] HIGH  Hardcoded secret: password
-  → Load secrets from environment variables or a secrets manager.
-
-2 findings  (2 high, 0 medium, 0 low)
-```
-
-Exit codes: `0` = no findings, `1` = findings found, `2` = error.
-
-### Inline suppression
+### Suppressions
 
 ```python
-query = f"SELECT * FROM users WHERE id = {uid}"  # codeguard: ignore[CG-SEC-001]
+query = f"SELECT * FROM t WHERE id = {uid}"  # codeguard: ignore[CG-SEC-001] reason: uid is an int until=2026-12-31
 ```
 
-Suppressed findings still appear with `suppressed: true` in JSON/SARIF output.
+A suppression without a reason, or past its `until=` date, is itself reported
+(`CG-META-001` / `002`). Audit them with `codeguard suppressions list`.
 
-### Config file
+### Configuration
 
-Place a `codeguard.toml` in your project root:
+`codeguard.toml` (or `[tool.codeguard]` in `pyproject.toml`). Run `codeguard init` for a
+starter file.
 
 ```toml
 [codeguard]
-exclude = ["tests/", "migrations/"]
-severity = "medium"   # ignore findings below this level
+exclude    = ["tests/fixtures/**", "**/*.min.js"]
+categories = ["security", "performance", "quality"]   # default: ["security"]
+fail_on    = "high"
+baseline   = ".codeguard-baseline.json"
 
 [codeguard.rules]
-disabled = ["CG-SEC-002"]  # not yet
+disable = ["CG-QUAL-104"]
+
+[codeguard.rules.CG-QUAL-003]
+max_complexity = 20          # rule options: see `codeguard explain <ID>`
 ```
 
-_(Config file support is on the roadmap; not yet implemented.)_
+See [configuration](docs/configuration.md), [baselines](docs/baseline.md),
+[autofix](docs/autofix.md), and [taint tracking](docs/taint.md).
 
 ---
 
 ## CI integration
 
-### GitHub Actions
-
 ```yaml
-- name: Run CodeGuard
-  run: |
-    pip install codeguard-cli
-    codeguard scan src/ --format sarif > codeguard.sarif
-
-- name: Upload SARIF
-  uses: github/codeql-action/upload-sarif@v3
-  with:
-    sarif_file: codeguard.sarif
+- uses: mevichitra/codeguard/action@v2    # diff-aware scan + SARIF upload to code scanning
 ```
+
+`codeguard ci` scans only the files changed since the base branch and applies the
+baseline. Pre-commit hooks and a Docker image are also available. See
+[docs/ci.md](docs/ci.md).
+
+---
 
 ## Editor integrations
 
-CodeGuard includes editor extensions for Visual Studio Code and Zed that display findings as native editor diagnostics while keeping all analysis 100% local.
+The language server (`codeguard lsp`) and the extensions put every finding in the editor
+with **severity-coloured diagnostics, hovers that show the taint path, quick fixes,
+one-click suppressions, and fix-all on save**. Editors show security, performance, and
+quality findings by default; CI keeps the project's categories.
 
-### Visual Studio Code
-
-The VS Code extension ([`editors/vscode`](editors/vscode)) starts `codeguard lsp`, supports Python, JavaScript, JSX, TypeScript, and TSX, and provides live diagnostics, code lenses, quick actions, and settings.
-
-```bash
-# Build the extension from source:
-cd editors/vscode
-npm install
-npm run compile
-```
-
-- Press `F5` in VS Code to launch the extension in a development host.
-- Or package into a `.vsix` file using `npx @vscode/vsce package` and install via **Install from VSIX...**.
-
-### Zed editor
-
-CodeGuard includes a development extension for Zed in [`editors/zed`](editors/zed).
-
-```bash
-# Install this checkout so Zed can find the command.
-pipx install -e .
-# or: uv tool install -e .
-```
-
-In Zed, open **Extensions**, select **Install Dev Extension**, and choose the
-[`editors/zed`](editors/zed) directory. The extension starts `codeguard lsp`,
-scans the workspace on startup, and refreshes open files after edits. Findings
-appear as warnings. Clicking a CodeGuard rule link opens the local dashboard;
-the **🛡 Open CodeGuard Dashboard** quick action provides an additional route.
-
-### Standalone LSP and Dashboard
-
-The dashboard is a local Markdown report stored in the user cache rather than
-the analyzed repository. It can also be generated directly:
-
-```bash
-codeguard dashboard .
-codeguard dashboard . --output codeguard-report.md
-```
-
-The LSP can also be started directly by any compatible editor:
-
-```bash
-codeguard lsp
-```
+- **VS Code** ([`editors/vscode`](editors/vscode)): a Findings sidebar grouped by
+  severity, category, or file; live status-bar counts; a Security Overview panel; fix
+  all in the workspace; SARIF export; and a getting-started walkthrough.
+- **Zed** ([`editors/zed`](editors/zed)): native diagnostics and Project Diagnostics,
+  `lsp.codeguard` settings passthrough, `code_actions_on_format` fix-all, and a
+  local Markdown dashboard.
+- **Neovim, Helix, and other LSP clients:** run `codeguard lsp`. See
+  [docs/editors.md](docs/editors.md) for configuration and the custom
+  `codeguard/summary` protocol.
 
 ---
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add a rule or file a bug.  
-Adding a rule requires: one rule file + two test fixtures (vulnerable + safe). See the [rule authoring guide](CONTRIBUTING.md#adding-a-rule).
+See [CONTRIBUTING.md](CONTRIBUTING.md). A new rule is one module, a vulnerable and a safe
+fixture (plus a `fixed` fixture if it has an autofix), a test, and a docs page.
 
----
+## Roadmap
 
-## Project status and roadmap
-
-**2.0 (beta).** Rule IDs, the `Finding` / JSON schema, config keys, and the exit-code
-contract are stable. Full details in [the changelog](CHANGELOG.md) and
-[docs/](https://mevichitra.github.io/codeguard/).
-
-On the roadmap:
-
-1. Light intraprocedural taint tracking (source → sink, sanitizer-aware) to cut false positives further
-2. A Semgrep-compatible YAML rule subset for custom rules
-3. Autofix (`--fix`) for the safe-fix rules
-4. Standalone single-file binaries and a Homebrew tap
-5. Published editor extensions and managed standalone language-server binaries
-6. Optional, offline AI-assisted triage (confidence + rationale, no code leaves the machine)
+Phase 1 (2.2, this release) added taint tracking, the performance and quality packs,
+autofix, and the editor UX. Next come JavaScript / TypeScript taint tracking, same-file
+function summaries, Semgrep-compatible custom rules, more security rules (SSRF, XXE,
+ReDoS, JWT, insecure cookies), Marketplace / Open VSX publishing, and standalone
+binaries. Details in [docs/roadmap.md](docs/roadmap.md).
 
 ---
 

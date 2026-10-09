@@ -30,6 +30,7 @@ nav:
   - Workflow & Value: workflow.md
   - Install: install.md
   - Usage: usage.md
+  - Editors: editors.md
   - Configuration: configuration.md
   - CI integration: ci.md
   - Baseline: baseline.md

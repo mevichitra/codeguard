@@ -4,12 +4,14 @@ Static analysis that finds security anti-patterns in source code — fast, offli
 built to sit at every gate of your workflow (editor, pre-commit, pre-push, PR/CI, merge,
 scheduled audit) from a single config file.
 
-!!! note "Version 2.0 (beta)"
-    CodeGuard scans **Python, JavaScript, and TypeScript**, with a config file,
-    diff-aware CI, baselines, governed suppressions, and packaged distribution
-    (pre-commit hook, GitHub Action, Docker image). Rule IDs, the `Finding` /
-    JSON schema, config keys, and exit codes are a stable contract from 2.0 —
-    see [Migrating to v2](migration-v2.md) if you used the 0.1 alpha.
+!!! note "Version 2.2"
+    CodeGuard scans **Python, JavaScript, and TypeScript** for **security** issues
+    (including source-to-sink [taint tracking](taint.md) for Python), **performance**
+    problems, and **code-quality** risks. Many findings come with a safe
+    [autofix](autofix.md). The [VS Code and Zed extensions](editors.md) show everything
+    live with quick fixes. Rule IDs, the `Finding` / JSON schema, config keys, and exit
+    codes are a stable contract from 2.0, and upgrading never changes a CI exit code:
+    `scan` and `ci` run security rules unless you opt into more categories.
 
 ## What it produces
 
@@ -26,22 +28,20 @@ myproject/auth.py:12:5  [CG-SEC-001] HIGH  SQL query built with string formattin
 1 finding(s)  (1 high)
 ```
 
-## Rules today
+## Rules
 
-**Python** (`0xx`): SQL string-formatting (CWE-89), hardcoded secrets (CWE-798),
-`eval`/`exec` on dynamic input (CWE-95), unsafe deserialization (CWE-502),
-`subprocess` shell injection (CWE-78).
+| Category | Python | JavaScript / TypeScript |
+|---|---|---|
+| **Security** | SQL injection, shell injection, `eval`/`exec`, unsafe deserialization, hardcoded secrets, weak hashes, disabled TLS verification, `random` for secrets, `tempfile.mktemp`, and taint-tracked SQL / shell / eval / path traversal / open redirect | `eval` / `new Function`, `child_process.exec`, DOM XSS, `dangerouslySetInnerHTML`, hardcoded secrets, `Math.random()` for secrets, weak hashes, disabled TLS verification, open redirect, path traversal, prototype pollution |
+| **Performance** | list-literal membership in loops, `+=` string building, `range(len())`, redundant `.keys()`, regex compiled in loops | `await` in loops, JSON deep clone, spread in `reduce`, `new RegExp` in loops, array-literal lookups in loops |
+| **Quality** | mutable defaults, swallowed exceptions, complexity, nesting depth, parameter count | loose equality, empty `catch`, complexity, `var` |
 
-**JavaScript / TypeScript** (`1xx`): dynamic code execution (CWE-95),
-`child_process` shell injection (CWE-78), DOM XSS sinks (CWE-79),
-`dangerouslySetInnerHTML` (CWE-79), hardcoded secrets (CWE-798),
-`Math.random()` for security values (CWE-338).
-
-See [Rules overview](rules/index.md) or run `codeguard list-rules`.
+See the [rules overview](rules/index.md) or run `codeguard list-rules`.
 
 ## Next steps
 
 - [Workflow & Value guide](workflow.md)
 - [Install](install.md)
 - [Usage](usage.md)
+- [Editors](editors.md)
 - [CI integration](ci.md)

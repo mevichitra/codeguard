@@ -1,0 +1,1 @@
+Added guides for taint tracking, autofix, and editor integration (VS Code, Zed, Neovim, Helix, and the custom LSP protocol), a roadmap, rule pages for every rule grouped by category, an updated contributor guide, and `scripts/scaffold_rule_docs.py` to start a new rule's page from its metadata and fixtures. The README describes 2.2 accurately.
