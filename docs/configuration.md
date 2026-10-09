@@ -56,7 +56,7 @@ CLI flags win over the config file. `--config PATH` forces a specific file.
 | `fail_on` | severity or `"never"` | `"info"` | Exit-code threshold. |
 | `output` | format | `"human"` | Default `--format`. |
 | `jobs` | int | `0` | Worker processes (`0` = auto). |
-| `baseline` | path | — | Baseline file *(used from a later release)*. |
+| `baseline` | path | — | Baseline file; its findings do not fail the run. See [Baseline](baseline.md). |
 | `[rules] disable` / `enable` | list of IDs | `[]` | Turn rules off / restrict to a set. |
 | `[rules.<ID>] severity` | severity | — | Per-rule severity remap. |
 | `[rules.<ID>] confidence_min` | float | — | Drop that rule's low-confidence findings. |
@@ -65,5 +65,5 @@ CLI flags win over the config file. `--config PATH` forces a specific file.
 
 !!! note "Monorepo nearest-wins"
     Per-directory config resolution (a nested `codeguard.toml` overriding the one
-    above it, per scanned file) is planned. Today one effective config applies to
+    above it, per scanned file) is not supported. One effective config applies to
     the whole run; `[[overrides]]` with path globs covers most monorepo needs.

@@ -32,7 +32,7 @@ discovery  →  language adapter (parse)  →  rules (analyze)  →  findings
 - **`lang/`** — a language adapter layer. `LanguageSupport` implementations wrap a parser
   (stdlib `ast` for Python; tree-sitter for JavaScript and TypeScript) and hand rules a
   uniform `SourceNode`. Rules declare the languages they target.
-- **`config/`** — config discovery, schema, and monorepo nearest-wins merging.
+- **`config/`** — config discovery (first `codeguard.toml` / `.codeguard.toml` / `pyproject.toml [tool.codeguard]` found walking up to the repository root) and the validated schema.
 - **`engine/discovery.py`** — `.gitignore`-aware file discovery with parallel scanning.
 - **`engine/fingerprint.py`** — stable finding fingerprints for baseline and SARIF.
 - **`engine/suppressions.py`** — language-aware suppression parsing with reasons and expiry.

@@ -43,6 +43,14 @@ nav:
       - CG-SEC-003 eval / exec: rules/CG-SEC-003.md
       - CG-SEC-004 Unsafe deserialization: rules/CG-SEC-004.md
       - CG-SEC-005 Shell injection: rules/CG-SEC-005.md
+      - CG-SEC-101 Dynamic code execution: rules/CG-SEC-101.md
+      - CG-SEC-102 child_process.exec: rules/CG-SEC-102.md
+      - CG-SEC-103 DOM XSS sink: rules/CG-SEC-103.md
+      - CG-SEC-104 dangerouslySetInnerHTML: rules/CG-SEC-104.md
+      - CG-SEC-105 Hardcoded secret (JS/TS): rules/CG-SEC-105.md
+      - CG-SEC-106 Math.random for secrets: rules/CG-SEC-106.md
+      - CG-META-001 Suppression without reason: rules/CG-META-001.md
+      - CG-META-002 Expired suppression: rules/CG-META-002.md
   - Architecture: architecture.md
   - Migrating to v2: migration-v2.md
   - Contributing: contributing.md
