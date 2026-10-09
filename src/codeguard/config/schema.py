@@ -17,6 +17,8 @@ from codeguard.lang.base import Language
 
 _SEVERITIES = {s.value for s in Severity}
 _LANGUAGES = {lang.value for lang in Language}
+#: Rule categories a project can select with ``categories = [...]``.
+CATEGORIES = ("security", "performance", "quality", "ai-smell")
 
 
 class SchemaError(Exception):
@@ -102,6 +104,9 @@ class Config:
     include: list[str] = field(default_factory=list)
     exclude: list[str] = field(default_factory=list)
     languages: list[str] = field(default_factory=list)
+    #: Rule categories to run.  ``None`` (unset) means the caller's default:
+    #: security only for ``scan`` / ``ci``, every category in editors.
+    categories: list[str] | None = None
     gitignore: bool = True
     fail_on: str = "info"
     output: str = "human"
@@ -134,6 +139,14 @@ class Config:
                     if bad:
                         raise SchemaError(f"unknown language(s): {sorted(bad)}")
                 setattr(out, key, lst)
+            elif key == "categories":
+                cats = _expect_str_list(value, key)
+                bad = set(cats) - set(CATEGORIES)
+                if bad:
+                    raise SchemaError(
+                        f"unknown categor(y/ies): {sorted(bad)} (allowed: {list(CATEGORIES)})"
+                    )
+                out.categories = cats
             elif key == "gitignore":
                 out.gitignore = _expect_bool(value, key)
             elif key == "fail_on":

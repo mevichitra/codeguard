@@ -33,8 +33,10 @@ class AnalysisOptions:
     includes: tuple[str, ...] = ()
     no_gitignore: bool = False
     now: date | None = None
-    #: Only run rules in these categories (empty = all).
+    #: Only run rules in these categories (empty = config, then *default_categories*).
     categories: tuple[str, ...] = ()
+    #: Categories used when neither *categories* nor the config chooses.
+    default_categories: tuple[str, ...] = ("security",)
     #: Extra rules to disable on top of the config (e.g. from editor settings).
     disabled_rule_ids: tuple[str, ...] = ()
     #: Re-read config and baseline on every scan.  Long-lived callers such as the
@@ -68,7 +70,12 @@ class ProjectAnalyzer:
         active_ids = active_rule_ids(
             config,
             selected,
-            categories=self.options.categories,
+            categories=effective_categories(
+                config,
+                self.options.categories,
+                selected=selected,
+                default=self.options.default_categories,
+            ),
             extra_disabled=self.options.disabled_rule_ids,
         )
 
@@ -148,6 +155,37 @@ class ProjectAnalyzer:
 
 
 CATEGORIES = ("security", "performance", "quality", "ai-smell", "meta")
+
+#: Categories ``scan`` / ``ci`` run when neither the command line nor the config
+#: chooses: security only, so upgrading never changes a pipeline's exit code.
+CLI_DEFAULT_CATEGORIES: tuple[str, ...] = ("security",)
+
+#: Categories editors show by default: everything (diagnostics coach, not gate).
+EDITOR_DEFAULT_CATEGORIES: tuple[str, ...] = ("security", "performance", "quality")
+
+
+def effective_categories(
+    config: Config,
+    requested: Iterable[str] = (),
+    *,
+    selected: list[str] | None = None,
+    default: tuple[str, ...] = CLI_DEFAULT_CATEGORIES,
+) -> tuple[str, ...]:
+    """Which categories to run.
+
+    Precedence: *requested* (command line / editor setting), then the config's
+    ``categories``, then *default*.  When rules are selected explicitly (``--rule``
+    or ``[rules] enable``) and no category was requested, every category is
+    allowed so the selection is honoured as written.
+    """
+    chosen = tuple(requested)
+    if chosen:
+        return chosen
+    if selected:
+        return ()
+    if config.categories is not None:
+        return tuple(config.categories)
+    return default
 
 
 def active_rule_ids(

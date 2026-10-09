@@ -142,3 +142,46 @@ def test_list_rules_fixable_and_explain(fix_rule: None) -> None:
     r = CliRunner().invoke(cli, ["explain", "CG-TEST-FIX"])
     assert "Autofix:   safe" in r.output
     assert "enabled = True" in r.output
+
+
+class TestCategoryDefaults:
+    """Performance / quality rules never change a CLI exit code unless asked for."""
+
+    SRC = "def f(items=[]):\n    for k in items:\n        pass\n"
+
+    def test_cli_default_is_security_only(self, tmp_path: Path) -> None:
+        _proj(tmp_path, self.SRC)
+        r = CliRunner().invoke(cli, ["scan", str(tmp_path)])
+        assert r.exit_code == EXIT_OK
+
+    def test_config_categories_enable_quality(self, tmp_path: Path) -> None:
+        _proj(tmp_path, self.SRC)
+        (tmp_path / "codeguard.toml").write_text(
+            '[codeguard]\ncategories = ["security", "quality"]\n'
+        )
+        r = CliRunner().invoke(cli, ["scan", str(tmp_path)])
+        assert r.exit_code == EXIT_FINDINGS and "CG-QUAL-001" in r.output
+
+    def test_explicit_rule_selection_runs_any_category(self, tmp_path: Path) -> None:
+        _proj(tmp_path, self.SRC)
+        r = CliRunner().invoke(cli, ["scan", str(tmp_path), "--rule", "CG-QUAL-001"])
+        assert r.exit_code == EXIT_FINDINGS
+
+    def test_unknown_category_in_config(self, tmp_path: Path) -> None:
+        _proj(tmp_path, self.SRC)
+        (tmp_path / "codeguard.toml").write_text('[codeguard]\ncategories = ["speed"]\n')
+        r = CliRunner().invoke(cli, ["scan", str(tmp_path)])
+        assert r.exit_code == 3
+
+
+def test_analyzer_editor_defaults_include_all_categories(tmp_path: Path) -> None:
+    from codeguard.analysis import EDITOR_DEFAULT_CATEGORIES, AnalysisOptions, ProjectAnalyzer
+
+    (tmp_path / ".git").mkdir()
+    src = "def f(items=[]):\n    pass\n"
+    cli_view = ProjectAnalyzer(tmp_path).scan_document(src, tmp_path / "m.py")
+    editor = ProjectAnalyzer(
+        tmp_path, AnalysisOptions(default_categories=EDITOR_DEFAULT_CATEGORIES)
+    ).scan_document(src, tmp_path / "m.py")
+    assert cli_view == []
+    assert [f.rule_id for f in editor] == ["CG-QUAL-001"]

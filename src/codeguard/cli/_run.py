@@ -16,6 +16,7 @@ from codeguard.analysis import (
     active_rule_ids,
     apply_project_policy,
     discovery_config,
+    effective_categories,
     rule_options_from,
     validate_rule_options,
 )
@@ -107,7 +108,8 @@ def execute(opt: RunOptions) -> int:
             err.print(f"[bold red]Error:[/bold red] unknown rule ID(s): {', '.join(bad)}.")
             return EXIT_USAGE
     try:
-        active_ids = active_rule_ids(config, selected, categories=opt.categories)
+        categories = effective_categories(config, opt.categories, selected=selected)
+        active_ids = active_rule_ids(config, selected, categories=categories)
     except ConfigError as exc:
         err.print(f"[bold red]Error:[/bold red] {exc}")
         return EXIT_USAGE

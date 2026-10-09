@@ -12,7 +12,12 @@ import click
 
 import codeguard.rules  # noqa: F401  -- register built-in rules
 from codeguard import __version__
-from codeguard.analysis import rule_options_from, validate_rule_options
+from codeguard.analysis import (
+    active_rule_ids,
+    effective_categories,
+    rule_options_from,
+    validate_rule_options,
+)
 from codeguard.cli.formatters import finding_help_uri
 from codeguard.config import ConfigError, find_config, load_config
 from codeguard.engine.finding import Finding
@@ -259,7 +264,11 @@ def _scan_for_baseline(paths: tuple[Path, ...], config_path: Path | None) -> lis
         exclude=list(config.exclude),
         respect_gitignore=config.gitignore,
     )
-    runner = AnalysisRunner(rule_options=rule_options_from(config))
+    selected = config.enable or None
+    active = active_rule_ids(
+        config, selected, categories=effective_categories(config, selected=selected)
+    )
+    runner = AnalysisRunner(rule_ids=active, rule_options=rule_options_from(config))
     findings = runner.run_files(discover(targets, disc, root=cfg_root))
     findings = apply_config(findings, config, root=str(cfg_root))
     return [f for f in findings if not f.suppressed]

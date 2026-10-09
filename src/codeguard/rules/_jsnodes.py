@@ -173,3 +173,27 @@ def member_property(node: SourceNode) -> str | None:
         return None
     prop = node.child_by_field("property")
     return prop.text() if prop is not None else None
+
+
+#: Text that reads request data in Express / Koa / Fastify / Next handlers.
+REQUEST_DATA = re.compile(
+    r"\b(?:req|request|ctx\.request)\.(?:query|body|params|headers|cookies)\b"
+)
+
+#: Text that reads attacker-controllable browser location data.
+LOCATION_DATA = re.compile(
+    r"\b(?:location\.(?:search|hash)|URLSearchParams|searchParams\.get|document\.referrer)\b"
+)
+
+
+def is_false(node: SourceNode) -> bool:
+    return node.kind == "false"
+
+
+def property_key(pair: SourceNode) -> str | None:
+    """The key of an object ``pair`` as plain text (quotes stripped)."""
+    key = pair.child_by_field("key")
+    if key is None:
+        return None
+    text = key.text()
+    return text[1:-1] if key.kind == "string" and len(text) >= 2 else text

@@ -35,28 +35,61 @@ nav:
   - Baseline: baseline.md
   - Suppressions: suppressions.md
   - Taint tracking: taint.md
+  - Autofix: autofix.md
   - Exit codes: exit-codes.md
   - Output formats: output-formats.md
   - Rules:
       - Overview: rules/index.md
-      - CG-SEC-001 SQL injection: rules/CG-SEC-001.md
-      - CG-SEC-002 Hardcoded secrets: rules/CG-SEC-002.md
-      - CG-SEC-003 eval / exec: rules/CG-SEC-003.md
-      - CG-SEC-004 Unsafe deserialization: rules/CG-SEC-004.md
-      - CG-SEC-005 Shell injection: rules/CG-SEC-005.md
-      - CG-SEC-010 Tainted SQL: rules/CG-SEC-010.md
-      - CG-SEC-011 Tainted shell command: rules/CG-SEC-011.md
-      - CG-SEC-012 Tainted eval/exec: rules/CG-SEC-012.md
-      - CG-SEC-013 Path traversal: rules/CG-SEC-013.md
-      - CG-SEC-014 Open redirect: rules/CG-SEC-014.md
-      - CG-SEC-101 Dynamic code execution: rules/CG-SEC-101.md
-      - CG-SEC-102 child_process.exec: rules/CG-SEC-102.md
-      - CG-SEC-103 DOM XSS sink: rules/CG-SEC-103.md
-      - CG-SEC-104 dangerouslySetInnerHTML: rules/CG-SEC-104.md
-      - CG-SEC-105 Hardcoded secret (JS/TS): rules/CG-SEC-105.md
-      - CG-SEC-106 Math.random for secrets: rules/CG-SEC-106.md
-      - CG-META-001 Suppression without reason: rules/CG-META-001.md
-      - CG-META-002 Expired suppression: rules/CG-META-002.md
+      - Security:
+          - CG-SEC-001 SQL query built with string formatting: rules/CG-SEC-001.md
+          - CG-SEC-002 Hardcoded secret: rules/CG-SEC-002.md
+          - CG-SEC-003 eval() / exec() on dynamic input: rules/CG-SEC-003.md
+          - CG-SEC-004 Unsafe deserialization: rules/CG-SEC-004.md
+          - CG-SEC-005 subprocess with shell=True and dynamic command: rules/CG-SEC-005.md
+          - CG-SEC-006 Weak hash (MD5 / SHA-1) used for a security value: rules/CG-SEC-006.md
+          - CG-SEC-007 TLS certificate verification disabled: rules/CG-SEC-007.md
+          - CG-SEC-008 Insecure temporary file name (tempfile.mktemp): rules/CG-SEC-008.md
+          - CG-SEC-009 random module used for a security value: rules/CG-SEC-009.md
+          - CG-SEC-010 Untrusted input reaches a SQL query: rules/CG-SEC-010.md
+          - CG-SEC-011 Untrusted input reaches a shell command: rules/CG-SEC-011.md
+          - CG-SEC-012 Untrusted input reaches eval() / exec(): rules/CG-SEC-012.md
+          - CG-SEC-013 Request data used as a file path: rules/CG-SEC-013.md
+          - CG-SEC-014 Request data used as a redirect target: rules/CG-SEC-014.md
+          - CG-SEC-101 Dynamic code execution (eval / Function / string timer): rules/CG-SEC-101.md
+          - CG-SEC-102 child_process.exec with a dynamic command: rules/CG-SEC-102.md
+          - CG-SEC-103 DOM XSS sink assigned a non-literal value: rules/CG-SEC-103.md
+          - CG-SEC-104 dangerouslySetInnerHTML with a non-literal value: rules/CG-SEC-104.md
+          - CG-SEC-105 Hardcoded secret: rules/CG-SEC-105.md
+          - CG-SEC-106 Math.random() used for a security value: rules/CG-SEC-106.md
+          - CG-SEC-107 Weak hash (MD5 / SHA-1) used for a security value: rules/CG-SEC-107.md
+          - CG-SEC-108 TLS certificate verification disabled: rules/CG-SEC-108.md
+          - CG-SEC-109 Redirect to a URL taken from the request: rules/CG-SEC-109.md
+          - CG-SEC-110 File path built from request data: rules/CG-SEC-110.md
+          - CG-SEC-111 Deep merge of request data (prototype pollution): rules/CG-SEC-111.md
+      - Performance:
+          - CG-PERF-001 Membership test against a list literal inside a loop: rules/CG-PERF-001.md
+          - CG-PERF-002 String built with += inside a loop: rules/CG-PERF-002.md
+          - CG-PERF-003 for i in range(len(seq)) used to index seq: rules/CG-PERF-003.md
+          - CG-PERF-004 Redundant .keys() in iteration or membership test: rules/CG-PERF-004.md
+          - CG-PERF-005 Regular expression compiled inside a loop: rules/CG-PERF-005.md
+          - CG-PERF-101 await inside a loop runs the iterations one after another: rules/CG-PERF-101.md
+          - CG-PERF-102 Deep clone with JSON.parse(JSON.stringify(x)): rules/CG-PERF-102.md
+          - CG-PERF-103 Accumulator copied with spread inside reduce: rules/CG-PERF-103.md
+          - CG-PERF-104 new RegExp() with a constant pattern inside a loop: rules/CG-PERF-104.md
+          - CG-PERF-105 includes() / indexOf() on an array literal inside a loop: rules/CG-PERF-105.md
+      - Code quality:
+          - CG-QUAL-001 Mutable default argument: rules/CG-QUAL-001.md
+          - CG-QUAL-002 Exception silently swallowed: rules/CG-QUAL-002.md
+          - CG-QUAL-003 Function is too complex: rules/CG-QUAL-003.md
+          - CG-QUAL-004 Code is nested too deeply: rules/CG-QUAL-004.md
+          - CG-QUAL-005 Function takes too many parameters: rules/CG-QUAL-005.md
+          - CG-QUAL-101 Loose equality (== / !=): rules/CG-QUAL-101.md
+          - CG-QUAL-102 Empty catch block: rules/CG-QUAL-102.md
+          - CG-QUAL-103 Function is too complex: rules/CG-QUAL-103.md
+          - CG-QUAL-104 var declaration: rules/CG-QUAL-104.md
+      - Suppression hygiene:
+          - CG-META-001 Suppression comment has no reason: rules/CG-META-001.md
+          - CG-META-002 Suppression has expired: rules/CG-META-002.md
   - Architecture: architecture.md
   - Roadmap: roadmap.md
   - Migrating to v2: migration-v2.md

@@ -18,9 +18,8 @@ SCOPE_TYPES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDef)
 
 #: Names that mark a value as security-sensitive (tokens, secrets, ids, ...).
 SECURITY_WORD = re.compile(
-    r"(?i)(token|secret|password|passwd|nonce|salt|otp|apikey|api_key|"
-    r"session|csrf|uuid|guid|random_?id|verification|reset_?code|auth|"
-    r"signature|hmac|key)"
+    r"(?i)(token|secret|password|passwd|pwd|nonce|salt|otp|api_?key|private_?key|"
+    r"session|csrf|verification|reset_?code|auth|credential|signature|hmac)"
 )
 
 
