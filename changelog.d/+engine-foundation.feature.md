@@ -1,1 +1,0 @@
-Findings can now carry a safe autofix and related locations, both emitted in JSON (`fix`, `related`) and SARIF (`fixes`, `relatedLocations`). Rules can declare tunable options set under `[rules.<ID>]` in `codeguard.toml`, and the `languages` config key now restricts discovery. The JSON summary gained `by_category` and `fixable` counts.

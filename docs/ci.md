@@ -51,7 +51,7 @@ uses the same [exit-code contract](exit-codes.md) as `scan`.
 ```yaml
 repos:
   - repo: https://github.com/mevichitra/codeguard
-    rev: v2.0.0
+    rev: v2.2.0
     hooks:
       - id: codeguard            # staged files, on every commit
       - id: codeguard-full       # whole tree, on push

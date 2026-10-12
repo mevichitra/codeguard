@@ -21,6 +21,37 @@ diff-aware CI, baselines, packaged distribution). See
 <!-- --8<-- [start:releases] -->
 <!-- towncrier release notes start -->
 
+## [2.2.0] - 2026-10-12
+
+### Added
+
+- Added 28 rules. Security: weak hashes for passwords and tokens (CG-SEC-006, CG-SEC-107), disabled TLS verification (CG-SEC-007, CG-SEC-108), `tempfile.mktemp` (CG-SEC-008), the `random` module for secrets (CG-SEC-009, with autofix), and Express open redirects, path traversal, and prototype pollution (CG-SEC-109 to CG-SEC-111). Performance: CG-PERF-001 to 005 for Python and CG-PERF-101 to 105 for JavaScript and TypeScript. Code quality: CG-QUAL-001 to 005 for Python and CG-QUAL-101 to 104 for JavaScript and TypeScript, with configurable complexity, nesting, and parameter limits.
+- Added intraprocedural taint tracking for Python and five rules built on it: untrusted input reaching a SQL query (CG-SEC-010), a shell command (CG-SEC-011), `eval`/`exec` (CG-SEC-012), a file path (CG-SEC-013), or a redirect (CG-SEC-014). Each finding lists the source and every assignment on the way, in the terminal, SARIF, and the editor; on the same line it replaces the matching pattern rule finding.
+- Findings can now carry a safe autofix and related locations, both emitted in JSON (`fix`, `related`) and SARIF (`fixes`, `relatedLocations`). Rules can declare tunable options set under `[rules.<ID>]` in `codeguard.toml`, and the `languages` config key now restricts discovery. The JSON summary gained `by_category` and `fixable` counts.
+- New `categories` config key. `scan` and `ci` run security rules by default, so upgrading does not change any exit code; enable performance and quality rules with `categories = [...]` or `--category`. Rules named with `--rule` or `[rules] enable` always run.
+- The language server now maps finding severity to editor severity (critical/high as errors, medium as warnings, low as information, info as hints; configurable with `severityMap`), offers quick fixes, line- and file-level suppressions, an Explain action, and a `source.fixAll.codeguard` action, shows hovers with the taint data-flow path, reports workspace-scan progress, and answers the custom `codeguard/summary` and `codeguard/fixAll` requests (with a `codeguard/summaryChanged` notification) that editor panels build on. Editors show security, performance, and quality findings by default; `categories` and `rules.disable` settings tune this. Results are cached per document, configuration is reloaded only when it changes, and positions are converted to UTF-16 so ranges and fixes are exact on lines with non-ASCII text.
+- VS Code extension 0.2.0: a CodeGuard activity-bar view that groups findings by severity, category, or file with inline fix and explain actions; live status-bar counts; a Security Overview panel; fix-all commands for a file or the whole workspace; SARIF export; settings for categories, severity mapping, and editor-only rule disabling; and a getting-started walkthrough. The extension now declares VS Code 1.82 as its minimum, which its language client already required.
+- Zed extension 0.2.0: settings under `lsp.codeguard` (`initialization_options` and `settings`) reach the server, so severity mapping, categories, and editor-only rule disabling work in Zed; `lsp.codeguard.binary` can point at a specific executable; Windows virtual environments are found; and the manifest declares CodeGuard's quick-fix and fix-all code-action kinds so `code_actions_on_format` can run them.
+- `codeguard scan --fix` applies safe autofixes in place and reports the post-fix state; `--fix-dry-run` prints them as a unified diff. `scan` and `ci` accept `--category` to run only security, performance, or quality rules. `list-rules` shows a fix column and gains `--fixable`; `explain` shows autofix support and rule options; `validate` rejects unknown rule options. The `output` config key now accepts every `--format` value.
+
+### Fixed
+
+- CG-SEC-001 now catches a query built with string formatting in a variable and executed on a later line, and no longer flags concatenation with a local variable that holds a string constant.
+- Language-server commands moved to the `codeguard.lsp.*` namespace so they no longer collide with the VS Code extension's own commands; `codeguard.openDashboard` is still accepted.
+- Rule documentation links in SARIF, JSON, `explain`, and editor diagnostics now use the published page path (`rules/CG-SEC-001/`); the previous lowercase links returned 404.
+- `import random as rnd` no longer makes the unbound name `random` resolve as the module when matching calls.
+
+### Documentation
+
+- Added guides for taint tracking, autofix, and editor integration (VS Code, Zed, Neovim, Helix, and the custom LSP protocol), a roadmap, rule pages for every rule grouped by category, an updated contributor guide, and `scripts/scaffold_rule_docs.py` to start a new rule's page from its metadata and fixtures. The README describes 2.2 accurately.
+- Added rule pages for CG-SEC-101 to CG-SEC-106 and the CG-META rules, and corrected stale statements about config discovery and baselines.
+- The changelog now has a page on the documentation site, the release process is written down in `docs/releasing.md`, and the VS Code and Zed extensions keep their own changelogs.
+
+### Internal
+
+- A new Editors workflow compiles, unit-tests, and packages the VS Code extension and lints, tests, and builds the Zed extension for `wasm32-wasip2` on every change under `editors/` or `src/codeguard/lsp/`.
+- News fragments can now use the `changed`, `deprecated`, `removed`, and `security` types, so release notes follow Keep a Changelog sections. CI also requires an extension changelog entry when a PR changes an editor extension, and only a PR that adds a new release section to `CHANGELOG.md` is exempt from the fragment check.
+
 ## [2.1.0] - 2026-09-02
 
 ### Added
