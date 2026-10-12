@@ -5,12 +5,14 @@ from __future__ import annotations
 
 import ast
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
+from types import MappingProxyType
 
 from codeguard.lang.base import Language
 from codeguard.lang.node import SourceNode
 
 from .context import RuleContext
-from .finding import Category, Finding, Location, Severity
+from .finding import Category, Finding, Fix, Location, RelatedLocation, Severity
 
 
 class Rule(ABC):
@@ -46,8 +48,19 @@ class Rule(ABC):
         Link to the rule's documentation page.  ``None`` falls back to a
         conventional URL derived from the rule ID.
     wants_dataflow:
-        Opt in to the intraprocedural taint pass (a later milestone).  Ignored
-        today.
+        Opt in to the intraprocedural taint pass.  When any active rule sets
+        this for a Python file, the runner computes ``ctx.dataflow`` once.
+    autofix:
+        ``True`` when the rule attaches safe :class:`~codeguard.engine.finding.Fix`
+        objects to (some of) its findings.  Shown by ``list-rules`` / ``explain``.
+    default_options:
+        Tunable options and their defaults, set per project under
+        ``[rules.<ID>]`` in ``codeguard.toml``.  Read them with
+        ``ctx.option(name)``.  Unknown option names are a config error.
+    supersedes:
+        Rule IDs whose finding on the same line this rule replaces.  Used by
+        taint rules so a tainted sink is reported once, with its taint path,
+        instead of also by the matching pattern rule.
     """
 
     id: str
@@ -60,6 +73,9 @@ class Rule(ABC):
     owasp: str | None = None
     help_uri: str | None = None
     wants_dataflow: bool = False
+    autofix: bool = False
+    default_options: Mapping[str, object] = MappingProxyType({})
+    supersedes: frozenset[str] = frozenset()
 
     @abstractmethod
     def analyze(self, ctx: RuleContext) -> list[Finding]:
@@ -116,6 +132,8 @@ class AstRule(Rule):
         fix_suggestion: str | None = None,
         confidence: float = 1.0,
         severity: Severity | None = None,
+        fix: Fix | None = None,
+        related: tuple[RelatedLocation, ...] = (),
     ) -> Finding:
         """Build a :class:`Finding` from an AST *node*.
 
@@ -145,6 +163,8 @@ class AstRule(Rule):
             owasp=self.owasp,
             fix_suggestion=fix_suggestion,
             confidence=confidence,
+            fix=fix,
+            related=related,
         )
 
 
@@ -171,6 +191,8 @@ class TreeSitterRule(Rule):
         fix_suggestion: str | None = None,
         confidence: float = 1.0,
         severity: Severity | None = None,
+        fix: Fix | None = None,
+        related: tuple[RelatedLocation, ...] = (),
     ) -> Finding:
         """Build a :class:`Finding` from a :class:`SourceNode` (already 1-indexed)."""
         start = node.start
@@ -192,4 +214,6 @@ class TreeSitterRule(Rule):
             owasp=self.owasp,
             fix_suggestion=fix_suggestion,
             confidence=confidence,
+            fix=fix,
+            related=related,
         )

@@ -1,6 +1,7 @@
-# archive/ holds unmaintained prototypes; tests/fixtures/ and benchmarks/corpus/
-# hold intentionally vulnerable sample code. All are excluded from every hook.
-exclude: ^(archive/|tests/fixtures/|benchmarks/corpus/)
+# archive/ holds unmaintained prototypes; tests/fixtures/, benchmarks/corpus/, and the
+# VS Code walkthrough sample hold intentionally vulnerable code. All are excluded from
+# every hook.
+exclude: ^(archive/|tests/fixtures/|benchmarks/corpus/|editors/vscode/media/sample/)
 
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit

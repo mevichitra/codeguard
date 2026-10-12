@@ -7,7 +7,7 @@ Thanks for considering a contribution. This guide covers everything you need.
 CodeGuard is a pure Python library + CLI. No database, no web stack. The core abstraction is:
 
 ```
-Rule → AnalysisRunner → [Finding, ...]
+Rule → AnalysisRunner → [Finding, ...]   (optionally with Fix and related locations)
 ```
 
 Each rule is self-contained: one file, independently testable, zero knowledge of other rules.
@@ -68,17 +68,25 @@ Preview with `towncrier build --draft`.
 
 This is the most common contribution. A rule requires exactly:
 
-1. **A rule module** in `src/codeguard/rules/<category>/`
-2. **A vulnerable fixture** that the rule must trigger on
-3. **A safe fixture** that the rule must NOT trigger on
-4. **A docs page** in `docs/rules/<category>/`
-5. Registration in the category's `__init__.py`
+1. **A rule module** in the package for its category: `src/codeguard/rules/security/`
+   (Python security), `rules/javascript/` (JS/TS security), `rules/performance/`, or
+   `rules/quality/`
+2. **A `vulnerable` fixture** that the rule must trigger on, and a **`safe` fixture** it
+   must NOT trigger on (for performance and quality rules these mean "reported" and "not
+   reported")
+3. **A `fixed` fixture** if the rule has an autofix
+4. **A test**
+5. **A docs page** in `docs/rules/<ID>.md`, listed in `docs/rules/index.md` and the
+   `mkdocs.yml` nav (`tests/test_docs.py` enforces this)
+6. Registration in the package's `__init__.py`
 
 ### Step-by-step
 
 #### 1. Claim a rule ID
 
-Check [docs/rules/](docs/rules/) for the next available ID. IDs are never reused or renumbered. Format: `CG-{CATEGORY}-{NNN}` where CATEGORY is one of `SEC`, `QUAL`, `PERF`, `AISM`.
+Check [docs/rules/](docs/rules/) for the next available ID. IDs are never reused or
+renumbered. Format: `CG-{CATEGORY}-{NNN}` where CATEGORY is one of `SEC`, `PERF`, `QUAL`,
+`AISM`; `0xx` numbers are Python and `1xx` are JavaScript / TypeScript.
 
 Open a draft PR or issue to claim the ID before writing code, to avoid collisions.
 
@@ -137,99 +145,84 @@ REGISTRY.register(MyRule())
 ```
 
 **Python rules subclass `AstRule`** and implement `check_ast(tree, source, filename)`.
-`AstRule` sets `languages = {Language.PYTHON}` and adapts your method to the
-language-aware engine. A rule for another language subclasses `Rule` directly,
-sets `languages` itself, and implements `analyze(ctx)` using `ctx.root`
-(a `SourceNode`) — see `src/codeguard/lang/`.
+**JavaScript / TypeScript rules subclass `TreeSitterRule`** with
+`languages = frozenset({Language.JAVASCRIPT, Language.TYPESCRIPT})` and implement
+`check_tree(root, ctx)` over the uniform `SourceNode` API.
 
-If your rule matches `module.function(...)` calls, resolve import aliases with
-`codeguard.rules._pyimports.ImportMap` so `from x import y` and `import x as z`
-are covered (see CG-SEC-004/005).
+Reuse the shared helpers instead of re-walking trees:
+
+| Helper | For |
+|---|---|
+| `rules/_pyimports.ImportMap` | resolving `from x import y` / `import x as z` |
+| `rules/_pysinks` | what counts as a SQL / shell / eval / path / redirect call |
+| `rules/_pyparents.PyParents` | parents, enclosing loop or function, security-flavoured binding names |
+| `rules/_pycomplexity`, `rules/_jscomplexity` | cyclomatic complexity, nesting, parameters |
+| `rules/_jsnodes` | calls, arguments, literals, enclosing loop and binding, request-data patterns |
+
+**Options.** Tunable thresholds go in `default_options = {"max_complexity": 15}`; read
+them with `ctx.option("max_complexity")` from `analyze(ctx)`. Users override them under
+`[rules.<ID>]`, and unknown names are rejected.
+
+**Autofix.** Set `autofix = True` and pass `fix=Fix(description, (edit, ...))` to
+`_make_finding`. Build edits with `engine.fixes.edit_for_ast_node`,
+`edit_for_source_node`, or `line_insert`. Only attach a fix when the rewrite provably
+keeps behaviour; otherwise give a `fix_suggestion` and no fix. See
+[docs/autofix.md](docs/autofix.md).
+
+**Taint rules.** Subclass `rules/security/_taint.TaintRule` and implement
+`sink(call, imports)`, returning the argument to check. Sources, sanitizers, and
+propagators live in `engine/dataflow/catalog.py`. If the rule replaces a pattern rule's
+finding on the same line, set `supersedes = frozenset({"CG-SEC-00X"})`.
+
+**Categories.** `scan` / `ci` run security rules by default. Performance and quality
+rules run when a project opts in, and always in editors. Pick severities accordingly:
+performance and quality rules are usually `LOW` or `INFO`.
 
 #### 3. Write fixtures
 
 ```
-tests/fixtures/<language>/security/cg_sec_NNN/
-├── vulnerable.<ext>   # MUST trigger — code that the rule should flag
-└── safe.<ext>         # MUST NOT trigger — correct code that looks similar
+tests/fixtures/<language>/<category>/<rule_id>/
+├── vulnerable.<ext>   # MUST trigger
+├── safe.<ext>         # MUST NOT trigger -- correct code that looks similar
+└── fixed.<ext>        # autofix rules only: vulnerable.<ext> after the fixes
 ```
 
-`<language>` is `python` / `javascript` / `typescript`; `<ext>` is `py` / `js` / `ts`.
-Keep fixtures minimal: the smallest snippet that demonstrates the point, with a
-comment explaining what it tests.
+`<language>` is `python` / `javascript` / `typescript`; `<category>` is `security` /
+`performance` / `quality`; `<ext>` is `py` / `js` / `ts` / `tsx`. Keep fixtures minimal,
+with a comment explaining what each case tests.
 
 #### 4. Write the test
 
+New rules add one line to `CASES` in `tests/test_rules/test_rule_packs.py`:
+
 ```python
-# tests/test_rules/security/test_cg_sec_NNN.py
-from codeguard.engine.runner import AnalysisRunner
-from tests.conftest import load_fixture
-
-RUNNER = AnalysisRunner(rule_ids=["CG-SEC-NNN"])
-
-
-def _findings_for(name: str) -> list:
-    src = load_fixture("python", "security", "cg_sec_NNN", name)
-    return [f for f in RUNNER.run(src, filename=f"{name}.py") if not f.suppressed]
-
-
-def test_vulnerable_triggers():
-    findings = _findings_for("vulnerable")
-    assert len(findings) >= 1
-    assert all(f.rule_id == "CG-SEC-NNN" for f in findings)
-
-
-def test_safe_does_not_trigger():
-    assert _findings_for("safe") == []
+("python", "security", "cg_sec_NNN", "CG-SEC-NNN", 2),  # 2 findings in vulnerable.py
 ```
 
-The existing per-rule test files (`tests/test_rules/security/test_cg_sec_00*.py`)
-are the template: a `Vulnerable` class, a `Safe` class, and — if the rule is
-suppressible in an interesting way — a `Suppression` class, plus
-`test_vulnerable_fixture` / `test_safe_fixture` using `load_fixture`.
+That checks the vulnerable count, a clean `safe` fixture, the category, and (for
+autofix rules) that applying the fixes reproduces `fixed.*` byte for byte and still
+parses. Add focused tests for tricky cases next to it (see
+`tests/test_rules/security/test_cg_sec_00*.py` and `test_taint_rules.py`).
 
 For rules where precision matters, add true/false-positive samples under
 `benchmarks/corpus/<RULE-ID>/{tp,tn}/` and check `python benchmarks/run_benchmark.py`.
 
 #### 5. Write the docs page
 
-```markdown
-# CG-SEC-NNN — Short title
+Generate a starter page from the rule's metadata and fixtures, then edit it:
 
-**Severity**: HIGH  
-**Category**: Security  
-**CWE**: [CWE-NNN](https://cwe.mitre.org/data/definitions/NNN.html)  
-**OWASP**: [ANNN:YYYY](https://owasp.org/Top10/)
-
-## What it catches
-
-...
-
-## Why it matters
-
-...
-
-## How to fix
-
-...
-
-## How to suppress (use sparingly)
-
-```python
-risky_call()  # codeguard: ignore[CG-SEC-NNN]
+```bash
+python scripts/scaffold_rule_docs.py
 ```
 
-## False positives
-
-...
-```
+Add the page to the Rules section of `mkdocs.yml` and to `docs/rules/index.md`.
 
 #### 6. Register the rule
 
-Add an import to `src/codeguard/rules/security/__init__.py`:
+Import the module in its package `__init__.py`:
 
 ```python
-from . import cg_sec_NNN_my_rule as _  # noqa: F401  (import for side-effect: registers rule)
+from . import cg_sec_NNN_my_rule as _NNN  # noqa: F401  (import registers the rule)
 ```
 
 ### Rule quality bar
@@ -238,6 +231,17 @@ from . import cg_sec_NNN_my_rule as _  # noqa: F401  (import for side-effect: re
 - `confidence` should be < 1.0 if the detection is heuristic.
 - Rules detect one thing. If you're tempted to add a second check, make a second rule.
 - Every rule needs both a vulnerable AND a safe fixture.
+- Run CodeGuard on a real project (`codeguard scan . --category <yours>`) and look at what
+  it reports before opening the PR.
+
+## Editor extensions
+
+- **VS Code** (`editors/vscode`): `npm ci && npm test` compiles and runs the unit tests;
+  press `F5` in VS Code to try it.
+- **Zed** (`editors/zed`): `cargo test`, then
+  `cargo build --release --target wasm32-wasip2`; install it with **Install Dev Extension**.
+- The protocol both use is documented in [docs/editors.md](docs/editors.md). Server-side
+  changes go in `src/codeguard/lsp/` with tests in `tests/test_lsp/`.
 
 ## Filing a bug report
 

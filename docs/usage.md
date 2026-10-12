@@ -27,6 +27,9 @@ from stdin with `-`.
 | `--config PATH` | Use a specific config file. |
 | `--format {human,json,json-legacy,sarif,github,rdjson,junit}` | Output format. See [Output formats](output-formats.md). |
 | `--rule RULE_ID` | Only run the named rule(s). Repeatable. |
+| `--category NAME` | Only run rules in this category (`security`, `performance`, `quality`). Repeatable. Default: the config's `categories`, else `security`. |
+| `--fix` | `scan` only. Apply safe autofixes in place, then report what remains. See [Autofix](autofix.md). |
+| `--fix-dry-run` | `scan` only. Print the safe autofixes as a unified diff without changing files. |
 | `--exclude GLOB` / `--include GLOB` | Path filters. Repeatable. |
 | `--diff REF` | Only scan files changed since `REF` (merge-base with `HEAD`). |
 | `--baseline PATH` | Findings in the baseline don't fail the run. |

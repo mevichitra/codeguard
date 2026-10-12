@@ -46,7 +46,9 @@ def cli() -> None:
 
 
 @cli.command("lsp")
-@click.option("--stdio", is_flag=True, default=True, help="Run language server over stdio (default).")
+@click.option(
+    "--stdio", is_flag=True, default=True, help="Run language server over stdio (default)."
+)
 def lsp(stdio: bool = True) -> None:
     """Run the CodeGuard language server over standard input/output."""
     from codeguard.lsp.server import run_stdio
@@ -142,6 +144,13 @@ def _common_options(fn: _CmdFn) -> _CmdFn:
             metavar="N",
             help="Parallel worker processes (0 = auto).",
         ),
+        click.option(
+            "--category",
+            "categories",
+            multiple=True,
+            type=click.Choice(["security", "performance", "quality", "ai-smell"]),
+            help="Only run rules in this category. Repeatable.",
+        ),
         click.option("--quiet", "-q", is_flag=True, help="Only print findings."),
         click.option("--no-color", is_flag=True, help="Disable coloured output."),
         click.option(
@@ -168,6 +177,12 @@ def _common_options(fn: _CmdFn) -> _CmdFn:
 )
 @click.option(
     "--stdin-filename", default="stdin.py", help="Filename to assume when reading from stdin ('-')."
+)
+@click.option("--fix", is_flag=True, help="Apply safe autofixes in place, then report.")
+@click.option(
+    "--fix-dry-run",
+    is_flag=True,
+    help="Print the safe autofixes as a unified diff without changing files.",
 )
 def scan(**kw: object) -> None:
     """Scan PATHS (files or directories; default '.') and report findings.

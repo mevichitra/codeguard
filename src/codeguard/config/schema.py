@@ -17,6 +17,8 @@ from codeguard.lang.base import Language
 
 _SEVERITIES = {s.value for s in Severity}
 _LANGUAGES = {lang.value for lang in Language}
+#: Rule categories a project can select with ``categories = [...]``.
+CATEGORIES = ("security", "performance", "quality", "ai-smell")
 
 
 class SchemaError(Exception):
@@ -43,10 +45,17 @@ def _expect_severity(value: Any, key: str) -> str:
 
 @dataclass
 class RuleSettings:
-    """Per-rule tuning from ``[tool.codeguard.rules.<ID>]``."""
+    """Per-rule tuning from ``[tool.codeguard.rules.<ID>]``.
+
+    ``severity`` and ``confidence_min`` apply to every rule.  Any other key is a
+    rule option (e.g. ``max_complexity``); option names and types are checked
+    against the rule's ``default_options`` by
+    :func:`codeguard.analysis.validate_rule_options`.
+    """
 
     severity: str | None = None
     confidence_min: float | None = None
+    options: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_dict(cls, rule_id: str, data: dict[str, Any]) -> RuleSettings:
@@ -59,7 +68,7 @@ class RuleSettings:
                     raise SchemaError(f"rules.{rule_id}.confidence_min must be in [0.0, 1.0]")
                 out.confidence_min = float(v)
             else:
-                raise SchemaError(f"unknown key rules.{rule_id}.{k}")
+                out.options[k] = v
         return out
 
 
@@ -95,6 +104,9 @@ class Config:
     include: list[str] = field(default_factory=list)
     exclude: list[str] = field(default_factory=list)
     languages: list[str] = field(default_factory=list)
+    #: Rule categories to run.  ``None`` (unset) means the caller's default:
+    #: security only for ``scan`` / ``ci``, every category in editors.
+    categories: list[str] | None = None
     gitignore: bool = True
     fail_on: str = "info"
     output: str = "human"
@@ -127,6 +139,14 @@ class Config:
                     if bad:
                         raise SchemaError(f"unknown language(s): {sorted(bad)}")
                 setattr(out, key, lst)
+            elif key == "categories":
+                cats = _expect_str_list(value, key)
+                bad = set(cats) - set(CATEGORIES)
+                if bad:
+                    raise SchemaError(
+                        f"unknown categor(y/ies): {sorted(bad)} (allowed: {list(CATEGORIES)})"
+                    )
+                out.categories = cats
             elif key == "gitignore":
                 out.gitignore = _expect_bool(value, key)
             elif key == "fail_on":
@@ -134,7 +154,15 @@ class Config:
                     _expect_severity(value, key)
                 out.fail_on = str(value)
             elif key == "output":
-                if value not in {"human", "json", "json-legacy", "sarif"}:
+                if value not in {
+                    "human",
+                    "json",
+                    "json-legacy",
+                    "sarif",
+                    "github",
+                    "rdjson",
+                    "junit",
+                }:
                     raise SchemaError(f"'output' must be a valid format, got {value!r}")
                 out.output = str(value)
             elif key == "jobs":

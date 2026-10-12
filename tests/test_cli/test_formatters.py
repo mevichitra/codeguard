@@ -37,10 +37,16 @@ class TestJsonEnvelope:
         assert out["schema_version"] == "1"
         assert out["tool"] == {"name": "CodeGuard", "version": "2.0.0"}
         assert [r["id"] for r in out["rules"]] == ["CG-SEC-001"]
-        assert out["rules"][0]["help_uri"].endswith("/rules/cg-sec-001/")
+        assert out["rules"][0]["help_uri"].endswith("/rules/CG-SEC-001/")
         assert out["results"][0]["fingerprint"] == "deadbeefdeadbeef"
         assert out["results"][0]["location"]["col"] == 5
-        assert out["summary"] == {"findings": 1, "by_severity": {"high": 1}, "suppressed": 0}
+        assert out["summary"] == {
+            "findings": 1,
+            "by_severity": {"high": 1},
+            "by_category": {"security": 1},
+            "fixable": 0,
+            "suppressed": 0,
+        }
 
     def test_suppressed_excluded_by_default(self) -> None:
         out = json.loads(format_json([_finding(suppressed=True)]))
@@ -66,7 +72,7 @@ class TestSarif:
         driver = out["runs"][0]["tool"]["driver"]
         assert driver["informationUri"] == "https://github.com/mevichitra/codeguard"
         rule = driver["rules"][0]
-        assert rule["helpUri"].endswith("/rules/cg-sec-001/")
+        assert rule["helpUri"].endswith("/rules/CG-SEC-001/")
         assert rule["properties"]["security-severity"] == "8.0"
         assert "external/cwe/cwe-89" in rule["properties"]["tags"]
 

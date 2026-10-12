@@ -23,6 +23,7 @@ codeguard validate
 include   = ["src/**", "lib/**"]  # empty = every supported file
 exclude   = ["**/*.min.js", "tests/fixtures/**"]
 languages = ["python"]
+categories = ["security", "performance", "quality"]  # default: ["security"]
 gitignore = true                  # honour .gitignore (default true)
 fail_on   = "high"                # min severity that makes the run exit 1
 output    = "human"               # default --format
@@ -35,6 +36,9 @@ enable  = []                      # empty = all (minus `disable`)
 [codeguard.rules.CG-SEC-001]
 severity       = "medium"         # remap this rule's severity
 confidence_min = 0.8              # drop findings below this confidence
+
+[codeguard.rules.CG-QUAL-003]
+max_complexity = 20               # a rule option (see `codeguard explain CG-QUAL-003`)
 
 [codeguard.severity_remap]
 CG-SEC-005 = "critical"
@@ -52,18 +56,20 @@ CLI flags win over the config file. `--config PATH` forces a specific file.
 |---|---|---|---|
 | `include` / `exclude` | list of globs | `[]` | Gitignore-style path filters. |
 | `languages` | list | all | Restrict to these languages. |
+| `categories` | list | `["security"]` | Rule categories `scan` / `ci` run: `security`, `performance`, `quality`. Editors show all three unless this is set. |
 | `gitignore` | bool | `true` | Honour the repo `.gitignore`. |
 | `fail_on` | severity or `"never"` | `"info"` | Exit-code threshold. |
 | `output` | format | `"human"` | Default `--format`. |
 | `jobs` | int | `0` | Worker processes (`0` = auto). |
-| `baseline` | path | — | Baseline file *(used from a later release)*. |
+| `baseline` | path | — | Baseline file; its findings do not fail the run. See [Baseline](baseline.md). |
 | `[rules] disable` / `enable` | list of IDs | `[]` | Turn rules off / restrict to a set. |
 | `[rules.<ID>] severity` | severity | — | Per-rule severity remap. |
 | `[rules.<ID>] confidence_min` | float | — | Drop that rule's low-confidence findings. |
+| `[rules.<ID>] <option>` | per rule | rule default | Rule options such as `max_complexity`; `codeguard explain <ID>` lists them, and unknown names are an error. |
 | `[severity_remap]` | table | `{}` | `RULE-ID = "severity"`. |
 | `[[overrides]]` | array of tables | `[]` | `path` glob + `disable` / `enable`. |
 
 !!! note "Monorepo nearest-wins"
     Per-directory config resolution (a nested `codeguard.toml` overriding the one
-    above it, per scanned file) is planned. Today one effective config applies to
+    above it, per scanned file) is not supported. One effective config applies to
     the whole run; `[[overrides]]` with path globs covers most monorepo needs.

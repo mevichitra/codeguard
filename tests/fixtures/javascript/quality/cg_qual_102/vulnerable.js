@@ -1,0 +1,3 @@
+try {
+  risky();
+} catch (err) {}

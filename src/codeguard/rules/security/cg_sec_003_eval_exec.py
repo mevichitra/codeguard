@@ -29,8 +29,7 @@ import ast
 from codeguard.engine.finding import Category, Finding, Severity
 from codeguard.engine.registry import REGISTRY
 from codeguard.engine.rule import AstRule
-
-_DANGEROUS_BUILTINS = frozenset({"eval", "exec", "compile"})
+from codeguard.rules._pysinks import eval_like_name
 
 _FIX = (
     "Avoid eval/exec on dynamic input. Use a safe dispatch mechanism "
@@ -61,8 +60,8 @@ class EvalExecRule(AstRule):
             if not isinstance(node, ast.Call):
                 continue
 
-            func_name = self._func_name(node)
-            if func_name not in _DANGEROUS_BUILTINS:
+            func_name = eval_like_name(node)
+            if func_name is None:
                 continue
 
             # No arguments at all — unusual but not our concern
@@ -88,17 +87,6 @@ class EvalExecRule(AstRule):
             )
 
         return findings
-
-    # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
-
-    @staticmethod
-    def _func_name(node: ast.Call) -> str:
-        """Return the bare function name for simple Name calls, else ''."""
-        if isinstance(node.func, ast.Name):
-            return node.func.id
-        return ""
 
 
 REGISTRY.register(EvalExecRule())

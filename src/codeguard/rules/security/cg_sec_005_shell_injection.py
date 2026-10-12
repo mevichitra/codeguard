@@ -42,27 +42,7 @@ from codeguard.engine.finding import Category, Finding, Severity
 from codeguard.engine.registry import REGISTRY
 from codeguard.engine.rule import AstRule
 from codeguard.rules._pyimports import ImportMap
-
-# subprocess entry points where a shell is only used when shell=True is passed.
-_SHELL_OPTIONAL: frozenset[tuple[str, str]] = frozenset(
-    {
-        ("subprocess", "run"),
-        ("subprocess", "call"),
-        ("subprocess", "Popen"),
-        ("subprocess", "check_output"),
-        ("subprocess", "check_call"),
-    }
-)
-
-# Calls that ALWAYS run their argument through a shell -- no shell= keyword.
-_ALWAYS_SHELL: frozenset[tuple[str, str]] = frozenset(
-    {
-        ("os", "system"),
-        ("os", "popen"),
-        ("subprocess", "getoutput"),
-        ("subprocess", "getstatusoutput"),
-    }
-)
+from codeguard.rules._pysinks import command_is_literal, shell_target
 
 _FIX = (
     "Pass the command as a list with shell=False: "
@@ -95,15 +75,8 @@ class ShellInjectionRule(AstRule):
             if not isinstance(node, ast.Call):
                 continue
 
-            target = imports.resolve_call(node.func)
-            always_shell = target in _ALWAYS_SHELL
-            shell_optional = target in _SHELL_OPTIONAL
-
-            if not always_shell and not shell_optional:
-                continue
-            if shell_optional and not self._has_shell_true(node):
-                continue
-            if self._command_is_literal(node):
+            target = shell_target(node, imports)
+            if target is None or command_is_literal(node):
                 continue
 
             module, method = target
@@ -121,37 +94,6 @@ class ShellInjectionRule(AstRule):
             )
 
         return findings
-
-    # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
-
-    @staticmethod
-    def _has_shell_true(node: ast.Call) -> bool:
-        """Return True if shell=True is explicitly passed."""
-        for kw in node.keywords:
-            if kw.arg == "shell":
-                val = kw.value
-                # shell=True  or  shell=1
-                if isinstance(val, ast.Constant) and val.value:
-                    return True
-        return False
-
-    @staticmethod
-    def _command_is_literal(node: ast.Call) -> bool:
-        """Return True if the command arg is a plain string literal (safe case)."""
-        if not node.args:
-            # All keyword args — look for args=
-            for kw in node.keywords:
-                if kw.arg == "args":
-                    return isinstance(kw.value, ast.Constant)
-            return True  # no command at all — not our concern
-
-        first = node.args[0]
-        # List of literals is fine too: ["ls", "-la"]
-        if isinstance(first, ast.List):
-            return all(isinstance(elt, ast.Constant) for elt in first.elts)
-        return isinstance(first, ast.Constant)
 
 
 REGISTRY.register(ShellInjectionRule())

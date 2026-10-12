@@ -35,7 +35,8 @@ class ImportMap:
                 for alias in node.names:
                     top = alias.name.split(".")[0]
                     m.module_aliases[alias.asname or alias.name] = alias.name
-                    m.module_aliases.setdefault(top, top)
+                    if alias.asname is None:  # `import os.path` also binds `os`
+                        m.module_aliases.setdefault(top, top)
             elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
                 for alias in node.names:
                     local = alias.asname or alias.name
@@ -58,3 +59,39 @@ class ImportMap:
                 return self.symbol_imports[func.id]
             return None, func.id
         return None, None
+
+    def has_module(self, module: str) -> bool:
+        """True if ``import <module>`` (under any alias) appears in the file."""
+        return module in self.module_aliases.values()
+
+    def local_name_for(self, module: str) -> str | None:
+        """The local name bound to ``import <module>`` (``"sp"`` for ``import x as sp``)."""
+        if self.module_aliases.get(module) == module:
+            return module
+        for local, canonical in self.module_aliases.items():
+            if canonical == module:
+                return local
+        return None
+
+
+def insertion_line(tree: ast.Module) -> int:
+    """The 1-indexed line where a new top-level ``import`` should go.
+
+    After the last top-level import if there is one; otherwise after a module
+    docstring and any ``from __future__`` imports; otherwise line 1.
+    """
+    last = 0
+    body = tree.body
+    if (
+        body
+        and isinstance(body[0], ast.Expr)
+        and isinstance(body[0].value, ast.Constant)
+        and isinstance(body[0].value.value, str)
+    ):
+        last = body[0].end_lineno or body[0].lineno
+    for stmt in body:
+        if isinstance(stmt, (ast.Import, ast.ImportFrom)):
+            last = stmt.end_lineno or stmt.lineno
+        elif not (isinstance(stmt, ast.Expr) and stmt is body[0]):
+            break
+    return last + 1

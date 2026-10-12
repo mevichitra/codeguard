@@ -39,7 +39,7 @@ class TestExplain:
         r = CliRunner().invoke(cli, ["explain", "CG-SEC-001"])
         assert r.exit_code == 0
         assert "CWE-89" in r.output
-        assert "rules/cg-sec-001/" in r.output
+        assert "rules/CG-SEC-001/" in r.output
 
     def test_unknown(self) -> None:
         r = CliRunner().invoke(cli, ["explain", "CG-NOPE-999"])
