@@ -93,6 +93,8 @@ nav:
           - CG-META-002 Suppression has expired: rules/CG-META-002.md
   - Architecture: architecture.md
   - Roadmap: roadmap.md
+  - Changelog: changelog.md
+  - Releasing: releasing.md
   - Migrating to v2: migration-v2.md
   - Contributing: contributing.md
 
@@ -100,6 +102,9 @@ markdown_extensions:
   - admonition
   - pymdownx.details
   - pymdownx.superfences
+  - pymdownx.snippets:
+      base_path: ["."]
+      check_paths: true
   - pymdownx.highlight:
       anchor_linenums: true
   - toc:

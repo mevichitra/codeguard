@@ -55,14 +55,24 @@ git commit -s -m "feat(rules): add CG-SEC-006 open-redirect detection"
 This adds a `Signed-off-by: Your Name <your@email.com>` trailer.  
 PRs without DCO sign-off will not be merged.
 
-## Changelog fragments
+## Changelog
 
-Any PR that touches `src/codeguard/` and has a user-visible effect must add a news
-fragment under `changelog.d/` — CI enforces this. The filename is
-`<id>.<type>.md` (`<id>` = issue/PR number or a short slug prefixed with `+`;
-`<type>` = `breaking`, `feature`, `bugfix`, `doc`, or `internal`). One or two
-past-tense sentences describing the change for a user. See `changelog.d/README.md`.
-Preview with `towncrier build --draft`.
+CodeGuard keeps a [changelog](CHANGELOG.md) in the
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format. CI enforces both rules
+below.
+
+- **CLI and library changes.** Any PR that touches `src/codeguard/` with a user-visible
+  effect adds a news fragment under `changelog.d/`, named `<id>.<type>.md`. `<id>` is the
+  issue or PR number, or a short slug prefixed with `+`. `<type>` is one of `breaking`,
+  `feature`, `changed`, `deprecated`, `removed`, `bugfix`, `security`, `doc`, or
+  `internal`. Write one or two past-tense sentences for a user. See
+  `changelog.d/README.md` for which type to pick, and preview with
+  `towncrier build --draft`.
+- **Editor extensions.** A PR that changes `editors/vscode/` or `editors/zed/` adds an
+  entry under `## [x.y.z] - Unreleased` in that extension's `CHANGELOG.md`.
+
+Maintainers build the release notes when cutting a release; see
+[docs/releasing.md](docs/releasing.md).
 
 ## Adding a rule
 

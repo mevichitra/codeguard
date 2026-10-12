@@ -7,8 +7,9 @@ at the repository root. In short:
 - **Setup:** `pip install -e ".[dev]"` then `pre-commit install`.
 - **Tests:** `pytest`. **Types:** `mypy src/`. **Lint:** `ruff check src/ tests/`.
 - **Sign your commits:** `git commit -s` (Developer Certificate of Origin).
-- **Add a news fragment:** any user-visible change needs a file in `changelog.d/`
-  (see `changelog.d/README.md`).
+- **Add a news fragment:** any user-visible change to `src/codeguard/` needs a file in
+  `changelog.d/` (see `changelog.d/README.md`). Changes to an editor extension add an
+  entry to that extension's `CHANGELOG.md`. See [Releasing](releasing.md).
 - **Adding a rule:** one rule module, a vulnerable and a safe fixture (plus a `fixed`
   fixture for autofix rules), a line in `tests/test_rules/test_rule_packs.py`, a docs
   page (`python scripts/scaffold_rule_docs.py` writes a starter), and registration in
