@@ -2266,6 +2266,60 @@
   
   
     <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releasing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Releasing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../migration-v2/" class="md-nav__link">
         
   
@@ -2374,8 +2428,9 @@ at the repository root. In short:</p>
 <li><strong>Setup:</strong> <code>pip install -e ".[dev]"</code> then <code>pre-commit install</code>.</li>
 <li><strong>Tests:</strong> <code>pytest</code>. <strong>Types:</strong> <code>mypy src/</code>. <strong>Lint:</strong> <code>ruff check src/ tests/</code>.</li>
 <li><strong>Sign your commits:</strong> <code>git commit -s</code> (Developer Certificate of Origin).</li>
-<li><strong>Add a news fragment:</strong> any user-visible change needs a file in <code>changelog.d/</code>
-  (see <code>changelog.d/README.md</code>).</li>
+<li><strong>Add a news fragment:</strong> any user-visible change to <code>src/codeguard/</code> needs a file in
+  <code>changelog.d/</code> (see <code>changelog.d/README.md</code>). Changes to an editor extension add an
+  entry to that extension's <code>CHANGELOG.md</code>. See <a href="../releasing/">Releasing</a>.</li>
 <li><strong>Adding a rule:</strong> one rule module, a vulnerable and a safe fixture (plus a <code>fixed</code>
   fixture for autofix rules), a line in <code>tests/test_rules/test_rule_packs.py</code>, a docs
   page (<code>python scripts/scaffold_rule_docs.py</code> writes a starter), and registration in
