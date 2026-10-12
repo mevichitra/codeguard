@@ -311,3 +311,6 @@ docs/_build/
 test-results/
 screenshots/
 videos/
+
+# Claude Code project notes (kept local)
+.claude/CLAUDE.md
