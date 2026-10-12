@@ -368,6 +368,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../editors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Editors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../configuration/" class="md-nav__link">
         
   
@@ -476,6 +503,60 @@
   
   
     <li class="md-nav__item">
+      <a href="../taint/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Taint tracking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../autofix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Autofix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../exit-codes/" class="md-nav__link">
         
   
@@ -545,10 +626,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" checked>
         
           
-          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
             
   
   
@@ -566,8 +647,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_11">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_14">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -593,6 +674,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -610,10 +709,122 @@
 
       </a>
       
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code-quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code quality
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#suppression-hygiene" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Suppression hygiene
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
               
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_14_2" id="__nav_14_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_14_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Security
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
             
               
                 
@@ -629,7 +840,7 @@
   <span class="md-ellipsis">
     
   
-    CG-SEC-001 SQL injection
+    CG-SEC-001 SQL query built with string formatting
   
 
     
@@ -657,7 +868,7 @@
   <span class="md-ellipsis">
     
   
-    CG-SEC-002 Hardcoded secrets
+    CG-SEC-002 Hardcoded secret
   
 
     
@@ -685,7 +896,7 @@
   <span class="md-ellipsis">
     
   
-    CG-SEC-003 eval / exec
+    CG-SEC-003 eval() / exec() on dynamic input
   
 
     
@@ -741,7 +952,7 @@
   <span class="md-ellipsis">
     
   
-    CG-SEC-005 Shell injection
+    CG-SEC-005 subprocess with shell=True and dynamic command
   
 
     
@@ -750,6 +961,1333 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-SEC-006/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-006 Weak hash (MD5 / SHA-1) used for a security value
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-SEC-007/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-007 TLS certificate verification disabled
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-SEC-008/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-008 Insecure temporary file name (tempfile.mktemp)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-SEC-009/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-009 random module used for a security value
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-SEC-010/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-010 Untrusted input reaches a SQL query
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-SEC-011/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-011 Untrusted input reaches a shell command
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-SEC-012/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-012 Untrusted input reaches eval() / exec()
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-SEC-013/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-013 Request data used as a file path
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-SEC-014/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-014 Request data used as a redirect target
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-SEC-101/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-101 Dynamic code execution (eval / Function / string timer)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-SEC-102/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-102 child_process.exec with a dynamic command
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-SEC-103/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-103 DOM XSS sink assigned a non-literal value
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-SEC-104/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-104 dangerouslySetInnerHTML with a non-literal value
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-SEC-105/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-105 Hardcoded secret
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-SEC-106/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-106 Math.random() used for a security value
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-SEC-107/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-107 Weak hash (MD5 / SHA-1) used for a security value
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-SEC-108/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-108 TLS certificate verification disabled
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-SEC-109/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-109 Redirect to a URL taken from the request
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-SEC-110/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-110 File path built from request data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-SEC-111/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-SEC-111 Deep merge of request data (prototype pollution)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_14_3" id="__nav_14_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_14_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Performance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-PERF-001/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-PERF-001 Membership test against a list literal inside a loop
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-PERF-002/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-PERF-002 String built with += inside a loop
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-PERF-003/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-PERF-003 for i in range(len(seq)) used to index seq
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-PERF-004/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-PERF-004 Redundant .keys() in iteration or membership test
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-PERF-005/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-PERF-005 Regular expression compiled inside a loop
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-PERF-101/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-PERF-101 await inside a loop runs the iterations one after another
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-PERF-102/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-PERF-102 Deep clone with JSON.parse(JSON.stringify(x))
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-PERF-103/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-PERF-103 Accumulator copied with spread inside reduce
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-PERF-104/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-PERF-104 new RegExp() with a constant pattern inside a loop
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-PERF-105/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-PERF-105 includes() / indexOf() on an array literal inside a loop
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_14_4" id="__nav_14_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code quality
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_14_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Code quality
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-QUAL-001/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-QUAL-001 Mutable default argument
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-QUAL-002/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-QUAL-002 Exception silently swallowed
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-QUAL-003/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-QUAL-003 Function is too complex
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-QUAL-004/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-QUAL-004 Code is nested too deeply
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-QUAL-005/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-QUAL-005 Function takes too many parameters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-QUAL-101/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-QUAL-101 Loose equality (== / !=)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-QUAL-102/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-QUAL-102 Empty catch block
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-QUAL-103/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-QUAL-103 Function is too complex
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-QUAL-104/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-QUAL-104 var declaration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_14_5" id="__nav_14_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Suppression hygiene
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_14_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Suppression hygiene
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-META-001/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-META-001 Suppression comment has no reason
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CG-META-002/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CG-META-002 Suppression has expired
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -777,6 +2315,33 @@
     
   
     Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
   
 
     
@@ -863,6 +2428,58 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code-quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code quality
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#suppression-hygiene" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Suppression hygiene
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -887,124 +2504,451 @@
 
 
 <h1 id="rules">Rules<a class="headerlink" href="#rules" title="Permanent link">&para;</a></h1>
-<p>Every rule has a stable ID (<code>CG-&lt;CATEGORY&gt;-&lt;NNN&gt;</code>), a severity, a CWE/OWASP mapping, and
-a fix suggestion. IDs are permanent — never renumbered or reused.</p>
-<p>The <code>1xx</code> block covers JavaScript / TypeScript; <code>0xx</code> covers Python.</p>
+<p>Every rule has a stable ID (<code>CG-&lt;CATEGORY&gt;-&lt;NNN&gt;</code>), a severity, and a fix suggestion.
+Security rules also map to CWE and OWASP. IDs are permanent: never renumbered or reused.</p>
+<p><code>0xx</code> IDs are Python; <code>1xx</code> IDs are JavaScript / TypeScript.</p>
+<div class="admonition note">
+<p class="admonition-title">Which rules run</p>
+<p><code>codeguard scan</code> and <code>codeguard ci</code> run <strong>security</strong> rules by default, so upgrading
+never changes a pipeline's exit code. Turn on more with <code>--category performance</code>
+or <code>categories = ["security", "performance", "quality"]</code> in <code>codeguard.toml</code>.
+Editors show all three categories by default. Rules named with <code>--rule</code> or
+<code>[rules] enable</code> always run.</p>
+</div>
+<h2 id="security">Security<a class="headerlink" href="#security" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
 <th>ID</th>
 <th>Title</th>
 <th>Severity</th>
-<th>CWE</th>
 <th>Languages</th>
+<th>Autofix</th>
+<th>CWE</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>CG-SEC-001</td>
+<td><a href="CG-SEC-001/">CG-SEC-001</a></td>
 <td>SQL query built with string formatting</td>
 <td>HIGH</td>
-<td>CWE-89</td>
 <td>Python</td>
+<td></td>
+<td>CWE-89</td>
 </tr>
 <tr>
-<td>CG-SEC-002</td>
+<td><a href="CG-SEC-002/">CG-SEC-002</a></td>
 <td>Hardcoded secret</td>
 <td>HIGH</td>
+<td>Python</td>
+<td></td>
 <td>CWE-798</td>
-<td>Python</td>
 </tr>
 <tr>
-<td>CG-SEC-003</td>
-<td><code>eval()</code> / <code>exec()</code> on dynamic input</td>
+<td><a href="CG-SEC-003/">CG-SEC-003</a></td>
+<td>eval() / exec() on dynamic input</td>
 <td>HIGH</td>
-<td>CWE-95</td>
 <td>Python</td>
+<td></td>
+<td>CWE-95</td>
 </tr>
 <tr>
-<td>CG-SEC-004</td>
+<td><a href="CG-SEC-004/">CG-SEC-004</a></td>
 <td>Unsafe deserialization</td>
 <td>HIGH</td>
+<td>Python</td>
+<td></td>
 <td>CWE-502</td>
-<td>Python</td>
 </tr>
 <tr>
-<td>CG-SEC-005</td>
-<td><code>subprocess</code> with <code>shell=True</code> and a dynamic command</td>
+<td><a href="CG-SEC-005/">CG-SEC-005</a></td>
+<td>subprocess with shell=True and dynamic command</td>
 <td>HIGH</td>
+<td>Python</td>
+<td></td>
 <td>CWE-78</td>
-<td>Python</td>
 </tr>
 <tr>
-<td>CG-SEC-101</td>
-<td>Dynamic code execution (<code>eval</code> / <code>Function</code> / string timer)</td>
+<td><a href="CG-SEC-006/">CG-SEC-006</a></td>
+<td>Weak hash (MD5 / SHA-1) used for a security value</td>
+<td>MEDIUM</td>
+<td>Python</td>
+<td></td>
+<td>CWE-328</td>
+</tr>
+<tr>
+<td><a href="CG-SEC-007/">CG-SEC-007</a></td>
+<td>TLS certificate verification disabled</td>
 <td>HIGH</td>
+<td>Python</td>
+<td></td>
+<td>CWE-295</td>
+</tr>
+<tr>
+<td><a href="CG-SEC-008/">CG-SEC-008</a></td>
+<td>Insecure temporary file name (tempfile.mktemp)</td>
+<td>MEDIUM</td>
+<td>Python</td>
+<td></td>
+<td>CWE-377</td>
+</tr>
+<tr>
+<td><a href="CG-SEC-009/">CG-SEC-009</a></td>
+<td>random module used for a security value</td>
+<td>MEDIUM</td>
+<td>Python</td>
+<td>safe</td>
+<td>CWE-338</td>
+</tr>
+<tr>
+<td><a href="CG-SEC-010/">CG-SEC-010</a></td>
+<td>Untrusted input reaches a SQL query</td>
+<td>HIGH</td>
+<td>Python</td>
+<td></td>
+<td>CWE-89</td>
+</tr>
+<tr>
+<td><a href="CG-SEC-011/">CG-SEC-011</a></td>
+<td>Untrusted input reaches a shell command</td>
+<td>CRITICAL</td>
+<td>Python</td>
+<td></td>
+<td>CWE-78</td>
+</tr>
+<tr>
+<td><a href="CG-SEC-012/">CG-SEC-012</a></td>
+<td>Untrusted input reaches eval() / exec()</td>
+<td>CRITICAL</td>
+<td>Python</td>
+<td></td>
 <td>CWE-95</td>
-<td>JS, TS</td>
 </tr>
 <tr>
-<td>CG-SEC-102</td>
-<td><code>child_process.exec</code> with a dynamic command</td>
+<td><a href="CG-SEC-013/">CG-SEC-013</a></td>
+<td>Request data used as a file path</td>
 <td>HIGH</td>
+<td>Python</td>
+<td></td>
+<td>CWE-22</td>
+</tr>
+<tr>
+<td><a href="CG-SEC-014/">CG-SEC-014</a></td>
+<td>Request data used as a redirect target</td>
+<td>MEDIUM</td>
+<td>Python</td>
+<td></td>
+<td>CWE-601</td>
+</tr>
+<tr>
+<td><a href="CG-SEC-101/">CG-SEC-101</a></td>
+<td>Dynamic code execution (eval / Function / string timer)</td>
+<td>HIGH</td>
+<td>JS, TS</td>
+<td></td>
+<td>CWE-95</td>
+</tr>
+<tr>
+<td><a href="CG-SEC-102/">CG-SEC-102</a></td>
+<td>child_process.exec with a dynamic command</td>
+<td>HIGH</td>
+<td>JS, TS</td>
+<td></td>
 <td>CWE-78</td>
-<td>JS, TS</td>
 </tr>
 <tr>
-<td>CG-SEC-103</td>
-<td>DOM XSS sink assigned a non-literal (<code>innerHTML</code>, <code>document.write</code>, …)</td>
+<td><a href="CG-SEC-103/">CG-SEC-103</a></td>
+<td>DOM XSS sink assigned a non-literal value</td>
 <td>HIGH</td>
-<td>CWE-79</td>
 <td>JS, TS</td>
+<td></td>
+<td>CWE-79</td>
 </tr>
 <tr>
-<td>CG-SEC-104</td>
-<td><code>dangerouslySetInnerHTML</code> with a non-literal value</td>
+<td><a href="CG-SEC-104/">CG-SEC-104</a></td>
+<td>dangerouslySetInnerHTML with a non-literal value</td>
 <td>HIGH</td>
-<td>CWE-79</td>
 <td>JS, TS</td>
+<td></td>
+<td>CWE-79</td>
 </tr>
 <tr>
-<td>CG-SEC-105</td>
+<td><a href="CG-SEC-105/">CG-SEC-105</a></td>
 <td>Hardcoded secret</td>
 <td>HIGH</td>
+<td>JS, TS</td>
+<td></td>
 <td>CWE-798</td>
-<td>JS, TS</td>
 </tr>
 <tr>
-<td>CG-SEC-106</td>
-<td><code>Math.random()</code> used for a security value</td>
+<td><a href="CG-SEC-106/">CG-SEC-106</a></td>
+<td>Math.random() used for a security value</td>
 <td>MEDIUM</td>
+<td>JS, TS</td>
+<td></td>
 <td>CWE-338</td>
-<td>JS, TS</td>
 </tr>
 <tr>
-<td>CG-META-001</td>
-<td>Suppression comment has no <code>reason:</code></td>
-<td>LOW</td>
-<td>—</td>
-<td>all</td>
-</tr>
-<tr>
-<td>CG-META-002</td>
-<td>Suppression <code>until=</code> date has passed</td>
+<td><a href="CG-SEC-107/">CG-SEC-107</a></td>
+<td>Weak hash (MD5 / SHA-1) used for a security value</td>
 <td>MEDIUM</td>
-<td>—</td>
-<td>all</td>
+<td>JS, TS</td>
+<td></td>
+<td>CWE-328</td>
+</tr>
+<tr>
+<td><a href="CG-SEC-108/">CG-SEC-108</a></td>
+<td>TLS certificate verification disabled</td>
+<td>HIGH</td>
+<td>JS, TS</td>
+<td></td>
+<td>CWE-295</td>
+</tr>
+<tr>
+<td><a href="CG-SEC-109/">CG-SEC-109</a></td>
+<td>Redirect to a URL taken from the request</td>
+<td>MEDIUM</td>
+<td>JS, TS</td>
+<td></td>
+<td>CWE-601</td>
+</tr>
+<tr>
+<td><a href="CG-SEC-110/">CG-SEC-110</a></td>
+<td>File path built from request data</td>
+<td>HIGH</td>
+<td>JS, TS</td>
+<td></td>
+<td>CWE-22</td>
+</tr>
+<tr>
+<td><a href="CG-SEC-111/">CG-SEC-111</a></td>
+<td>Deep merge of request data (prototype pollution)</td>
+<td>MEDIUM</td>
+<td>JS, TS</td>
+<td></td>
+<td>CWE-1321</td>
 </tr>
 </tbody>
 </table>
-<p><code>CG-META-*</code> are raised by the suppression engine, not by code analysis — see
-<a href="../suppressions/">Suppressions</a>.</p>
+<h2 id="performance">Performance<a class="headerlink" href="#performance" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Title</th>
+<th>Severity</th>
+<th>Languages</th>
+<th>Autofix</th>
+<th>CWE</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="CG-PERF-001/">CG-PERF-001</a></td>
+<td>Membership test against a list literal inside a loop</td>
+<td>LOW</td>
+<td>Python</td>
+<td>safe</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="CG-PERF-002/">CG-PERF-002</a></td>
+<td>String built with += inside a loop</td>
+<td>LOW</td>
+<td>Python</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="CG-PERF-003/">CG-PERF-003</a></td>
+<td>for i in range(len(seq)) used to index seq</td>
+<td>INFO</td>
+<td>Python</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="CG-PERF-004/">CG-PERF-004</a></td>
+<td>Redundant .keys() in iteration or membership test</td>
+<td>INFO</td>
+<td>Python</td>
+<td>safe</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="CG-PERF-005/">CG-PERF-005</a></td>
+<td>Regular expression compiled inside a loop</td>
+<td>INFO</td>
+<td>Python</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="CG-PERF-101/">CG-PERF-101</a></td>
+<td>await inside a loop runs the iterations one after another</td>
+<td>LOW</td>
+<td>JS, TS</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="CG-PERF-102/">CG-PERF-102</a></td>
+<td>Deep clone with JSON.parse(JSON.stringify(x))</td>
+<td>INFO</td>
+<td>JS, TS</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="CG-PERF-103/">CG-PERF-103</a></td>
+<td>Accumulator copied with spread inside reduce</td>
+<td>LOW</td>
+<td>JS, TS</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="CG-PERF-104/">CG-PERF-104</a></td>
+<td>new RegExp() with a constant pattern inside a loop</td>
+<td>LOW</td>
+<td>JS, TS</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="CG-PERF-105/">CG-PERF-105</a></td>
+<td>includes() / indexOf() on an array literal inside a loop</td>
+<td>LOW</td>
+<td>JS, TS</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="code-quality">Code quality<a class="headerlink" href="#code-quality" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Title</th>
+<th>Severity</th>
+<th>Languages</th>
+<th>Autofix</th>
+<th>CWE</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="CG-QUAL-001/">CG-QUAL-001</a></td>
+<td>Mutable default argument</td>
+<td>MEDIUM</td>
+<td>Python</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="CG-QUAL-002/">CG-QUAL-002</a></td>
+<td>Exception silently swallowed</td>
+<td>LOW</td>
+<td>Python</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="CG-QUAL-003/">CG-QUAL-003</a></td>
+<td>Function is too complex</td>
+<td>LOW</td>
+<td>Python</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="CG-QUAL-004/">CG-QUAL-004</a></td>
+<td>Code is nested too deeply</td>
+<td>LOW</td>
+<td>Python</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="CG-QUAL-005/">CG-QUAL-005</a></td>
+<td>Function takes too many parameters</td>
+<td>INFO</td>
+<td>Python</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="CG-QUAL-101/">CG-QUAL-101</a></td>
+<td>Loose equality (== / !=)</td>
+<td>LOW</td>
+<td>JS, TS</td>
+<td>safe</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="CG-QUAL-102/">CG-QUAL-102</a></td>
+<td>Empty catch block</td>
+<td>LOW</td>
+<td>JS, TS</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="CG-QUAL-103/">CG-QUAL-103</a></td>
+<td>Function is too complex</td>
+<td>LOW</td>
+<td>JS, TS</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="CG-QUAL-104/">CG-QUAL-104</a></td>
+<td>var declaration</td>
+<td>INFO</td>
+<td>JS, TS</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="suppression-hygiene">Suppression hygiene<a class="headerlink" href="#suppression-hygiene" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Title</th>
+<th>Severity</th>
+<th>Languages</th>
+<th>Autofix</th>
+<th>CWE</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="CG-META-001/">CG-META-001</a></td>
+<td>Suppression comment has no reason</td>
+<td>LOW</td>
+<td>all</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="CG-META-002/">CG-META-002</a></td>
+<td>Suppression has expired</td>
+<td>MEDIUM</td>
+<td>all</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><code>CG-SEC-010</code>..<code>014</code> use <a href="../taint/">taint tracking</a>. <code>CG-META-*</code> are raised by the
+suppression engine, not by code analysis; see <a href="../suppressions/">Suppressions</a>.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>codeguard<span class="w"> </span>list-rules
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>codeguard<span class="w"> </span>list-rules<span class="w"> </span>--language<span class="w"> </span>javascript
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>codeguard<span class="w"> </span>explain<span class="w"> </span>CG-SEC-101
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>codeguard<span class="w"> </span>list-rules<span class="w"> </span>--category<span class="w"> </span>performance<span class="w"> </span>--fixable
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>codeguard<span class="w"> </span>explain<span class="w"> </span>CG-SEC-011
 </code></pre></div>
-<div class="admonition note">
-<p class="admonition-title">v2.0</p>
-<p>This table will be <strong>generated</strong> from rule metadata (the same source
-<code>codeguard explain</code> reads), with a page per rule.</p>
-</div>
 
 
 

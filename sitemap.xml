@@ -2,78 +2,258 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://mevichitra.github.io/codeguard/</loc>
-         <lastmod>2026-09-01</lastmod>
+         <lastmod>2026-10-12</lastmod>
     </url>
     <url>
          <loc>https://mevichitra.github.io/codeguard/architecture/</loc>
-         <lastmod>2026-09-01</lastmod>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/autofix/</loc>
+         <lastmod>2026-10-12</lastmod>
     </url>
     <url>
          <loc>https://mevichitra.github.io/codeguard/baseline/</loc>
-         <lastmod>2026-09-01</lastmod>
+         <lastmod>2026-10-12</lastmod>
     </url>
     <url>
          <loc>https://mevichitra.github.io/codeguard/ci/</loc>
-         <lastmod>2026-09-01</lastmod>
+         <lastmod>2026-10-12</lastmod>
     </url>
     <url>
          <loc>https://mevichitra.github.io/codeguard/configuration/</loc>
-         <lastmod>2026-09-01</lastmod>
+         <lastmod>2026-10-12</lastmod>
     </url>
     <url>
          <loc>https://mevichitra.github.io/codeguard/contributing/</loc>
-         <lastmod>2026-09-01</lastmod>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/editors/</loc>
+         <lastmod>2026-10-12</lastmod>
     </url>
     <url>
          <loc>https://mevichitra.github.io/codeguard/exit-codes/</loc>
-         <lastmod>2026-09-01</lastmod>
+         <lastmod>2026-10-12</lastmod>
     </url>
     <url>
          <loc>https://mevichitra.github.io/codeguard/install/</loc>
-         <lastmod>2026-09-01</lastmod>
+         <lastmod>2026-10-12</lastmod>
     </url>
     <url>
          <loc>https://mevichitra.github.io/codeguard/migration-v2/</loc>
-         <lastmod>2026-09-01</lastmod>
+         <lastmod>2026-10-12</lastmod>
     </url>
     <url>
          <loc>https://mevichitra.github.io/codeguard/output-formats/</loc>
-         <lastmod>2026-09-01</lastmod>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/roadmap/</loc>
+         <lastmod>2026-10-12</lastmod>
     </url>
     <url>
          <loc>https://mevichitra.github.io/codeguard/suppressions/</loc>
-         <lastmod>2026-09-01</lastmod>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/taint/</loc>
+         <lastmod>2026-10-12</lastmod>
     </url>
     <url>
          <loc>https://mevichitra.github.io/codeguard/usage/</loc>
-         <lastmod>2026-09-01</lastmod>
+         <lastmod>2026-10-12</lastmod>
     </url>
     <url>
          <loc>https://mevichitra.github.io/codeguard/workflow/</loc>
-         <lastmod>2026-09-01</lastmod>
+         <lastmod>2026-10-12</lastmod>
     </url>
     <url>
          <loc>https://mevichitra.github.io/codeguard/rules/</loc>
-         <lastmod>2026-09-01</lastmod>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-META-001/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-META-002/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-PERF-001/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-PERF-002/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-PERF-003/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-PERF-004/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-PERF-005/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-PERF-101/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-PERF-102/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-PERF-103/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-PERF-104/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-PERF-105/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-QUAL-001/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-QUAL-002/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-QUAL-003/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-QUAL-004/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-QUAL-005/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-QUAL-101/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-QUAL-102/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-QUAL-103/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-QUAL-104/</loc>
+         <lastmod>2026-10-12</lastmod>
     </url>
     <url>
          <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-001/</loc>
-         <lastmod>2026-09-01</lastmod>
+         <lastmod>2026-10-12</lastmod>
     </url>
     <url>
          <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-002/</loc>
-         <lastmod>2026-09-01</lastmod>
+         <lastmod>2026-10-12</lastmod>
     </url>
     <url>
          <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-003/</loc>
-         <lastmod>2026-09-01</lastmod>
+         <lastmod>2026-10-12</lastmod>
     </url>
     <url>
          <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-004/</loc>
-         <lastmod>2026-09-01</lastmod>
+         <lastmod>2026-10-12</lastmod>
     </url>
     <url>
          <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-005/</loc>
-         <lastmod>2026-09-01</lastmod>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-006/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-007/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-008/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-009/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-010/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-011/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-012/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-013/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-014/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-101/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-102/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-103/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-104/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-105/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-106/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-107/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-108/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-109/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-110/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://mevichitra.github.io/codeguard/rules/CG-SEC-111/</loc>
+         <lastmod>2026-10-12</lastmod>
     </url>
 </urlset>
