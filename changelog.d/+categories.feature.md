@@ -1,1 +1,0 @@
-New `categories` config key. `scan` and `ci` run security rules by default, so upgrading does not change any exit code; enable performance and quality rules with `categories = [...]` or `--category`. Rules named with `--rule` or `[rules] enable` always run.

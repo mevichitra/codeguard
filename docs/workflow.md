@@ -215,7 +215,7 @@ Add to your `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/mevichitra/codeguard
-    rev: v2.0.0
+    rev: v2.2.0
     hooks:
       - id: codeguard
 ```

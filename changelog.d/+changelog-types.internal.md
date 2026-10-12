@@ -1,1 +1,0 @@
-News fragments can now use the `changed`, `deprecated`, `removed`, and `security` types, so release notes follow Keep a Changelog sections. CI also requires an extension changelog entry when a PR changes an editor extension, and only a PR that adds a new release section to `CHANGELOG.md` is exempt from the fragment check.
