@@ -9,12 +9,16 @@ stable contract.
 
 Entries are assembled by [towncrier](https://towncrier.readthedocs.io/) from news
 fragments in `changelog.d/` — run `towncrier build --draft` to preview unreleased
-changes.
+changes. See [docs/releasing.md](docs/releasing.md) for how a release is cut.
+
+The editor extensions are versioned separately and keep their own changelogs:
+[VS Code](editors/vscode/CHANGELOG.md) and [Zed](editors/zed/CHANGELOG.md).
 
 `2.0.0` is a large step from the `0.1` alpha (multi-language scanning, config file,
 diff-aware CI, baselines, packaged distribution). See
 [docs/migration-v2.md](docs/migration-v2.md) for every backward-incompatible change.
 
+<!-- --8<-- [start:releases] -->
 <!-- towncrier release notes start -->
 
 ## [2.1.0] - 2026-09-02
@@ -85,3 +89,5 @@ Initial alpha: AST rule engine, CLI (`scan`), and five security rules
 (CG-SEC-001..005) with human / JSON / SARIF output and inline suppression comments.
 
 [0.1.0]: https://github.com/mevichitra/codeguard/releases/tag/v0.1.0
+
+<!-- --8<-- [end:releases] -->

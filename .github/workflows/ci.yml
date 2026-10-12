@@ -135,17 +135,34 @@ jobs:
         run: |
           base="${{ github.event.pull_request.base.sha }}"
           changed=$(git diff --name-only "$base" HEAD)
-          # Release PRs edit CHANGELOG.md directly (towncrier consumed the fragments).
-          if echo "$changed" | grep -qE '^CHANGELOG\.md$'; then
-            echo "CHANGELOG.md edited directly -- fragment check skipped."
+          # Release PRs add a new "## [X.Y.Z]" section to CHANGELOG.md (towncrier consumed
+          # the fragments). Other edits to CHANGELOG.md do not exempt a PR.
+          if git diff "$base" HEAD -- CHANGELOG.md | grep -qE '^\+## \['; then
+            echo "Release PR (new CHANGELOG.md section) -- fragment check skipped."
             exit 0
           fi
+          types='breaking|feature|changed|deprecated|removed|bugfix|security|doc|internal'
           if echo "$changed" | grep -qE '^src/codeguard/'; then
-            if ! echo "$changed" | grep -qE '^changelog\.d/.+\.(breaking|feature|bugfix|doc|internal)\.md$'; then
+            if ! echo "$changed" | grep -qE "^changelog\.d/.+\.($types)\.md$"; then
               echo "::error::This PR changes src/ but adds no changelog.d/ fragment. See changelog.d/README.md."
               exit 1
             fi
           fi
+
+      - name: Require an extension changelog entry when an editor extension changes
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          changed=$(git diff --name-only "$base" HEAD)
+          status=0
+          for ext in vscode zed; do
+            code=$(echo "$changed" | grep -E "^editors/$ext/" \
+                     | grep -vE "^editors/$ext/(CHANGELOG|README)\.md$" || true)
+            if [ -n "$code" ] && ! echo "$changed" | grep -qE "^editors/$ext/CHANGELOG\.md$"; then
+              echo "::error::This PR changes editors/$ext/ but not editors/$ext/CHANGELOG.md."
+              status=1
+            fi
+          done
+          exit $status
 
   hygiene:
     name: Repo hygiene
