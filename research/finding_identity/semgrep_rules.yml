@@ -1,0 +1,388 @@
+# Local Semgrep rules for the finding-identity harness (--analyzer semgrep).
+#
+# Written for this study, not taken from the Semgrep registry, so that runs are offline and
+# pinned. They cover common security and quality patterns in Python, JavaScript and
+# TypeScript, and deliberately mix rule shapes, because Semgrep's match_based_id depends on
+# the rule's formula and metavariable bindings: plain patterns with and without
+# metavariables, pattern-either, patterns with pattern-not / pattern-inside, metavariable
+# filters, and taint mode.
+rules:
+  # ------------------------------------------------------------------ Python
+  - id: py-eval-exec
+    languages: [python]
+    severity: ERROR
+    message: Dynamic code execution with $FN on $ARG
+    metadata: {cwe: "CWE-95", confidence: MEDIUM}
+    patterns:
+      - pattern-either:
+          - pattern: eval($ARG, ...)
+          - pattern: exec($ARG, ...)
+          - pattern: $FN($ARG, ...)
+      - metavariable-regex:
+          metavariable: $FN
+          regex: ^(eval|exec)$
+      - pattern-not: $FN("...", ...)
+
+  - id: py-subprocess-shell
+    languages: [python]
+    severity: ERROR
+    message: subprocess.$CALL with shell=True
+    metadata: {cwe: "CWE-78", confidence: HIGH}
+    pattern: subprocess.$CALL(..., shell=True, ...)
+
+  - id: py-os-command
+    languages: [python]
+    severity: WARNING
+    message: Command run through the shell
+    metadata: {cwe: "CWE-78", confidence: MEDIUM}
+    pattern-either:
+      - pattern: os.system(...)
+      - pattern: os.popen(...)
+      - pattern: os.spawnl(...)
+      - pattern: commands.getoutput(...)
+
+  - id: py-pickle-load
+    languages: [python]
+    severity: WARNING
+    message: Deserializing with $MOD.$FN can execute code
+    metadata: {cwe: "CWE-502", confidence: MEDIUM}
+    patterns:
+      - pattern: $MOD.$FN(...)
+      - metavariable-regex:
+          metavariable: $MOD
+          regex: ^(pickle|cPickle|dill|shelve|marshal)$
+      - metavariable-regex:
+          metavariable: $FN
+          regex: ^(load|loads|open)$
+
+  - id: py-yaml-unsafe-load
+    languages: [python]
+    severity: WARNING
+    message: yaml.load without a safe Loader
+    metadata: {cwe: "CWE-502", confidence: HIGH}
+    patterns:
+      - pattern: yaml.load(...)
+      - pattern-not: yaml.load(..., Loader=yaml.SafeLoader, ...)
+      - pattern-not: yaml.load(..., Loader=SafeLoader, ...)
+      - pattern-not: yaml.load(..., Loader=yaml.CSafeLoader, ...)
+
+  - id: py-weak-hash
+    languages: [python]
+    severity: WARNING
+    message: Weak hash function hashlib.$H
+    metadata: {cwe: "CWE-328", confidence: MEDIUM}
+    patterns:
+      - pattern: hashlib.$H(...)
+      - metavariable-regex:
+          metavariable: $H
+          regex: ^(md5|sha1|md4)$
+      - pattern-not: hashlib.$H(..., usedforsecurity=False, ...)
+
+  - id: py-requests-no-verify
+    languages: [python]
+    severity: ERROR
+    message: TLS verification disabled in requests.$M
+    metadata: {cwe: "CWE-295", confidence: HIGH}
+    pattern: requests.$M(..., verify=False, ...)
+
+  - id: py-sql-format
+    languages: [python]
+    severity: ERROR
+    message: SQL built by string formatting passed to $CUR.execute
+    metadata: {cwe: "CWE-89", confidence: MEDIUM}
+    pattern-either:
+      - pattern: $CUR.execute("..." % ..., ...)
+      - pattern: $CUR.execute("...".format(...), ...)
+      - pattern: $CUR.execute(f"...", ...)
+      - pattern: $CUR.execute("..." + $X, ...)
+
+  - id: py-django-raw-sql
+    languages: [python]
+    severity: WARNING
+    message: Raw SQL in $QS.$RAW
+    metadata: {cwe: "CWE-89", confidence: LOW}
+    patterns:
+      - pattern: $QS.$RAW($SQL, ...)
+      - metavariable-regex:
+          metavariable: $RAW
+          regex: ^(raw|extra|RawSQL)$
+      - pattern-not: $QS.$RAW("...", ...)
+
+  - id: py-mark-safe
+    languages: [python]
+    severity: WARNING
+    message: mark_safe on a non-literal disables HTML escaping
+    metadata: {cwe: "CWE-79", confidence: LOW}
+    patterns:
+      - pattern-either:
+          - pattern: mark_safe($X)
+          - pattern: django.utils.safestring.mark_safe($X)
+      - pattern-not: mark_safe("...")
+
+  - id: py-tempfile-mktemp
+    languages: [python]
+    severity: WARNING
+    message: tempfile.mktemp is race-prone
+    metadata: {cwe: "CWE-377", confidence: HIGH}
+    pattern: tempfile.mktemp(...)
+
+  - id: py-assert-used
+    languages: [python]
+    severity: INFO
+    message: assert is removed under python -O
+    metadata: {cwe: "CWE-703", confidence: LOW}
+    paths:
+      exclude: ["tests/", "test_*.py", "*_test.py", "conftest.py"]
+    pattern-either:
+      - pattern: assert $COND
+      - pattern: assert $COND, $MSG
+
+  - id: py-hardcoded-secret
+    languages: [python]
+    severity: WARNING
+    message: Possible hard-coded secret in $NAME
+    metadata: {cwe: "CWE-798", confidence: LOW}
+    patterns:
+      - pattern: $NAME = "$VALUE"
+      - metavariable-regex:
+          metavariable: $NAME
+          regex: (?i).*(password|passwd|secret|api_key|token)$
+      - metavariable-regex:
+          metavariable: $VALUE
+          regex: .{4,}
+
+  - id: py-flask-debug
+    languages: [python]
+    severity: WARNING
+    message: Flask app run with debug=True
+    metadata: {cwe: "CWE-489", confidence: MEDIUM}
+    pattern: $APP.run(..., debug=True, ...)
+
+  - id: py-bare-except-pass
+    languages: [python]
+    severity: INFO
+    message: Exception swallowed by a bare except
+    metadata: {cwe: "CWE-703", confidence: LOW}
+    pattern: |
+      try:
+        ...
+      except:
+        pass
+
+  - id: py-broad-except-pass
+    languages: [python]
+    severity: INFO
+    message: $EXC swallowed without handling
+    metadata: {cwe: "CWE-703", confidence: LOW}
+    pattern-either:
+      - pattern: |
+          try:
+            ...
+          except $EXC:
+            pass
+      - pattern: |
+          try:
+            ...
+          except $EXC as $E:
+            pass
+
+  - id: py-requests-no-timeout
+    languages: [python]
+    severity: WARNING
+    message: requests.$M without a timeout can hang
+    metadata: {cwe: "CWE-400", confidence: MEDIUM}
+    patterns:
+      - pattern: requests.$M(...)
+      - metavariable-regex:
+          metavariable: $M
+          regex: ^(get|post|put|patch|delete|head|options|request)$
+      - pattern-not: requests.$M(..., timeout=$T, ...)
+
+  - id: py-logging-fstring
+    languages: [python]
+    severity: INFO
+    message: f-string formatted eagerly in $LOG.$M
+    metadata: {confidence: LOW}
+    patterns:
+      - pattern: $LOG.$M(f"...", ...)
+      - metavariable-regex:
+          metavariable: $M
+          regex: ^(debug|info|warning|error|exception|critical)$
+
+  - id: py-csrf-exempt
+    languages: [python]
+    severity: WARNING
+    message: CSRF protection disabled for $VIEW
+    metadata: {cwe: "CWE-352", confidence: MEDIUM}
+    pattern: |
+      @csrf_exempt
+      def $VIEW(...):
+        ...
+
+  - id: py-subprocess-call
+    languages: [python]
+    severity: INFO
+    message: subprocess.$CALL runs an external program
+    metadata: {cwe: "CWE-78", confidence: LOW}
+    patterns:
+      - pattern: subprocess.$CALL($CMD, ...)
+      - metavariable-regex:
+          metavariable: $CALL
+          regex: ^(run|call|check_call|check_output|Popen)$
+
+  - id: py-open-no-encoding
+    languages: [python]
+    severity: INFO
+    message: open($PATH) in text mode without an explicit encoding
+    metadata: {confidence: LOW}
+    patterns:
+      - pattern: open($PATH, ...)
+      - pattern-not: open($PATH, ..., encoding=$E, ...)
+      - pattern-not: open($PATH, "=~/b/", ...)
+      - pattern-not: open($PATH, mode="=~/b/", ...)
+
+  - id: py-mutable-default
+    languages: [python]
+    severity: WARNING
+    message: Mutable default argument $ARG in $FN
+    metadata: {confidence: HIGH}
+    pattern-either:
+      - pattern: |
+          def $FN(..., $ARG=[], ...):
+            ...
+      - pattern: |
+          def $FN(..., $ARG={}, ...):
+            ...
+      - pattern: |
+          def $FN(..., $ARG=set(), ...):
+            ...
+
+  - id: py-open-redirect
+    languages: [python]
+    severity: WARNING
+    message: Redirect to a URL taken from the request
+    metadata: {cwe: "CWE-601", confidence: LOW}
+    mode: taint
+    pattern-sources:
+      - pattern: request.args.get(...)
+      - pattern: request.GET.get(...)
+      - pattern: request.values.get(...)
+    pattern-sinks:
+      - pattern: redirect(...)
+      - pattern: HttpResponseRedirect(...)
+
+  - id: py-path-traversal
+    languages: [python]
+    severity: WARNING
+    message: File opened with a path taken from the request
+    metadata: {cwe: "CWE-22", confidence: LOW}
+    mode: taint
+    pattern-sources:
+      - pattern: request.$ATTR.get(...)
+      - pattern: request.$ATTR[...]
+    pattern-sinks:
+      - pattern: open(...)
+      - pattern: send_file(...)
+      - pattern: os.path.join(...)
+
+  # --------------------------------------------------------- JavaScript / TypeScript
+  - id: js-eval
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: Dynamic code execution with $FN
+    metadata: {cwe: "CWE-95", confidence: MEDIUM}
+    patterns:
+      - pattern-either:
+          - pattern: eval($X)
+          - pattern: new Function(...)
+          - pattern: $FN($X, ...)
+      - metavariable-regex:
+          metavariable: $FN
+          regex: ^(eval|setTimeout|setInterval)$
+      - pattern-not: $FN("...", ...)
+      - pattern-not: $FN(function (...) {...}, ...)
+      - pattern-not: $FN((...) => {...}, ...)
+      - pattern-not: $FN((...) => $Y, ...)
+
+  - id: js-inner-html
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: Assignment to $EL.$PROP can inject HTML
+    metadata: {cwe: "CWE-79", confidence: LOW}
+    patterns:
+      - pattern: $EL.$PROP = $VAL
+      - metavariable-regex:
+          metavariable: $PROP
+          regex: ^(innerHTML|outerHTML)$
+      - pattern-not: $EL.$PROP = "..."
+
+  - id: js-document-write
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: document.write with dynamic content
+    metadata: {cwe: "CWE-79", confidence: LOW}
+    patterns:
+      - pattern-either:
+          - pattern: document.write($X)
+          - pattern: document.writeln($X)
+      - pattern-not: document.write("...")
+
+  - id: js-child-process
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: Shell command run with child_process.$FN
+    metadata: {cwe: "CWE-78", confidence: MEDIUM}
+    patterns:
+      - pattern-either:
+          - pattern: require('child_process').$FN($CMD, ...)
+          - pattern: child_process.$FN($CMD, ...)
+          - pattern: $CP.$FN($CMD, ...)
+      - metavariable-regex:
+          metavariable: $FN
+          regex: ^(exec|execSync)$
+      - pattern-not: $CP.$FN("...", ...)
+
+  - id: js-dangerously-set-html
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: dangerouslySetInnerHTML bypasses React escaping
+    metadata: {cwe: "CWE-79", confidence: LOW}
+    pattern: "{dangerouslySetInnerHTML: $X}"
+
+  - id: js-weak-random
+    languages: [javascript, typescript]
+    severity: INFO
+    message: Math.random is not a secure random source
+    metadata: {cwe: "CWE-338", confidence: LOW}
+    pattern: Math.random()
+
+  - id: js-weak-hash
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: Weak hash $ALG
+    metadata: {cwe: "CWE-328", confidence: MEDIUM}
+    patterns:
+      - pattern: $CRYPTO.createHash("$ALG")
+      - metavariable-regex:
+          metavariable: $ALG
+          regex: ^(md5|sha1)$
+
+  - id: js-console-log
+    languages: [javascript, typescript]
+    severity: INFO
+    message: console.$M left in code
+    metadata: {cwe: "CWE-532", confidence: LOW}
+    patterns:
+      - pattern: console.$M(...)
+      - metavariable-regex:
+          metavariable: $M
+          regex: ^(log|debug)$
+
+  - id: js-tls-reject-unauthorized
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: TLS certificate checks disabled
+    metadata: {cwe: "CWE-295", confidence: HIGH}
+    pattern-either:
+      - pattern: "{rejectUnauthorized: false}"
+      - pattern: process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"

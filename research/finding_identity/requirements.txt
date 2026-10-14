@@ -1,5 +1,12 @@
-# Extra dependencies of the controlled transformation experiment (`transform` subcommand).
+# Research-only dependencies of the finding-identity harness; not part of codeguard.
 # CodeGuard itself is installed from the repository root: pip install -e .
+
+# Second analyzers for the replay (`replay --analyzer bandit|semgrep`), pinned.
+bandit==1.9.4
+semgrep==1.180.0
+PyYAML==6.0.1
+
+# The controlled transformation experiment (`transform` subcommand).
 libcst>=1.1
 black>=24.1        # reformat; falls back to `ruff format` when absent
 matplotlib>=3.8    # optional: --heatmap

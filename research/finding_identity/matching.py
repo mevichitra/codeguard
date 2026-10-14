@@ -5,7 +5,9 @@ rule and the old finding's line maps (see :mod:`linemap`) to the new finding's l
 Each new finding then has a true status, "known" (it existed before) or "new".
 
 A scheme predicts a status by matching keys: findings with equal keys are paired in
-line order. Comparing the two statuses gives, per new finding:
+line order. Schemes that real tools implement as an algorithm rather than a key (SonarQube's
+multi-pass tracker, Bandit's baseline membership) use their matcher from
+:data:`trackers.MATCHERS` instead. Comparing the two statuses gives, per new finding:
 
 - ``known_ok``     known, and the scheme paired it with its true predecessor
 - ``mispaired``    known, but the scheme paired it with a different old finding
@@ -20,6 +22,8 @@ from collections import defaultdict
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
+from .trackers import MATCHERS
+
 OUTCOMES = ("known_ok", "mispaired", "false_new", "false_known", "new_ok")
 
 
@@ -31,6 +35,11 @@ class Observation:
     line: int
     col: int
     keys: dict[str, str] = field(hash=False, compare=False)
+    #: The analyzer's message; SonarQube's tracker compares it.
+    message: str = field(default="", compare=False)
+    #: The lines of the file version, shared by all its findings; SonarQube's tracker
+    #: hashes them to recognise moved code.
+    lines: Sequence[str] = field(default=(), hash=False, compare=False, repr=False)
 
 
 @dataclass
@@ -68,6 +77,9 @@ def scheme_pairs(
     old: Sequence[Observation], new: Sequence[Observation], scheme: str
 ) -> dict[int, int]:
     """``{new index: old index}`` as the scheme would match them."""
+    matcher = MATCHERS.get(scheme)
+    if matcher is not None:
+        return matcher(old, new)
     old_by_key: dict[str, list[int]] = defaultdict(list)
     new_by_key: dict[str, list[int]] = defaultdict(list)
     for i, o in enumerate(old):
