@@ -24,6 +24,8 @@ import hashlib
 import os
 import re
 
+from .text import split_lines
+
 SCHEME = "codeguard/v1"
 
 _STRING_RE = re.compile(r"""(['"]).*?(?<!\\)\1""", re.DOTALL)
@@ -58,7 +60,7 @@ def _normalize(text: str) -> str:
 
 
 def _normalized_statement(source: str, line: int) -> str:
-    lines = source.splitlines()
+    lines = split_lines(source)
     if 1 <= line <= len(lines):
         return _normalize(lines[line - 1])
     return ""

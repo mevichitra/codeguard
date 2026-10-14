@@ -20,6 +20,7 @@ from codeguard.engine.finding import Category, Finding, Fix, Severity, TextEdit
 from codeguard.engine.fixes import edit_for_ast_node, line_insert
 from codeguard.engine.registry import REGISTRY
 from codeguard.engine.rule import AstRule
+from codeguard.engine.text import split_lines
 from codeguard.rules._pyimports import ImportMap, insertion_line
 from codeguard.rules._pyparents import PyParents
 
@@ -114,7 +115,7 @@ class InsecureRandomRule(AstRule):
 def _import_secrets(tree: ast.Module, source: str) -> TextEdit:
     line = insertion_line(tree)
     text = "import secrets\n"
-    if line > len(source.splitlines()) and source and not source.endswith("\n"):
+    if line > len(split_lines(source)) and source and not source.endswith("\n"):
         text = "\n" + text
     return line_insert(line, text)
 

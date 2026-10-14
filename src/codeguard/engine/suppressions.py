@@ -18,6 +18,8 @@ import re
 from dataclasses import dataclass, field
 from datetime import date
 
+from .text import split_lines
+
 META_MISSING_REASON = "CG-META-001"
 META_EXPIRED = "CG-META-002"
 
@@ -55,7 +57,7 @@ class SuppressionSet:
     @classmethod
     def parse(cls, source: str) -> SuppressionSet:
         out = cls()
-        for lineno, text in enumerate(source.splitlines(), start=1):
+        for lineno, text in enumerate(split_lines(source), start=1):
             match = _LINE_RE.search(text)
             if not match:
                 continue
