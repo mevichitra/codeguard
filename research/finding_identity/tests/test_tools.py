@@ -271,3 +271,24 @@ def test_scanner_skips_files_bandit_does_not_analyse() -> None:
     result = scanner.scan("js", "web/app.js", b"eval(x);\n")
     assert result is not None and result.observations == []
     assert scanner.versions_scanned == 0 and scanner.parse_failures == 0
+
+
+@needs_bandit
+def test_cli_replay_with_bandit(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    from research.finding_identity.cli import main
+    from research.finding_identity.tests.test_replay import V1, V2, _commit, _git
+
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git(repo, "init", "-q")
+    for text, msg in ((V1, "v1"), (V2, "v2")):
+        _commit(repo, text, msg)
+    out = tmp_path / "out"
+    main(["replay", str(repo), "--commits", "1", "--analyzer", "bandit", "--out", str(out)])
+    summary = json.loads((out / "summary.json").read_text())
+    assert summary["totals"]["gt"]["known"] == 1  # eval() moved down three lines
+    assert set(summary["schemes"]) == set(ALL_SCHEMES)
+    assert summary["totals"]["schemes"]["sonar"]["known_ok"] == 1
+    assert summary["totals"]["schemes"]["line"]["false_new"] == 1
+    assert json.loads((out / "analyzer.json").read_text())["analyzer"] == "bandit"
+    assert "sonar" in capsys.readouterr().out
