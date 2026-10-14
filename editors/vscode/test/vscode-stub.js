@@ -26,7 +26,12 @@ const Uri = {
   joinPath: (base, ...parts) => Uri.parse(`${base.toString()}/${parts.join("/")}`),
 };
 
-const vscode = { EventEmitter, ThemeColor, ThemeIcon, MarkdownString, TreeItem, TreeItemCollapsibleState, Uri };
+const StatusBarAlignment = { Left: 1, Right: 2 };
+const window = {
+  createStatusBarItem: () => ({ text: "", show() {}, dispose() {} }),
+};
+
+const vscode = { window, StatusBarAlignment, EventEmitter, ThemeColor, ThemeIcon, MarkdownString, TreeItem, TreeItemCollapsibleState, Uri };
 
 const original = Module._load;
 Module._load = function (request, parent, isMain) {

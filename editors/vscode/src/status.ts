@@ -3,6 +3,8 @@ import * as vscode from "vscode";
 import { ClientState } from "./lsp";
 import { SummaryCounts } from "./protocol";
 
+const SCAN_TIMEOUT_MS = 5 * 60 * 1000;
+
 /** Status-bar item: severity counts at a glance; click to open the Findings view. */
 export class StatusIndicator implements vscode.Disposable {
   private readonly item = vscode.window.createStatusBarItem(
@@ -13,6 +15,7 @@ export class StatusIndicator implements vscode.Disposable {
   private counts: SummaryCounts | undefined;
   private state: ClientState = "stopped";
   private scanning = false;
+  private scanWatchdog: NodeJS.Timeout | undefined;
 
   constructor() {
     this.item.name = "CodeGuard";
@@ -23,21 +26,28 @@ export class StatusIndicator implements vscode.Disposable {
 
   setState(state: ClientState): void {
     this.state = state;
-    if (state === "starting") {
-      this.scanning = true;
-    }
-    this.render();
+    this.setScanning(state === "starting" || (this.scanning && state === "running"));
   }
 
+  /**
+   * The spinner is cleared when fresh counts arrive. A watchdog also clears it so a scan
+   * that never reports back (failed summary request, unchanged results) cannot spin forever.
+   */
   setScanning(scanning: boolean): void {
+    if (this.scanWatchdog) {
+      clearTimeout(this.scanWatchdog);
+      this.scanWatchdog = undefined;
+    }
     this.scanning = scanning;
+    if (scanning) {
+      this.scanWatchdog = setTimeout(() => this.setScanning(false), SCAN_TIMEOUT_MS);
+    }
     this.render();
   }
 
   setCounts(counts: SummaryCounts): void {
     this.counts = counts;
-    this.scanning = false;
-    this.render();
+    this.setScanning(false);
   }
 
   private render(): void {
@@ -102,6 +112,9 @@ export class StatusIndicator implements vscode.Disposable {
   }
 
   dispose(): void {
+    if (this.scanWatchdog) {
+      clearTimeout(this.scanWatchdog);
+    }
     this.item.dispose();
   }
 }
