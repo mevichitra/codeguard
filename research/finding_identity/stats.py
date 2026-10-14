@@ -320,47 +320,54 @@ def _ci(lo: float | None, hi: float | None) -> str:
 SCOPE_TITLES = {ALL: "All findings"}
 
 
-def markdown_tables(tables: Tables, summaries: Sequence[dict[str, Any]]) -> str:
-    """The pooled and per-repository tables as Markdown, one section per scope."""
+def markdown_tables(tables: Tables) -> str:
+    """The pooled tables as Markdown: per scope, false-new in detail, then the rest."""
     out: list[str] = []
     scopes = list(dict.fromkeys(r["scope"] for r in tables.pooled))
     for scope in scopes:
         rows = [r for r in tables.pooled if r["scope"] == scope]
         by = {(r["scheme"], r["metric"]): r for r in rows}
         schemes = list(dict.fromkeys(r["scheme"] for r in rows))
-        fn = by[(schemes[0], "false_new")] if schemes else None
-        hd = by[(schemes[0], "hidden")] if schemes else None
         title = SCOPE_TITLES.get(scope, f"{scope.capitalize()} findings")
         out.append(f"### {title}\n")
-        if fn and hd:
+        if schemes:
+            fn, hd = by[(schemes[0], "false_new")], by[(schemes[0], "hidden")]
             out.append(
-                f"{fn['repos']} repositories ({fn['repos_with_rate']} with persisting "
-                f"findings): {fn['den']} persisting findings, {hd['den']} introduced.\n"
+                f"{fn['repos']} repositories, {fn['repos_with_rate']} of them with persisting "
+                f"findings: {fn['den']} persisting findings, {hd['den']} introduced. "
+                "Rates in %.\n"
             )
         out.append(
-            "Pooled (micro) rates in %, Wilson 95% CI and cluster-bootstrap 95% CI over "
-            "repositories; macro = mean of per-repository rates (bootstrap CI); median "
-            "[IQR] of per-repository rates.\n"
+            "| scheme | false-new (pooled) | Wilson 95% CI | cluster bootstrap 95% CI "
+            "| macro (bootstrap CI) | median [IQR] |"
         )
-        out.append(
-            "| scheme | false-new | Wilson CI | bootstrap CI | macro (CI) | median [IQR] "
-            "| hidden (bootstrap CI) | mispair (bootstrap CI) | collision (bootstrap CI) |"
-        )
-        out.append("|---|---:|---|---|---|---|---|---|---|")
+        out.append("|---|---:|---|---|---|---|")
         for scheme in schemes:
             f = by[(scheme, "false_new")]
-            h, m, c = (by[(scheme, k)] for k in ("hidden", "mispair", "collision"))
             out.append(
                 f"| `{scheme}` | {_pct(f['pooled'])} | {_ci(f['wilson_lo'], f['wilson_hi'])} "
                 f"| {_ci(f['boot_lo'], f['boot_hi'])} "
                 f"| {_pct(f['macro'])} {_ci(f['macro_boot_lo'], f['macro_boot_hi'])} "
-                f"| {_pct(f['median'])} [{_pct(f['q1'])}, {_pct(f['q3'])}] "
-                + " | ".join(
-                    f"{_pct(x['pooled'])} {_ci(x['boot_lo'], x['boot_hi'])}" for x in (h, m, c)
-                )
-                + " |"
+                f"| {_pct(f['median'])} [{_pct(f['q1'])}, {_pct(f['q3'])}] |"
             )
         out.append("")
+        others = ("false_new_moved", "false_new_edited", "hidden", "mispair", "collision")
+        out.append(
+            "| scheme | false-new, moved | false-new, edited | hidden | mispair | collision |"
+        )
+        out.append("|---|---|---|---|---|---|")
+        for scheme in schemes:
+            cells = [
+                f"{_pct(x['pooled'])} {_ci(x['boot_lo'], x['boot_hi'])}"
+                for x in (by[(scheme, m)] for m in others)
+            ]
+            out.append(f"| `{scheme}` | " + " | ".join(cells) + " |")
+        out.append("")
+    out.append(
+        "Pooled = total numerator over total denominator. Brackets after a pooled rate are "
+        "the cluster bootstrap 95% CI over repositories; macro = mean of per-repository "
+        "rates; IQR over per-repository rates.\n"
+    )
     return "\n".join(out)
 
 
@@ -422,13 +429,19 @@ def box_plot(tables: Tables, path: Path, metric: str = "false_new") -> bool:
         ax.set_title(f"{title} ({n} repositories)", color=_INK, fontsize=10, loc="left")
         ax.set_xticks(list(positions), schemes, rotation=30, ha="right", fontsize=8)
         ax.tick_params(colors=_INK_SECONDARY, labelsize=8)
+        # Most schemes lose a few percent and `line` loses half: a symmetric log scale
+        # (linear below 1%) keeps both readable.
+        ax.set_yscale("symlog", linthresh=1, linscale=0.5)
+        ticks = [0, 0.5, 1, 2, 5, 10, 20, 50, 100]
+        ax.set_yticks(ticks, [f"{t:g}" for t in ticks])
+        ax.set_ylim(-0.1, 100)
         ax.grid(axis="y", color=_GRID, linewidth=0.8)
         ax.set_axisbelow(True)
         for side in ("top", "right"):
             ax.spines[side].set_visible(False)
         for side in ("left", "bottom"):
             ax.spines[side].set_color(_GRID)
-    axes[0][0].set_ylabel(f"{metric.replace('_', '-')} rate per repository (%)", color=_INK)
+    axes[0][0].set_ylabel(f"{metric.replace('_', '-')} rate per repository (%, symlog)", color=_INK)
     fig.tight_layout()
     fig.savefig(path, dpi=200)
     plt.close(fig)
@@ -458,7 +471,7 @@ def run_stats(
     write_csv(out_dir / "pooled.csv", tables.pooled)
     write_csv(out_dir / "per_repo.csv", tables.per_repo)
     write_csv(out_dir / "repos.csv", tables.repos)
-    md = markdown_tables(tables, summaries)
+    md = markdown_tables(tables)
     (out_dir / "tables.md").write_text(md, encoding="utf-8")
     print(md)
     if plot:
