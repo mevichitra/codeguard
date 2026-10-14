@@ -48,6 +48,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       provider.update(summary);
       if (summary) {
         status.setCounts(summary.counts);
+      } else {
+        status.setScanning(false); // no summary will follow; don't leave the spinner running
       }
       OverviewPanel.refresh(summary);
       updateViewChrome(treeView, provider);

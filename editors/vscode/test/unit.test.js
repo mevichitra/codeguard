@@ -6,6 +6,7 @@ const assert = require("node:assert/strict");
 const { FindingsProvider } = require("../out/findingsView");
 const { renderOverview, escapeHtml } = require("../out/overview");
 const { byteColumnToCharacter } = require("../out/text");
+const { StatusIndicator } = require("../out/status");
 
 function memento() {
   const store = new Map();
@@ -113,4 +114,27 @@ test("byte columns map to UTF-16 characters", () => {
   assert.equal(byteColumnToCharacter(line, yByte), line.indexOf("y"));
   assert.equal(byteColumnToCharacter("abc", 1), 0);
   assert.equal(byteColumnToCharacter("", 4), 3);
+});
+
+test("status spinner clears on counts, on stop, and via the watchdog", (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const spinning = (s) => s.item.text.includes("sync~spin");
+  const status = new StatusIndicator();
+
+  status.setState("starting");
+  assert.ok(spinning(status));
+  status.setState("running");
+  assert.ok(spinning(status), "still scanning until counts arrive");
+  status.setCounts({ total: 0, files: 0, fixable: 0, bySeverity: zero, byCategory: {} });
+  assert.ok(!spinning(status));
+
+  status.setScanning(true);
+  status.setState("failed");
+  assert.ok(!spinning(status), "a failed server must not keep spinning");
+
+  status.setState("running");
+  status.setScanning(true);
+  t.mock.timers.tick(5 * 60 * 1000 + 1);
+  assert.ok(!spinning(status), "watchdog clears a scan that never reports back");
+  status.dispose();
 });
