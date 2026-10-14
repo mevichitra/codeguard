@@ -12,6 +12,7 @@ from codeguard.engine.runner import AnalysisRunner
 from codeguard.lang.base import Language
 from codeguard.lang.registry import language_for_path
 
+from .categories import split_by_category
 from .matching import Observation, collisions
 from .schemes import FileContext, keys_for
 
@@ -51,6 +52,9 @@ class Scanner:
         self.parse_failures = 0
         self.observations = 0
         self.collision_totals = dict.fromkeys(self._schemes, 0)
+        #: The same counts split by rule category (see :mod:`categories`).
+        self.category_observations: dict[str, int] = {}
+        self.category_collisions: dict[str, dict[str, int]] = {}
 
     def scan(self, cache_key: str, path: str, data: bytes) -> ScanResult | None:
         """Findings for *path* with contents *data*; ``None`` if it cannot be analysed."""
@@ -64,7 +68,17 @@ class Scanner:
             self.observations += len(result.observations)
             for scheme, n in result.collisions.items():
                 self.collision_totals[scheme] += n
+            self._count_categories(result.observations)
         return result
+
+    def _count_categories(self, observations: Sequence[Observation]) -> None:
+        for category, obs in split_by_category(observations).items():
+            seen = self.category_observations
+            seen[category] = seen.get(category, 0) + len(obs)
+            zeros = dict.fromkeys(self._schemes, 0)
+            totals = self.category_collisions.setdefault(category, zeros)
+            for scheme, n in collisions(obs, self._schemes).items():
+                totals[scheme] += n
 
     def _scan(self, path: str, data: bytes) -> ScanResult | None:
         lang = language_for_path(path)
