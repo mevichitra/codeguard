@@ -1,10 +1,11 @@
-"""Command line: ``python -m research.finding_identity {replay,summarize} ...``."""
+"""Command line: ``python -m research.finding_identity {replay,summarize,batch,corpus,stats}``."""
 
 from __future__ import annotations
 
 import argparse
 from pathlib import Path
 
+from . import commands
 from .gitrepo import GitRepo
 from .replay import replay
 from .scan import Scanner, rule_ids_for
@@ -36,7 +37,12 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("results", nargs="+", type=Path)
     sp.add_argument("--csv", type=Path, help="also write the rows to this CSV file")
 
+    corpus_commands = commands.register(sub)
+
     args = parser.parse_args(argv)
+    if args.command in corpus_commands:
+        corpus_commands[args.command](args)
+        return
     if args.command == "summarize":
         summarize(args.results, args.csv)
         return

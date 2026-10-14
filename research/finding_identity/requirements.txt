@@ -1,0 +1,3 @@
+# The harness needs CodeGuard itself: pip install -e . from the repository root.
+# Optional: the per-repository box plot (python -m research.finding_identity stats --plot).
+matplotlib>=3.8
