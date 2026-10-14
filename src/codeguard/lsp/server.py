@@ -395,18 +395,31 @@ class CodeGuardLanguageServer:
                 "cancellable": False,
             },
         )
+        # Every path out of here must close the progress token, or the editor's
+        # "Scanning N files…" indicator spins forever.
+        end_message = "Failed"
         try:
-            files = analyzer.files()
-            self._progress(token, {"kind": "report", "message": f"Scanning {len(files)} files…"})
-            jobs = 1 if len(files) < PARALLEL_THRESHOLD else min(os.cpu_count() or 1, 4)
-            findings = analyzer.scan_workspace(jobs=jobs)
+            end_message = self._scan_workspace_body(token, generation) or "Cancelled"
         except (ConfigError, OSError, ValueError) as exc:
-            self._progress(token, {"kind": "end", "message": "Failed"})
             self._show_error(str(exc))
-            return
+        finally:
+            self._progress(token, {"kind": "end", "message": end_message})
+        if end_message not in ("Failed", "Cancelled"):
+            self._refresh_code_lenses()
+            self._schedule_summary()
+
+    def _scan_workspace_body(self, token: str | None, generation: int) -> str | None:
+        """Run one workspace scan; returns the end message, or None if superseded."""
+        analyzer = self._get_analyzer()
+        if analyzer is None:
+            return "Failed"
+        files = analyzer.files()
+        self._progress(token, {"kind": "report", "message": f"Scanning {len(files)} files…"})
+        jobs = 1 if len(files) < PARALLEL_THRESHOLD else min(os.cpu_count() or 1, 4)
+        findings = analyzer.scan_workspace(jobs=jobs)
         with self._lock:
             if generation != self._workspace_generation:
-                return  # a newer scan superseded this one
+                return None  # a newer scan superseded this one
 
         grouped: dict[str, list[Finding]] = {path_to_uri(path): [] for path in files}
         for finding in findings:
@@ -422,9 +435,7 @@ class CodeGuardLanguageServer:
             text = self._read_text(uri) if file_findings else ""
             self._publish(uri, file_findings, text=text, refresh=False)
         active = sum(1 for f in findings if not f.suppressed and not f.baselined)
-        self._progress(token, {"kind": "end", "message": f"{active} finding(s)"})
-        self._refresh_code_lenses()
-        self._schedule_summary()
+        return f"{active} finding(s)"
 
     def _scan_open_document(self, uri: str) -> None:
         with self._lock:

@@ -266,6 +266,61 @@ def test_workspace_progress_when_client_supports_it(make_server):  # type: ignor
     assert rec.of("$/progress")[-1]["value"]["message"] == "1 finding(s)"
 
 
+def _scan_with_progress(server, rec, scan):  # type: ignore[no-untyped-def]
+    """Run ``scan`` while answering the server's progress-create request."""
+
+    def answer_create() -> None:
+        deadline = time.time() + 2
+        while time.time() < deadline:
+            creates = [m for m in rec.sent if m.get("method") == "window/workDoneProgress/create"]
+            if creates:
+                server._on_response({"jsonrpc": "2.0", "id": creates[-1]["id"], "result": None})
+                return
+            time.sleep(0.005)
+
+    responder = threading.Thread(target=answer_create)
+    responder.start()
+    try:
+        scan()
+    finally:
+        responder.join()
+    return [p["value"]["kind"] for p in rec.of("$/progress")]
+
+
+def test_progress_ends_when_scan_is_superseded(make_server, monkeypatch):  # type: ignore[no-untyped-def]
+    server, rec = make_server({"app.py": TAINTED}, caps={"window": {"workDoneProgress": True}})
+    analyzer = server._get_analyzer()
+    original = analyzer.scan_workspace
+
+    def supersede(*args, **kwargs):  # type: ignore[no-untyped-def]
+        result = original(*args, **kwargs)
+        with server._lock:
+            server._workspace_generation += 1  # a newer scan began mid-run
+        return result
+
+    monkeypatch.setattr(analyzer, "scan_workspace", supersede)
+    kinds = _scan_with_progress(server, rec, server._scan_workspace)
+    assert kinds == ["begin", "report", "end"]
+
+
+def test_progress_ends_when_scan_crashes(make_server, monkeypatch):  # type: ignore[no-untyped-def]
+    server, rec = make_server({"app.py": TAINTED}, caps={"window": {"workDoneProgress": True}})
+    analyzer = server._get_analyzer()
+
+    def boom(*args, **kwargs):  # type: ignore[no-untyped-def]
+        raise RuntimeError("parser exploded")
+
+    monkeypatch.setattr(analyzer, "scan_workspace", boom)
+
+    def scan() -> None:
+        with pytest.raises(RuntimeError):
+            server._scan_workspace()
+
+    kinds = _scan_with_progress(server, rec, scan)
+    assert kinds == ["begin", "report", "end"]
+    assert rec.of("$/progress")[-1]["value"]["message"] == "Failed"
+
+
 def test_no_progress_without_capability(make_server):  # type: ignore[no-untyped-def]
     server, rec = make_server({"app.py": TAINTED})
     server._scan_workspace()
