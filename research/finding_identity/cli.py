@@ -6,6 +6,7 @@ import argparse
 import json
 from pathlib import Path
 
+from . import transform_cli
 from .gitrepo import GitRepo
 from .replay import replay
 from .scan import Scanner, rule_ids_for
@@ -48,7 +49,12 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("results", nargs="+", type=Path)
     sp.add_argument("--csv", type=Path, help="also write the rows to this CSV file")
 
+    transform_cli.add_parser(sub)
+
     args = parser.parse_args(argv)
+    if args.command == "transform":
+        transform_cli.run(args)
+        return
     if args.command == "summarize":
         summarize(args.results, args.csv)
         return

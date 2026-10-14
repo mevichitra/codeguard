@@ -13,6 +13,7 @@ from codeguard.lang.base import Language, LanguageSupport
 from codeguard.lang.node import SourceNode
 
 from .dataflow.model import DataflowResult
+from .text import split_lines
 
 _NO_OPTIONS: Mapping[str, Any] = MappingProxyType({})
 
@@ -54,7 +55,7 @@ class RuleContext:
     def lines(self) -> list[str]:
         """Source split into lines, cached."""
         if self._lines is None:
-            self._lines = self.source.splitlines()
+            self._lines = split_lines(self.source)
         return self._lines
 
     @property
