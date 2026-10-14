@@ -371,6 +371,28 @@ def markdown_tables(tables: Tables) -> str:
     return "\n".join(out)
 
 
+def per_repo_markdown(tables: Tables, metric: str = "false_new") -> str:
+    """Per scope, one row per repository: denominator and *metric* rate of every scheme."""
+    out: list[str] = []
+    scopes = list(dict.fromkeys(r["scope"] for r in tables.per_repo))
+    for scope in scopes:
+        rows = [r for r in tables.per_repo if r["scope"] == scope and r["metric"] == metric]
+        schemes = list(dict.fromkeys(r["scheme"] for r in rows))
+        labels = list(dict.fromkeys(r["label"] for r in rows))
+        by = {(r["label"], r["scheme"]): r for r in rows}
+        title = SCOPE_TITLES.get(scope, f"{scope.capitalize()} findings")
+        den = METRICS[metric][1]
+        out.append(f"### {title}: {metric.replace('_', '-')} rate per repository (%)\n")
+        out.append(f"| repository | {den} | " + " | ".join(f"`{s}`" for s in schemes) + " |")
+        out.append("|---|---:|" + "---:|" * len(schemes))
+        for label in labels:
+            first = by[(label, schemes[0])]
+            cells = [_pct(by[(label, s)]["rate"]) for s in schemes]
+            out.append(f"| {label} | {first['den']} | " + " | ".join(cells) + " |")
+        out.append("")
+    return "\n".join(out)
+
+
 # ---------------------------------------------------------------------------
 # Box plot (optional dependency)
 # ---------------------------------------------------------------------------
@@ -473,6 +495,7 @@ def run_stats(
     write_csv(out_dir / "repos.csv", tables.repos)
     md = markdown_tables(tables)
     (out_dir / "tables.md").write_text(md, encoding="utf-8")
+    (out_dir / "per_repo.md").write_text(per_repo_markdown(tables), encoding="utf-8")
     print(md)
     if plot:
         box_plot(tables, out_dir / "false_new_by_repo.png")

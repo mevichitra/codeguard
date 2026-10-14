@@ -243,3 +243,5 @@ def test_run_stats_writes_tables(tmp_path: Path, summaries: list[dict[str, Any]]
     assert math.isclose(float(row["pooled"]), 0.4)
     assert (out / "per_repo.csv").exists() and (out / "repos.csv").exists()
     assert "Security findings" in (out / "tables.md").read_text()
+    per_repo_md = (out / "per_repo.md").read_text()
+    assert "| a | 4 | 25.00 | 0.00 |" in per_repo_md  # security: line 1/4, codeguard 0/4

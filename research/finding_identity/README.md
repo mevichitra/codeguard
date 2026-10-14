@@ -123,12 +123,17 @@ A repository is in the corpus when all of these hold:
    (Business Source, Sustainable Use, Functional Source, Elastic, Commons Clause) and
    root licences that put some directories under other terms (typically an `ee/`
    enterprise edition) are excluded, because the replay scans every directory.
-7. **Branch.** The default branch, unless the project develops on another branch
+7. **No committed build output.** The repository does not track bundler output (minified,
+   content-hashed JavaScript) outside the paths the harness already skips (`dist/`,
+   `build/`, `node_modules/`, `*.min.js`, ...). Such files are rewritten wholesale by every
+   build and would swamp the real code's findings.
+8. **Branch.** The default branch, unless the project develops on another branch
    (DefectDojo's `dev`, IntelOwl's `develop`: their default branches only receive
    releases); the branch is recorded.
 
-The file counts of criterion 2 and criteria 4, 5 and 6 are measured from git alone at the
-pinned commit, so anyone can re-check them later with the same result:
+Criteria 1, 3 and 7 are judged by hand. The file counts of criterion 2 and criteria 4, 5
+and 6 are measured from git alone at the pinned commit, so anyone can re-check them later
+with the same result:
 
 ```bash
 python -m research.finding_identity corpus check research/finding_identity/corpus.csv
@@ -136,12 +141,16 @@ python -m research.finding_identity corpus check research/finding_identity/corpu
 
 `corpus pin` re-pins every row (or `--only a,b`) to the current head of its branch; that
 is how the corpus was built, from a candidate list of 60 repositories on 2026-10-14. The
-36 that met every criterion (26 Python, 10 JavaScript/TypeScript) form the corpus; the 24
+35 that met every criterion (25 Python, 10 JavaScript/TypeScript) form the corpus; the 25
 that failed a criterion were dropped (reasons as `corpus check` reported them; "mixed"
-means the root licence puts some directories under other terms):
+means the root licence puts some directories under other terms). Criterion 7 was added
+during the first batch run, when CTFd turned out to commit its Vite build output: its
+replay compared 12,944 findings in its first 75 commit pairs, against at most about 4,000
+over 200 pairs for any other repository. No other repository was affected.
 
 | Candidate | Reason |
 |---|---|
+| ctfd (CTFd/CTFd) | commits Vite build output (`CTFd/themes/*/static/assets/*-<hash>.js`) that the harness does not skip (criterion 7) |
 | paperless-ngx (paperless-ngx/paperless-ngx) | Python is not the majority language (410 py, 435 js) |
 | mathesar (mathesar-foundation/mathesar) | pinned commit is 93 days old; Python is not the majority language (235 py, 492 js) |
 | redash (getredash/redash) | only 194 first-parent commits in 730 days; Python is not the majority language (291 py, 577 js) |
@@ -228,7 +237,24 @@ Outputs in `--out`:
 | `per_repo.csv` | one row per scope, repository, scheme and metric: numerator, denominator, rate |
 | `repos.csv` | one row per repository: pinned head, commit pairs, versions scanned, runtime, findings per scope |
 | `tables.md` | the pooled tables in Markdown |
+| `per_repo.md` | per-repository false-new rates of every scheme, per scope, in Markdown |
 | `false_new_by_repo.png` | with `--plot`: box plot of per-repository false-new rates per scheme, one panel per scope (needs `matplotlib`, see `requirements.txt`) |
+
+### Committed results
+
+`paper/` holds the aggregated outputs of the corpus run of 2026-10-14 (CodeGuard 2.2.0,
+200 commit pairs per repository, all rule categories), produced with:
+
+```bash
+python -m research.finding_identity batch research/finding_identity/corpus.csv --commits 200 --jobs 4
+python -m research.finding_identity stats research/finding_identity/results \
+    --corpus research/finding_identity/corpus.csv --out research/finding_identity/paper --plot
+```
+
+The batch took 14 min 44 s of wall-clock time for the 35 repositories on 4 cores
+(2,781 s summed over repositories, fetching included): 7,000 commit pairs, 34,275 file
+versions scanned, 36,232 findings, 8,703 of them security findings. Clones and per-commit
+results are not committed.
 
 ## Known limitations
 
@@ -238,3 +264,7 @@ Outputs in `--out`:
   form feeds and other rare separators, so in files containing them the `codeguard` key can
   hash a neighbouring line. The harness measures the tool as it is.
 - Taint findings depend on several lines; the ground truth tracks only the reported line.
+- Every scheme's key includes the file path, so a renamed or moved file makes every
+  scheme report its findings as new, even on unchanged lines. In the corpus run this is
+  most of the residual false-new rate of the text-based schemes (for example Ghost, which
+  renamed many `.js` files to `.ts`).
