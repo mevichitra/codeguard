@@ -146,7 +146,10 @@ that failed a criterion were dropped (reasons as `corpus check` reported them; "
 means the root licence puts some directories under other terms). Criterion 7 was added
 during the first batch run, when CTFd turned out to commit its Vite build output: its
 replay compared 12,944 findings in its first 75 commit pairs, against at most about 4,000
-over 200 pairs for any other repository. No other repository was affected.
+over 200 pairs for any other repository. No other repository was affected. Its finished
+replay (200 pairs, 28 minutes) has 22,122 persisting findings, as many as the other 35
+repositories together (23,237); including it would raise the pooled `codeguard`
+false-new rate from 1.8% to 48.7% while the per-repository median stays at 0.5%.
 
 | Candidate | Reason |
 |---|---|
