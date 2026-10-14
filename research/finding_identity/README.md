@@ -81,6 +81,104 @@ Tests:
 python -m pytest research/finding_identity/tests
 ```
 
+## Controlled transformation experiment (RQ2)
+
+Real histories rarely edit the flagged line itself and introduce few new findings, so
+they cannot say *which kinds of change break which schemes*. The `transform` subcommand
+answers that with a controlled experiment: it samples Python files with findings,
+rewrites each one with a set of transformations whose effect on line identity is known
+by construction, scans before and after, and scores every scheme.
+
+| Transformation | What it does | Behaviour |
+|---|---|---|
+| `reformat` | `black` at line length 79 (`--reformat-line-length`; `ruff format` if black is missing) | kept |
+| `insert_top` | a comment and an unused import below the docstring and `__future__` imports | kept |
+| `insert_below` | a comment line right below the flagged statement (GitHub's hash reads 100 non-whitespace characters forward) | kept |
+| `rename_local` | renames a local variable (not a parameter) used on the flagged line, in its whole function | kept |
+| `rename_function` | renames the enclosing function or method and its references in the file (`self.m`, `cls.m`, `Class.m` for methods) | kept in the file |
+| `move_function` | swaps the enclosing function with the adjacent function in the same body | kept |
+| `change_literal` | appends `_v2` to a string literal on the flagged line, or adds one to a number | changed |
+| `extract_helper` | moves the flagged statement into a new module-level function; reads become parameters, assignments are returned | kept |
+| `duplicate_above` / `duplicate_below` | copies the flagged statement directly above / below itself: a genuinely new finding | changed |
+| `ai_refactor` | asks a language model to refactor the enclosing function without changing its behaviour (optional) | checked by hand |
+
+Each transformation returns the new text and an exact old-line to new-line map, which
+is the ground truth. `reformat` pairs the syntax trees before and after (black keeps the
+tree), so when it splits a line the finding is followed to the line its node starts on.
+`ai_refactor` is the exception: its ground truth is the line diff of `linemap.py`, so
+its cases are flagged `needs_review` and written to `review.jsonl` with the old and new
+function for a manual check.
+
+Renames, extraction and moves are rewritten with `libcst` (source preserving) and only
+where they are safe within the file: names bound once, no `global`/`nonlocal`/`locals()`,
+no special methods, no overridden method names, no statements that `yield`, `await` or
+use `super()`. When a transformation does not fit a target finding it tries the next
+finding in the file (in a seeded random order); if none fits, the file counts as "n/a"
+for that transformation, with the reason. Other modules are not updated by renames.
+
+### Running it
+
+```bash
+pip install -r research/finding_identity/requirements.txt
+
+python -m research.finding_identity transform https://github.com/pallets/flask --samples 200 --heatmap
+python -m research.finding_identity transform https://github.com/DefectDojo/django-DefectDojo \
+    --ref dev --label defectdojo --samples 200 --heatmap
+
+# A subset of transformations, on a local directory
+python -m research.finding_identity transform path/to/src --transforms rename_local,extract_helper
+```
+
+`--samples` is the number of files with findings to use; `--seed` fixes the sample and
+the target findings. Results go to `results/transform-<label>/` (git-ignored):
+
+- `matrix.csv`: one row per transformation and scheme (the invariance matrix);
+- `matrix.md`: the same as a Markdown table (false-new % / hidden %);
+- `matrix.png`: heatmaps of the false-new and hidden rates (`--heatmap`, needs matplotlib);
+- `cases.jsonl`: one line per applied transformation, with the target, its outcome under
+  each scheme and the introduced findings;
+- `summary.json`: all counts, including "n/a" reasons and findings lost by the change.
+
+### Invariance matrix
+
+Two scopes are reported. The **target** scope is the paper's matrix: per transformation,
+
+- **false-new rate** = target findings a scheme reports as new / target findings still
+  detected after the change (`target_known`);
+- **hidden rate** = introduced findings a scheme matches to an old finding / introduced
+  findings (only the `duplicate` transformations introduce findings);
+- **mispair rate** = target findings matched to the wrong old finding / `target_known`;
+- **collision rate** = findings sharing a key with another finding in the transformed file.
+
+The **file** scope (`file_*` columns) scores every finding in the transformed file, as
+a CI baseline would see the change.
+
+A target finding that the change makes undetectable is counted as `target_lost` (with
+its rule in `summary.json`) and the next finding in the file is tried; lost cases are
+not scheme failures and do not enter the matrix. `extract_helper` loses most loop rules
+this way (`CG-PERF-002`, `CG-PERF-005`): outside its loop the statement is no longer a
+finding.
+
+The duplicate transformations show how matching order matters: schemes pair equal keys
+in line order, so a copy *above* the finding is matched to the old finding (hidden) and
+the original is reported as new; GitHub's hash, which reads forward, is fooled by a copy
+*below* instead.
+
+### Optional AI refactor
+
+`ai_refactor` uses the Anthropic API (`pip install anthropic`). No model is hard-coded:
+
+```bash
+export ANTHROPIC_API_KEY=...                 # or --ai-api-key
+export FINDING_IDENTITY_AI_MODEL=<model id>  # or --ai-model
+python -m research.finding_identity transform <repo> --transforms all --samples 50
+```
+
+`--transforms all` includes `ai_refactor` only when a model is set. Every reply is
+cached in `.cache/ai/` (git-ignored) under a hash of the model and prompt, so a rerun
+with the same cache reproduces the edits; `--ai-offline` uses the cache only. Replies
+that do not parse or that rename the function count as "n/a".
+
 ## Known limitations
 
 - The ground truth is a line diff. A finding whose anchor line is rewritten beyond the
@@ -89,3 +187,5 @@ python -m pytest research/finding_identity/tests
   form feeds and other rare separators, so in files containing them the `codeguard` key can
   hash a neighbouring line. The harness measures the tool as it is.
 - Taint findings depend on several lines; the ground truth tracks only the reported line.
+- The transformations are applied one at a time to one finding each; real commits mix
+  them. `change_literal` and the `duplicate` transformations change behaviour on purpose.
