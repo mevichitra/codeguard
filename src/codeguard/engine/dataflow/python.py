@@ -27,6 +27,7 @@ import ast
 
 from codeguard.rules._pyimports import ImportMap
 
+from ..text import split_lines
 from . import catalog
 from .model import TaintHop, TaintInfo, TaintSource
 
@@ -61,7 +62,7 @@ def _union_into(target: Env, other: Env) -> None:
 
 class _Analyzer:
     def __init__(self, source: str, imports: ImportMap) -> None:
-        self.lines = source.splitlines()
+        self.lines = split_lines(source)
         self.imports = imports
         self.memo: dict[int, TaintInfo] = {}
 

@@ -52,3 +52,8 @@ def test_contains_and_overlaps() -> None:
     assert overlaps(rng, other)
     far = {"start": {"line": 5, "character": 0}, "end": {"line": 5, "character": 1}}
     assert not overlaps(rng, far)
+
+
+def test_line_index_counts_only_lf_crlf_and_cr() -> None:
+    index = LineIndex("a\x0cb\r\nc\u2028d\re\n")
+    assert [index.line(i) for i in range(4)] == ["a\x0cb", "c\u2028d", "e", ""]

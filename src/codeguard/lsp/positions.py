@@ -11,6 +11,7 @@ from __future__ import annotations
 from typing import Any
 
 from codeguard.engine.finding import Location, TextEdit
+from codeguard.engine.text import split_lines
 
 LspPosition = dict[str, int]
 LspRange = dict[str, LspPosition]
@@ -44,11 +45,11 @@ class LineIndex:
     """Lines of one document, for position conversion."""
 
     def __init__(self, text: str) -> None:
-        self.lines = text.split("\n")
+        self.lines = split_lines(text)
 
     def line(self, index: int) -> str:
         if 0 <= index < len(self.lines):
-            return self.lines[index].rstrip("\r")
+            return self.lines[index]
         return ""
 
     def position(self, line: int, col: int) -> LspPosition:

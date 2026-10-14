@@ -6,7 +6,12 @@ from __future__ import annotations
 import ast
 import textwrap
 
+import pytest
+
+import codeguard.rules  # noqa: F401  (registers rules)
 from codeguard.engine import fingerprint as fp
+from codeguard.engine.runner import AnalysisRunner
+from codeguard.lang.base import Language
 
 
 def _fp(source: str, line: int) -> str:
@@ -50,6 +55,32 @@ class TestSensitivity:
         one = fp.compute("CG-SEC-001", "mod.py", src, 2, scope=scope)
         two = fp.compute("CG-SEC-003", "mod.py", src, 2, scope=scope)
         assert one != two
+
+
+class TestLineSeparators:
+    """Only LF, CRLF and CR end a line -- the same lines ``ast`` numbers."""
+
+    def test_finding_after_form_feed_uses_its_own_line(self) -> None:
+        src = "x = 1\n\x0c\ndef f(s):\n    return eval(s)\n"
+        plain = "x = 1\n\ndef f(s):\n    return eval(s)\n"
+        runner = AnalysisRunner(rule_ids=["CG-SEC-003"])
+        [with_ff] = runner.run(src, filename="m.py", language=Language.PYTHON)
+        [without] = runner.run(plain, filename="m.py", language=Language.PYTHON)
+        assert with_ff.location.line == without.location.line == 4
+        assert with_ff.fingerprint == without.fingerprint
+
+    @pytest.mark.parametrize(
+        "sep", ["\x0b", "\x0c", "\x1c", "\x1d", "\x1e", "\x85", "\u2028", "\u2029"]
+    )
+    def test_unicode_line_breaks_do_not_shift_lines(self, sep: str) -> None:
+        a = f"# page{sep}break\ndef f():\n    x = eval(data)\n"
+        b = "# page break\ndef f():\n    x = eval(data)\n"
+        assert _fp(a, 3) == _fp(b, 3)
+
+    @pytest.mark.parametrize("eol", ["\r\n", "\r"])
+    def test_crlf_and_cr_line_endings(self, eol: str) -> None:
+        a = "def f():\n    x = eval(data)\n"
+        assert _fp(a.replace("\n", eol), 2) == _fp(a, 2)
 
 
 class TestPythonScope:

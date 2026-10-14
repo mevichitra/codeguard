@@ -48,8 +48,17 @@ class TestParse:
         s = SuppressionSet.parse("x  # codeguard: ignore[CG-SEC-001]\n")
         assert s.inline[1][0].reason is None
 
+    def test_form_feed_does_not_shift_line_numbers(self) -> None:
+        s = SuppressionSet.parse("x = 1\n\x0c\ny  # codeguard: ignore[CG-SEC-001] reason: r\n")
+        assert set(s.inline) == {3}
+
 
 class TestOutcome:
+    def test_suppresses_finding_after_form_feed(self) -> None:
+        findings = _run(f"x = 1\n\x0c\n{SQL}  # codeguard: ignore[CG-SEC-001] reason: r\n")
+        sec = [f for f in findings if f.rule_id == "CG-SEC-001"]
+        assert sec and sec[0].suppressed
+
     def test_active_suppresses(self) -> None:
         findings = _run(f"{SQL}  # codeguard: ignore[CG-SEC-001] reason: r\n")
         sec = [f for f in findings if f.rule_id == "CG-SEC-001"]
