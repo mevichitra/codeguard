@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
 from .gitrepo import GitRepo
 from .replay import replay
 from .scan import Scanner, rule_ids_for
-from .schemes import ALL_SCHEMES
+from .schemes import ANALYZERS, schemes_for
 from .summarize import summarize
 
 HERE = Path(__file__).parent
@@ -31,6 +32,17 @@ def main(argv: list[str] | None = None) -> None:
         help="comma-separated rule categories to run",
     )
     rp.add_argument("--details", action="store_true", help="write one record per finding")
+    rp.add_argument(
+        "--analyzer",
+        choices=ANALYZERS,
+        default="codeguard",
+        help="what produces the findings (bandit and semgrep: see requirements.txt)",
+    )
+    rp.add_argument(
+        "--semgrep-rules",
+        type=Path,
+        help="local Semgrep rules for --analyzer semgrep (default: semgrep_rules.yml)",
+    )
 
     sp = sub.add_parser("summarize", help="print rate tables for one or more result dirs")
     sp.add_argument("results", nargs="+", type=Path)
@@ -44,16 +56,24 @@ def main(argv: list[str] | None = None) -> None:
     ref = None if args.ref == "HEAD" else args.ref
     repo = GitRepo.open_or_clone(args.repo, args.workdir, depth=args.commits + 2, ref=ref)
     label = args.label or repo.path.name
+    if args.analyzer != "codeguard" and not args.label:
+        label = f"{label}-{args.analyzer}"
     out = args.out or HERE / "results" / label
     categories = [c.strip() for c in args.categories.split(",") if c.strip()]
-    scanner = Scanner(rule_ids_for(categories), ALL_SCHEMES)
+    schemes = schemes_for(args.analyzer)
+    scanner = Scanner(
+        rule_ids_for(categories),
+        schemes,
+        analyzer=args.analyzer,
+        semgrep_rules=args.semgrep_rules,
+    )
     try:
         replay(
             repo,
             ref=args.ref,
             commits=args.commits,
             scanner=scanner,
-            schemes=ALL_SCHEMES,
+            schemes=schemes,
             out_dir=out,
             label=label,
             categories=categories,
@@ -61,4 +81,7 @@ def main(argv: list[str] | None = None) -> None:
         )
     finally:
         repo.close()
+    (out / "analyzer.json").write_text(
+        json.dumps(scanner.describe(), indent=2) + "\n", encoding="utf-8"
+    )
     summarize([out])

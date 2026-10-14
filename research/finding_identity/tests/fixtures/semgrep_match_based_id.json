@@ -1,0 +1,3692 @@
+{
+ "semgrep": "1.180.0",
+ "rules": "# Local Semgrep rules for the finding-identity harness (--analyzer semgrep).\n#\n# Written for this study, not taken from the Semgrep registry, so that runs are offline and\n# pinned. They cover common security and quality patterns in Python, JavaScript and\n# TypeScript, and deliberately mix rule shapes, because Semgrep's match_based_id depends on\n# the rule's formula and metavariable bindings: plain patterns with and without\n# metavariables, pattern-either, patterns with pattern-not / pattern-inside, metavariable\n# filters, and taint mode.\nrules:\n  # ------------------------------------------------------------------ Python\n  - id: py-eval-exec\n    languages: [python]\n    severity: ERROR\n    message: Dynamic code execution with $FN on $ARG\n    metadata: {cwe: \"CWE-95\", confidence: MEDIUM}\n    patterns:\n      - pattern-either:\n          - pattern: eval($ARG, ...)\n          - pattern: exec($ARG, ...)\n          - pattern: $FN($ARG, ...)\n      - metavariable-regex:\n          metavariable: $FN\n          regex: ^(eval|exec)$\n      - pattern-not: $FN(\"...\", ...)\n\n  - id: py-subprocess-shell\n    languages: [python]\n    severity: ERROR\n    message: subprocess.$CALL with shell=True\n    metadata: {cwe: \"CWE-78\", confidence: HIGH}\n    pattern: subprocess.$CALL(..., shell=True, ...)\n\n  - id: py-os-command\n    languages: [python]\n    severity: WARNING\n    message: Command run through the shell\n    metadata: {cwe: \"CWE-78\", confidence: MEDIUM}\n    pattern-either:\n      - pattern: os.system(...)\n      - pattern: os.popen(...)\n      - pattern: os.spawnl(...)\n      - pattern: commands.getoutput(...)\n\n  - id: py-pickle-load\n    languages: [python]\n    severity: WARNING\n    message: Deserializing with $MOD.$FN can execute code\n    metadata: {cwe: \"CWE-502\", confidence: MEDIUM}\n    patterns:\n      - pattern: $MOD.$FN(...)\n      - metavariable-regex:\n          metavariable: $MOD\n          regex: ^(pickle|cPickle|dill|shelve|marshal)$\n      - metavariable-regex:\n          metavariable: $FN\n          regex: ^(load|loads|open)$\n\n  - id: py-yaml-unsafe-load\n    languages: [python]\n    severity: WARNING\n    message: yaml.load without a safe Loader\n    metadata: {cwe: \"CWE-502\", confidence: HIGH}\n    patterns:\n      - pattern: yaml.load(...)\n      - pattern-not: yaml.load(..., Loader=yaml.SafeLoader, ...)\n      - pattern-not: yaml.load(..., Loader=SafeLoader, ...)\n      - pattern-not: yaml.load(..., Loader=yaml.CSafeLoader, ...)\n\n  - id: py-weak-hash\n    languages: [python]\n    severity: WARNING\n    message: Weak hash function hashlib.$H\n    metadata: {cwe: \"CWE-328\", confidence: MEDIUM}\n    patterns:\n      - pattern: hashlib.$H(...)\n      - metavariable-regex:\n          metavariable: $H\n          regex: ^(md5|sha1|md4)$\n      - pattern-not: hashlib.$H(..., usedforsecurity=False, ...)\n\n  - id: py-requests-no-verify\n    languages: [python]\n    severity: ERROR\n    message: TLS verification disabled in requests.$M\n    metadata: {cwe: \"CWE-295\", confidence: HIGH}\n    pattern: requests.$M(..., verify=False, ...)\n\n  - id: py-sql-format\n    languages: [python]\n    severity: ERROR\n    message: SQL built by string formatting passed to $CUR.execute\n    metadata: {cwe: \"CWE-89\", confidence: MEDIUM}\n    pattern-either:\n      - pattern: $CUR.execute(\"...\" % ..., ...)\n      - pattern: $CUR.execute(\"...\".format(...), ...)\n      - pattern: $CUR.execute(f\"...\", ...)\n      - pattern: $CUR.execute(\"...\" + $X, ...)\n\n  - id: py-django-raw-sql\n    languages: [python]\n    severity: WARNING\n    message: Raw SQL in $QS.$RAW\n    metadata: {cwe: \"CWE-89\", confidence: LOW}\n    patterns:\n      - pattern: $QS.$RAW($SQL, ...)\n      - metavariable-regex:\n          metavariable: $RAW\n          regex: ^(raw|extra|RawSQL)$\n      - pattern-not: $QS.$RAW(\"...\", ...)\n\n  - id: py-mark-safe\n    languages: [python]\n    severity: WARNING\n    message: mark_safe on a non-literal disables HTML escaping\n    metadata: {cwe: \"CWE-79\", confidence: LOW}\n    patterns:\n      - pattern-either:\n          - pattern: mark_safe($X)\n          - pattern: django.utils.safestring.mark_safe($X)\n      - pattern-not: mark_safe(\"...\")\n\n  - id: py-tempfile-mktemp\n    languages: [python]\n    severity: WARNING\n    message: tempfile.mktemp is race-prone\n    metadata: {cwe: \"CWE-377\", confidence: HIGH}\n    pattern: tempfile.mktemp(...)\n\n  - id: py-assert-used\n    languages: [python]\n    severity: INFO\n    message: assert is removed under python -O\n    metadata: {cwe: \"CWE-703\", confidence: LOW}\n    paths:\n      exclude: [\"tests/\", \"test_*.py\", \"*_test.py\", \"conftest.py\"]\n    pattern-either:\n      - pattern: assert $COND\n      - pattern: assert $COND, $MSG\n\n  - id: py-hardcoded-secret\n    languages: [python]\n    severity: WARNING\n    message: Possible hard-coded secret in $NAME\n    metadata: {cwe: \"CWE-798\", confidence: LOW}\n    patterns:\n      - pattern: $NAME = \"$VALUE\"\n      - metavariable-regex:\n          metavariable: $NAME\n          regex: (?i).*(password|passwd|secret|api_key|token)$\n      - metavariable-regex:\n          metavariable: $VALUE\n          regex: .{4,}\n\n  - id: py-flask-debug\n    languages: [python]\n    severity: WARNING\n    message: Flask app run with debug=True\n    metadata: {cwe: \"CWE-489\", confidence: MEDIUM}\n    pattern: $APP.run(..., debug=True, ...)\n\n  - id: py-bare-except-pass\n    languages: [python]\n    severity: INFO\n    message: Exception swallowed by a bare except\n    metadata: {cwe: \"CWE-703\", confidence: LOW}\n    pattern: |\n      try:\n        ...\n      except:\n        pass\n\n  - id: py-broad-except-pass\n    languages: [python]\n    severity: INFO\n    message: $EXC swallowed without handling\n    metadata: {cwe: \"CWE-703\", confidence: LOW}\n    pattern-either:\n      - pattern: |\n          try:\n            ...\n          except $EXC:\n            pass\n      - pattern: |\n          try:\n            ...\n          except $EXC as $E:\n            pass\n\n  - id: py-requests-no-timeout\n    languages: [python]\n    severity: WARNING\n    message: requests.$M without a timeout can hang\n    metadata: {cwe: \"CWE-400\", confidence: MEDIUM}\n    patterns:\n      - pattern: requests.$M(...)\n      - metavariable-regex:\n          metavariable: $M\n          regex: ^(get|post|put|patch|delete|head|options|request)$\n      - pattern-not: requests.$M(..., timeout=$T, ...)\n\n  - id: py-logging-fstring\n    languages: [python]\n    severity: INFO\n    message: f-string formatted eagerly in $LOG.$M\n    metadata: {confidence: LOW}\n    patterns:\n      - pattern: $LOG.$M(f\"...\", ...)\n      - metavariable-regex:\n          metavariable: $M\n          regex: ^(debug|info|warning|error|exception|critical)$\n\n  - id: py-csrf-exempt\n    languages: [python]\n    severity: WARNING\n    message: CSRF protection disabled for $VIEW\n    metadata: {cwe: \"CWE-352\", confidence: MEDIUM}\n    pattern: |\n      @csrf_exempt\n      def $VIEW(...):\n        ...\n\n  - id: py-subprocess-call\n    languages: [python]\n    severity: INFO\n    message: subprocess.$CALL runs an external program\n    metadata: {cwe: \"CWE-78\", confidence: LOW}\n    patterns:\n      - pattern: subprocess.$CALL($CMD, ...)\n      - metavariable-regex:\n          metavariable: $CALL\n          regex: ^(run|call|check_call|check_output|Popen)$\n\n  - id: py-open-no-encoding\n    languages: [python]\n    severity: INFO\n    message: open($PATH) in text mode without an explicit encoding\n    metadata: {confidence: LOW}\n    patterns:\n      - pattern: open($PATH, ...)\n      - pattern-not: open($PATH, ..., encoding=$E, ...)\n      - pattern-not: open($PATH, \"=~/b/\", ...)\n      - pattern-not: open($PATH, mode=\"=~/b/\", ...)\n\n  - id: py-mutable-default\n    languages: [python]\n    severity: WARNING\n    message: Mutable default argument $ARG in $FN\n    metadata: {confidence: HIGH}\n    pattern-either:\n      - pattern: |\n          def $FN(..., $ARG=[], ...):\n            ...\n      - pattern: |\n          def $FN(..., $ARG={}, ...):\n            ...\n      - pattern: |\n          def $FN(..., $ARG=set(), ...):\n            ...\n\n  - id: py-open-redirect\n    languages: [python]\n    severity: WARNING\n    message: Redirect to a URL taken from the request\n    metadata: {cwe: \"CWE-601\", confidence: LOW}\n    mode: taint\n    pattern-sources:\n      - pattern: request.args.get(...)\n      - pattern: request.GET.get(...)\n      - pattern: request.values.get(...)\n    pattern-sinks:\n      - pattern: redirect(...)\n      - pattern: HttpResponseRedirect(...)\n\n  - id: py-path-traversal\n    languages: [python]\n    severity: WARNING\n    message: File opened with a path taken from the request\n    metadata: {cwe: \"CWE-22\", confidence: LOW}\n    mode: taint\n    pattern-sources:\n      - pattern: request.$ATTR.get(...)\n      - pattern: request.$ATTR[...]\n    pattern-sinks:\n      - pattern: open(...)\n      - pattern: send_file(...)\n      - pattern: os.path.join(...)\n\n  # --------------------------------------------------------- JavaScript / TypeScript\n  - id: js-eval\n    languages: [javascript, typescript]\n    severity: ERROR\n    message: Dynamic code execution with $FN\n    metadata: {cwe: \"CWE-95\", confidence: MEDIUM}\n    patterns:\n      - pattern-either:\n          - pattern: eval($X)\n          - pattern: new Function(...)\n          - pattern: $FN($X, ...)\n      - metavariable-regex:\n          metavariable: $FN\n          regex: ^(eval|setTimeout|setInterval)$\n      - pattern-not: $FN(\"...\", ...)\n      - pattern-not: $FN(function (...) {...}, ...)\n      - pattern-not: $FN((...) => {...}, ...)\n      - pattern-not: $FN((...) => $Y, ...)\n\n  - id: js-inner-html\n    languages: [javascript, typescript]\n    severity: WARNING\n    message: Assignment to $EL.$PROP can inject HTML\n    metadata: {cwe: \"CWE-79\", confidence: LOW}\n    patterns:\n      - pattern: $EL.$PROP = $VAL\n      - metavariable-regex:\n          metavariable: $PROP\n          regex: ^(innerHTML|outerHTML)$\n      - pattern-not: $EL.$PROP = \"...\"\n\n  - id: js-document-write\n    languages: [javascript, typescript]\n    severity: WARNING\n    message: document.write with dynamic content\n    metadata: {cwe: \"CWE-79\", confidence: LOW}\n    patterns:\n      - pattern-either:\n          - pattern: document.write($X)\n          - pattern: document.writeln($X)\n      - pattern-not: document.write(\"...\")\n\n  - id: js-child-process\n    languages: [javascript, typescript]\n    severity: ERROR\n    message: Shell command run with child_process.$FN\n    metadata: {cwe: \"CWE-78\", confidence: MEDIUM}\n    patterns:\n      - pattern-either:\n          - pattern: require('child_process').$FN($CMD, ...)\n          - pattern: child_process.$FN($CMD, ...)\n          - pattern: $CP.$FN($CMD, ...)\n      - metavariable-regex:\n          metavariable: $FN\n          regex: ^(exec|execSync)$\n      - pattern-not: $CP.$FN(\"...\", ...)\n\n  - id: js-dangerously-set-html\n    languages: [javascript, typescript]\n    severity: WARNING\n    message: dangerouslySetInnerHTML bypasses React escaping\n    metadata: {cwe: \"CWE-79\", confidence: LOW}\n    pattern: \"{dangerouslySetInnerHTML: $X}\"\n\n  - id: js-weak-random\n    languages: [javascript, typescript]\n    severity: INFO\n    message: Math.random is not a secure random source\n    metadata: {cwe: \"CWE-338\", confidence: LOW}\n    pattern: Math.random()\n\n  - id: js-weak-hash\n    languages: [javascript, typescript]\n    severity: WARNING\n    message: Weak hash $ALG\n    metadata: {cwe: \"CWE-328\", confidence: MEDIUM}\n    patterns:\n      - pattern: $CRYPTO.createHash(\"$ALG\")\n      - metavariable-regex:\n          metavariable: $ALG\n          regex: ^(md5|sha1)$\n\n  - id: js-console-log\n    languages: [javascript, typescript]\n    severity: INFO\n    message: console.$M left in code\n    metadata: {cwe: \"CWE-532\", confidence: LOW}\n    patterns:\n      - pattern: console.$M(...)\n      - metavariable-regex:\n          metavariable: $M\n          regex: ^(log|debug)$\n\n  - id: js-tls-reject-unauthorized\n    languages: [javascript, typescript]\n    severity: ERROR\n    message: TLS certificate checks disabled\n    metadata: {cwe: \"CWE-295\", confidence: HIGH}\n    pattern-either:\n      - pattern: \"{rejectUnauthorized: false}\"\n      - pattern: process.env.NODE_TLS_REJECT_UNAUTHORIZED = \"0\"\n",
+ "rules_sha256": "82ca817f8d7b3951d1787a5511aa6c7e67a7971af71c6386fc91dd08d014f384",
+ "sources": [
+  {
+   "source": "https://github.com/pallets/flask",
+   "commit": "d086db856be187255b8ec61ef409357393020f32",
+   "files": [
+    [
+     {
+      "rule": "py-assert-used",
+      "path": "src/flask/app.py",
+      "metavars": {
+       "$COND": "bool(static_host)==host_matching",
+       "$MSG": "\"Invalid static_host/host_matching combination\""
+      },
+      "id": "67aa4017d63d3eca1e497b563c7dc0c645d39491f8ec32e9406bc43fa40671cb37f61ccf1838d6ffbd815d5c5ea4855a9f71a0dbd9c36208bcb69c01c5eb6760_0"
+     },
+     {
+      "rule": "py-open-no-encoding",
+      "path": "src/flask/app.py",
+      "metavars": {
+       "$PATH": "path"
+      },
+      "id": "5aaf7cb2c7d4e5b7e3f4cc3699f41c144dcfe183e1c063edfd11be3e2094f97860cbe3ded8255e673e7e513b5fd12a40c7fda21648557519b651d2eda94983a0_0"
+     },
+     {
+      "rule": "py-open-no-encoding",
+      "path": "src/flask/app.py",
+      "metavars": {
+       "$PATH": "path"
+      },
+      "id": "5aaf7cb2c7d4e5b7e3f4cc3699f41c144dcfe183e1c063edfd11be3e2094f97860cbe3ded8255e673e7e513b5fd12a40c7fda21648557519b651d2eda94983a0_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "src/flask/app.py",
+      "metavars": {
+       "$1": "error",
+       "$LOG": "self.logger",
+       "$M": "error"
+      },
+      "id": "6bed8edbceafc6ea78bd0e049e58883d75623ac36996099eba3096b5a99478286da56abad97369086734c25466800082c7898ec43ff4d5cada620993ce617736_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-open-no-encoding",
+      "path": "src/flask/blueprints.py",
+      "metavars": {
+       "$PATH": "path"
+      },
+      "id": "7f17cce90885acdd54aa54d168d659051579f3023f64d95ed0174121885c9197aafd6d8329a7c8d22e758c0187049dbbb92b2d87d8d0cbb75b079f5add496ee3_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-open-no-encoding",
+      "path": "src/flask/cli.py",
+      "metavars": {
+       "$PATH": "startup"
+      },
+      "id": "34bcc3d5c26a9a70bdf5d4234650e7a55464b7f190b03c795368c835b204e4b46754760614a376313b572e9d5a7ff466844074b903d10a75c7fcc5297126b8b8_0"
+     },
+     {
+      "rule": "py-eval-exec",
+      "path": "src/flask/cli.py",
+      "metavars": {
+       "$1": "eval",
+       "$FN": "eval",
+       "$ARG": "compile(f.read()startup\"exec\")"
+      },
+      "id": "65caeefc6bf5f6fbafbc6e23d46ae783425dc80cd2d7cb519d4ac3711a798cd03ff04c88a8479a086ccb717b33f071ed86451225f4ec1a3a04eae7ad6d3673ce_0"
+     },
+     {
+      "rule": "py-broad-except-pass",
+      "path": "src/flask/cli.py",
+      "metavars": {
+       "$EXC": "ValueError"
+      },
+      "id": "300af2ea9831c22169abe6ec829883d1fde41dfb976c333a68460d03f4cc8367704ac5aa9f61305f155bffbb99d3c12f4df66b0be0071fd5999dbde1e669ee2b_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-broad-except-pass",
+      "path": "src/flask/config.py",
+      "metavars": {
+       "$EXC": "Exception"
+      },
+      "id": "d2c1cd722dcdf3b0b15d200a542aff8c99e777d9fb9776fd1d3a3cb38fa05c3588602a92e02c37707e716f24595e6af4f91490b44212f1de7679f6904ebbb91a_0"
+     },
+     {
+      "rule": "py-eval-exec",
+      "path": "src/flask/config.py",
+      "metavars": {
+       "$1": "exec",
+       "$FN": "exec",
+       "$ARG": "compile(config_file.read()filename\"exec\")"
+      },
+      "id": "309c82048d1930a5d929f1d59898f29055bf5f0930d10b436f2289d73bc54e7224e8db0304e2f9e6d5350970b891a09a6a9b8844b477ef9708356326a9a02b89_0"
+     },
+     {
+      "rule": "py-open-no-encoding",
+      "path": "src/flask/config.py",
+      "metavars": {
+       "$PATH": "filename"
+      },
+      "id": "bb72fcf6a367a41441469a3ac25210e97d53d4e797ef97a32c956a796d5e67e60fe56b48457a7a396c9901672393271bb824127af7656b89af8ff1569b4be501_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-assert-used",
+      "path": "src/flask/debughelpers.py",
+      "metavars": {
+       "$COND": "isinstance(exc RequestRedirect)"
+      },
+      "id": "e3d219c23db2aeb642b6cd64615a35d400e0fc62d3e6cf3bc9fdf100cdb859d9153974db7ccc1bf643ba809f902dc9bbb4efc17270ec1a4d728284e0aca6ea42_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-assert-used",
+      "path": "src/flask/sansio/scaffold.py",
+      "metavars": {
+       "$COND": "view_func is None",
+       "$MSG": "\"expected view func if endpoint is not provided.\""
+      },
+      "id": "bf942b794c85ec952890bc0414eaeea4b57ae28fe37ecb98a2dd5d5a51aa1462508653bf126b72d90103494b58cd62c61cf8eb5a55a731bfef5c78c614415112_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-weak-hash",
+      "path": "src/flask/sessions.py",
+      "metavars": {
+       "$1": "sha1",
+       "$H": "sha1"
+      },
+      "id": "a39069fcfba66b0137527671af239c3cfe6dfa35fb59d24bbed02e333d2e0357e248b2cf2236658b7920d6a7a902d1a4e45f76bdaf3170fade362c24752d0c9c_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-assert-used",
+      "path": "src/flask/testing.py",
+      "metavars": {
+       "$COND": "not base_url or subdomain url_scheme or base_url is None!=bool(subdomain or url_scheme)",
+       "$MSG": "'Cannot pass \"subdomain\" or \"url_scheme\" with \"base_url\".'"
+      },
+      "id": "4800cb64d9e0729a3397afb723ce4f49a033296b971dbc80db7edd9f478505225999db5aee182ebb3138719ff9886d897060417ca4f404bf9cd41ee3734103fc_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-assert-used",
+      "path": "src/flask/views.py",
+      "metavars": {
+       "$COND": "meth is None",
+       "$MSG": "f\"Unimplemented method {request.method!r}\""
+      },
+      "id": "e6009984badf836d3293e158b331ccec764bd0139c4cf089a766ab36989a11ae65961becd090814192ae6b194b820b761fb526388221b082616374936c49d493_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-broad-except-pass",
+      "path": "tests/test_appctx.py",
+      "metavars": {
+       "$EXC": "Exception"
+      },
+      "id": "563f13e437a776d7f282ad88e17eb4f8cd768dc1522efbd2c004e069ac48912883a190d12ba240990c0fe5fa94c027423af09a39598d9506618adfb253afb200_0"
+     },
+     {
+      "rule": "py-broad-except-pass",
+      "path": "tests/test_appctx.py",
+      "metavars": {
+       "$EXC": "Exception"
+      },
+      "id": "563f13e437a776d7f282ad88e17eb4f8cd768dc1522efbd2c004e069ac48912883a190d12ba240990c0fe5fa94c027423af09a39598d9506618adfb253afb200_1"
+     }
+    ],
+    [
+     {
+      "rule": "py-broad-except-pass",
+      "path": "tests/test_basic.py",
+      "metavars": {
+       "$EXC": "Exception"
+      },
+      "id": "e0450c36479e421d0d49c2e460221945d0b95578aa0fc764b976f5c8ae9d18563bf696f1731c49b3d85ee0ba7b2057071e78a34d2075315b365be1d30a8fb77b_0"
+     },
+     {
+      "rule": "py-broad-except-pass",
+      "path": "tests/test_basic.py",
+      "metavars": {
+       "$EXC": "Exception"
+      },
+      "id": "e0450c36479e421d0d49c2e460221945d0b95578aa0fc764b976f5c8ae9d18563bf696f1731c49b3d85ee0ba7b2057071e78a34d2075315b365be1d30a8fb77b_1"
+     },
+     {
+      "rule": "py-flask-debug",
+      "path": "tests/test_basic.py",
+      "metavars": {
+       "$APP": "app"
+      },
+      "id": "ef0eef998c323960f3245bdd275664a433b1e5a695e7bf09f6eecf4828e4ea52ab4999c01e240d127f14e084e64c144d1299b6414fb49d6731894a74f6fbfe6d_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-broad-except-pass",
+      "path": "tests/test_reqctx.py",
+      "metavars": {
+       "$EXC": "Exception"
+      },
+      "id": "b0ec84156ec9da4c8fc4f0083f733b8d45966ab6b184afa3bc83f8991cb421ebd8567080e68de98f8bcbe80bbea22db2c722b506eb9578afb1f3bb2d4a1b4b8d_0"
+     },
+     {
+      "rule": "py-broad-except-pass",
+      "path": "tests/test_reqctx.py",
+      "metavars": {
+       "$EXC": "Exception"
+      },
+      "id": "b0ec84156ec9da4c8fc4f0083f733b8d45966ab6b184afa3bc83f8991cb421ebd8567080e68de98f8bcbe80bbea22db2c722b506eb9578afb1f3bb2d4a1b4b8d_1"
+     }
+    ],
+    [
+     {
+      "rule": "py-flask-debug",
+      "path": "tests/test_templating.py",
+      "metavars": {
+       "$APP": "app"
+      },
+      "id": "d8f762c433980f2a6c6b307f9928a4f0ac649b1556324a64babf879563bf3a5667db841ce9fa95e8afc47ef9248c98804c3a236fc8f3f5fd8f470a7e32b75af1_0"
+     }
+    ]
+   ]
+  },
+  {
+   "source": "https://github.com/DefectDojo/django-DefectDojo",
+   "commit": "559a677f183c0083cd78906be1527b3eb1a2dfb7",
+   "files": [
+    [
+     {
+      "rule": "py-subprocess-call",
+      "path": "docker/install_chrome_dependencies.py",
+      "metavars": {
+       "$1": "run",
+       "$CALL": "run",
+       "$CMD": "cmd"
+      },
+      "id": "43c751636a142807e5773d8c50a0c18d05334a63162e9167894499851c015c6a523408145837b27b780bedba05bf2315689beb1eec9583d7e58115256e2cb7b0_0"
+     }
+    ],
+    [
+     {
+      "rule": "js-weak-random",
+      "path": "docs/assets/js/custom.js",
+      "metavars": {},
+      "id": "89f7b62bcf886b8fdf5b56920c6b5c2400331a2b7dbf09bc35fa0c36fb35d89db3492cd7bc11151f1f936facce66957a3e43045a2437724e5de6e1a02d31bd45_0"
+     },
+     {
+      "rule": "js-weak-random",
+      "path": "docs/assets/js/custom.js",
+      "metavars": {},
+      "id": "89f7b62bcf886b8fdf5b56920c6b5c2400331a2b7dbf09bc35fa0c36fb35d89db3492cd7bc11151f1f936facce66957a3e43045a2437724e5de6e1a02d31bd45_1"
+     },
+     {
+      "rule": "js-weak-random",
+      "path": "docs/assets/js/custom.js",
+      "metavars": {},
+      "id": "89f7b62bcf886b8fdf5b56920c6b5c2400331a2b7dbf09bc35fa0c36fb35d89db3492cd7bc11151f1f936facce66957a3e43045a2437724e5de6e1a02d31bd45_2"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/api_v2/serializers.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "bf24186927cb3c6e1630a4a09c8fc127575c7a66bad6ec2b9c4e194b65a3e820ad51f05a3f289055f9b8ed4d3b082691c1db1f51d5627f613d85d792c740a26b_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/api_v2/serializers.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "bf24186927cb3c6e1630a4a09c8fc127575c7a66bad6ec2b9c4e194b65a3e820ad51f05a3f289055f9b8ed4d3b082691c1db1f51d5627f613d85d792c740a26b_1"
+     }
+    ],
+    [
+     {
+      "rule": "py-sql-format",
+      "path": "dojo/auditlog/backfill.py",
+      "metavars": {
+       "$CUR": "cursor"
+      },
+      "id": "b58c08533bfc5dfbe981a649684e1e17664d968c5cb3d86082404e3c130ca89975eabae8681847392b1ccb1ac0a783afb444144edcc2fa74cbd4548ab194da55_0"
+     },
+     {
+      "rule": "py-sql-format",
+      "path": "dojo/auditlog/backfill.py",
+      "metavars": {
+       "$CUR": "cursor"
+      },
+      "id": "b58c08533bfc5dfbe981a649684e1e17664d968c5cb3d86082404e3c130ca89975eabae8681847392b1ccb1ac0a783afb444144edcc2fa74cbd4548ab194da55_1"
+     },
+     {
+      "rule": "py-sql-format",
+      "path": "dojo/auditlog/backfill.py",
+      "metavars": {
+       "$CUR": "cursor"
+      },
+      "id": "b58c08533bfc5dfbe981a649684e1e17664d968c5cb3d86082404e3c130ca89975eabae8681847392b1ccb1ac0a783afb444144edcc2fa74cbd4548ab194da55_2"
+     },
+     {
+      "rule": "py-sql-format",
+      "path": "dojo/auditlog/backfill.py",
+      "metavars": {
+       "$CUR": "cursor"
+      },
+      "id": "b58c08533bfc5dfbe981a649684e1e17664d968c5cb3d86082404e3c130ca89975eabae8681847392b1ccb1ac0a783afb444144edcc2fa74cbd4548ab194da55_3"
+     },
+     {
+      "rule": "py-sql-format",
+      "path": "dojo/auditlog/backfill.py",
+      "metavars": {
+       "$CUR": "raw_cursor"
+      },
+      "id": "6030f3944bbb1799f6ab40e010f7c499ab3d428aed30fbb164ab7dff0171b7fcb3bc63ef0835eb6ca5fa859b7125875f735a9dc26261b6ad6a4bfb86eaee0525_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/auditlog/backfill.py",
+      "metavars": {
+       "$1": "error",
+       "$LOG": "logger",
+       "$M": "error"
+      },
+      "id": "feed5ca32f46eaec64b64341863c67ba219d1409b20c27198073dba5cf6c9b10cd878d099bd55ede051e2345c71667f24ea46f9ffd5473dd9b6a09ae41e2a708_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/auditlog/backfill.py",
+      "metavars": {
+       "$1": "exception",
+       "$LOG": "logger",
+       "$M": "exception"
+      },
+      "id": "0e97d1ccf24bc93998b7b95d71d15228ae840856cac0519215571ff6fb793e91ec1ea62e6257c0926402a783ce44a85ab0f640e4c83cf592c2223b582539ffe6_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-broad-except-pass",
+      "path": "dojo/auditlog/helpers.py",
+      "metavars": {
+       "$EXC": "LookupError"
+      },
+      "id": "01dcfe2d0ff306ec301f79d78a789ea9e2a84a26461a95e44fae2b8bcdfa5644c948cdead0873e578c3f63756d76425883a5d1c411d6be864a5c162bb2c543a4_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/auditlog/services.py",
+      "metavars": {
+       "$1": "error",
+       "$LOG": "logger",
+       "$M": "error"
+      },
+      "id": "64bd171b2ba0aea41551754fc2b9a6e651ca723e937427bf7cdeb1058769e611778e6b58a841baa78f3a03b38598f5a8f61f62e01a3bad925c7486d768888599_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/auditlog/services.py",
+      "metavars": {
+       "$1": "error",
+       "$LOG": "logger",
+       "$M": "error"
+      },
+      "id": "64bd171b2ba0aea41551754fc2b9a6e651ca723e937427bf7cdeb1058769e611778e6b58a841baa78f3a03b38598f5a8f61f62e01a3bad925c7486d768888599_1"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/base_models/base.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "199cca426e916be4cd17b4f762fa13efe19def88d7fb7a089f35936735c601dc9eeb89d2cd92ca6ed2ce7f0e3c47d7d43f5a6dec1b22e376dbe316f7ebea58d1_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/base_models/base.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "199cca426e916be4cd17b4f762fa13efe19def88d7fb7a089f35936735c601dc9eeb89d2cd92ca6ed2ce7f0e3c47d7d43f5a6dec1b22e376dbe316f7ebea58d1_1"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/celery.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "81aa0f1e869bb5300cd16b4685252d47141f64c5977140950e35dc92c7506fb61c822c9c7b851c2f271179ec102d256d8b73373207b059ca115fa7cfdfa004b2_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-broad-except-pass",
+      "path": "dojo/db_migrations/0047_jira_minimum_severity_default.py",
+      "metavars": {
+       "$EXC": "Exception",
+       "$E": "e"
+      },
+      "id": "289a7e915d3fbf54cede5700fdbe37ecfb51bbcc433059f58599ac04d4959695cbd59a86e6d032d8b04302a44e2fbc680702861dc99cbe39edad28c704b84adb_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-broad-except-pass",
+      "path": "dojo/db_migrations/0061_jira_webhook_secret.py",
+      "metavars": {
+       "$EXC": "Exception",
+       "$E": "e"
+      },
+      "id": "e44e571e5b6140f77e256d77cdfa95178ea163ee2337ce79fca4371965dd8560a834c1b6925b345e630f5365938580e466995386e43437df6622fb90f5388971_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-broad-except-pass",
+      "path": "dojo/db_migrations/0147_rename_sslyze_parser.py",
+      "metavars": {
+       "$EXC": "Test_Type_model.DoesNotExist"
+      },
+      "id": "1f76c357d7ed0a979fbd5c642faf2413f5dab51779bb99166dc017b16e45247a544b5333bdcdf63aeedceff7b2dcc5a5e290ba56c365027a99ff09a492b525e2_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-bare-except-pass",
+      "path": "dojo/db_migrations/0156_migrate_finding_groups_setting.py",
+      "metavars": {},
+      "id": "b020400f97eab22adba4cc2e3161a1a6e28866c8e7fd295d2b5070853734e2f4c80a9e00ec64ffbafaba5aaf663696957a89e57a134cc93e2b4c26589f3cefbe_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-bare-except-pass",
+      "path": "dojo/db_migrations/0175_system_settings_enable_notify_sla.py",
+      "metavars": {},
+      "id": "b56b4b81b020d58063bf35924e84fd415ba1165cfec10416e4e39be0fa08374d545c87c174d5c2324bff2e8f3262d2d585366e7f9c5a183624f3edcb1c5e002d_0"
+     },
+     {
+      "rule": "py-bare-except-pass",
+      "path": "dojo/db_migrations/0175_system_settings_enable_notify_sla.py",
+      "metavars": {},
+      "id": "b56b4b81b020d58063bf35924e84fd415ba1165cfec10416e4e39be0fa08374d545c87c174d5c2324bff2e8f3262d2d585366e7f9c5a183624f3edcb1c5e002d_1"
+     },
+     {
+      "rule": "py-bare-except-pass",
+      "path": "dojo/db_migrations/0175_system_settings_enable_notify_sla.py",
+      "metavars": {},
+      "id": "b56b4b81b020d58063bf35924e84fd415ba1165cfec10416e4e39be0fa08374d545c87c174d5c2324bff2e8f3262d2d585366e7f9c5a183624f3edcb1c5e002d_2"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/db_migrations/0187_nessus_to_tenable.py",
+      "metavars": {
+       "$1": "warning",
+       "$LOG": "logger",
+       "$M": "warning"
+      },
+      "id": "e2be07b70b96cc6df0c99392114e4f686ccf6ba2326edc292792837c18b0ee2def69bb7af175aa24245f198c03c97f2c359f6fc47dc49df3443411961b2f2ce5_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/db_migrations/0197_parser_merge.py",
+      "metavars": {
+       "$1": "warning",
+       "$LOG": "logger",
+       "$M": "warning"
+      },
+      "id": "f3de0687ebaa0dfc2c0afd951281b83b3210f50dc6317e33834357818ee1939e819d873fa782ad2d5b88648edfd5129eb56189b5acb9dea33eb263f22e075384_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/db_migrations/0197_parser_merge.py",
+      "metavars": {
+       "$1": "warning",
+       "$LOG": "logger",
+       "$M": "warning"
+      },
+      "id": "f3de0687ebaa0dfc2c0afd951281b83b3210f50dc6317e33834357818ee1939e819d873fa782ad2d5b88648edfd5129eb56189b5acb9dea33eb263f22e075384_1"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/db_migrations/0199_whitesource_to_mend.py",
+      "metavars": {
+       "$1": "warning",
+       "$LOG": "logger",
+       "$M": "warning"
+      },
+      "id": "5fdcf7c265781bbf8f2d4bc2d617e8d25d5b5576300fb500e294be17ae09e80223d654b85d7bf3a60ff23e665fe4bee06717cefbfb80695a30cb07ee265709f8_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/db_migrations/0208_merge_acunetix.py",
+      "metavars": {
+       "$1": "warning",
+       "$LOG": "logger",
+       "$M": "warning"
+      },
+      "id": "289c2c0fe39e49e8963b83749b6c32128051676d77f47aba00b7b16c4fb4f656d59031a8dbe9f0613de4e79593813c647f8f1304eb9bd96481ebc829ce8e202d_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/db_migrations/0227_migrate_tags.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "71f2e56a913e7cae3aface2b5e235d059d9691583bc170369f60e689cdd17a2936a7b520a9b6ce455becd0b47371c53dfd92095bbdf502081391bb2eb800eca0_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/db_migrations/0227_migrate_tags.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "71f2e56a913e7cae3aface2b5e235d059d9691583bc170369f60e689cdd17a2936a7b520a9b6ce455becd0b47371c53dfd92095bbdf502081391bb2eb800eca0_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/db_migrations/0227_migrate_tags.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "71f2e56a913e7cae3aface2b5e235d059d9691583bc170369f60e689cdd17a2936a7b520a9b6ce455becd0b47371c53dfd92095bbdf502081391bb2eb800eca0_2"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/db_migrations/0235_clean_tags.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "0bb181ee18f9350404bc8e5c42826752572954f1b60a48895e08f64ecc0138504a93e499de8676b42a1cb1e430d978812601168aaa07decbcaffd0c3cc6b6eea_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/db_migrations/0235_clean_tags.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "0bb181ee18f9350404bc8e5c42826752572954f1b60a48895e08f64ecc0138504a93e499de8676b42a1cb1e430d978812601168aaa07decbcaffd0c3cc6b6eea_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/db_migrations/0235_clean_tags.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "0bb181ee18f9350404bc8e5c42826752572954f1b60a48895e08f64ecc0138504a93e499de8676b42a1cb1e430d978812601168aaa07decbcaffd0c3cc6b6eea_2"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/db_migrations/0250_pghistory_backfill.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "f906ccc03d8aa2e329923577904ee98273bdfe74189abf4e64bd1d328b102b8285abcd3ad9c4003a34b787bb5bcb1ae0ee01db67d38b603cce45d01ecacb2b11_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/db_migrations/0250_pghistory_backfill.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "f906ccc03d8aa2e329923577904ee98273bdfe74189abf4e64bd1d328b102b8285abcd3ad9c4003a34b787bb5bcb1ae0ee01db67d38b603cce45d01ecacb2b11_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/db_migrations/0250_pghistory_backfill.py",
+      "metavars": {
+       "$1": "error",
+       "$LOG": "logger",
+       "$M": "error"
+      },
+      "id": "26e899a79070313371dbabfb74bf5bfe383e8a693cfe05d0606f2991d54850e25ca43980c6768614499aa39136ea058f67aee427d87f572f42bd5ee701abb9db_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/db_migrations/0250_pghistory_backfill.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "f906ccc03d8aa2e329923577904ee98273bdfe74189abf4e64bd1d328b102b8285abcd3ad9c4003a34b787bb5bcb1ae0ee01db67d38b603cce45d01ecacb2b11_2"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/db_migrations/0257_pghistory_tags_backfill.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "7537b7130bed2fc65259adea573e5f692f14ed123a739964e2e1c0d5fc5fdae8fa00aa9bd2de71e0aaad8203ea3d102a826842a02407f250bf057c740abfad70_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/db_migrations/0257_pghistory_tags_backfill.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "7537b7130bed2fc65259adea573e5f692f14ed123a739964e2e1c0d5fc5fdae8fa00aa9bd2de71e0aaad8203ea3d102a826842a02407f250bf057c740abfad70_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/db_migrations/0257_pghistory_tags_backfill.py",
+      "metavars": {
+       "$1": "exception",
+       "$LOG": "logger",
+       "$M": "exception"
+      },
+      "id": "554069f6420ba926b57ba792378d0476507d8a1f69b4b29a368cbed7bbcad58333db65754cf92146f1d5ba0942428524fab28bb1fe423e8b330121a22c2b47bd_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/db_migrations/0257_pghistory_tags_backfill.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "7537b7130bed2fc65259adea573e5f692f14ed123a739964e2e1c0d5fc5fdae8fa00aa9bd2de71e0aaad8203ea3d102a826842a02407f250bf057c740abfad70_2"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/endpoint/utils.py",
+      "metavars": {
+       "$1": "error",
+       "$LOG": "logger",
+       "$M": "error"
+      },
+      "id": "b57b8572258474173a6edbb90cf1e4b0946dd2311c5f25b361cd8ae277c735e53687160ca67ee94e61414838b1a85616715642db266211e22d30b38d4c64c0ab_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/engagement/ui/views.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "4977e80c2526ac79c834971933cb69d04270f08dfeb2d704435176cc8df8792079499aa3138d859999c3bafbb9c12ea8e0e26a4813d8df2b4846b383a6eda61b_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/engagement/ui/views.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "4977e80c2526ac79c834971933cb69d04270f08dfeb2d704435176cc8df8792079499aa3138d859999c3bafbb9c12ea8e0e26a4813d8df2b4846b383a6eda61b_1"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/file_uploads/helper.py",
+      "metavars": {
+       "$1": "warning",
+       "$LOG": "logger",
+       "$M": "warning"
+      },
+      "id": "ad03dc5f67dd69bb7e296be3872eaa3d3f9055401db8d75eb2cc44c50b4cd993f3979f5f92b3a646f10af36b62c18dfca161caefaf92b922a9411963797dbe00_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/file_uploads/helper.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "d18c59b48b29df70bfed978a116868a991a8965724c28ab2e3828b61a93b90baa490ebc263a32e4e57837fecdf5fdef32a02e6b9244706e7cbbe62c101554fff_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/api/serializer.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "4803d5f0ff806e8e243cd71e032d7316438c8b331686435704769bd5142e06e2475a052a89359c6e694eb0f1bdbbbbe7abd4d6a9ee564a734f41c2aa7cb3236b_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "1ffc553c568f82f625ab64b871f3c3d2638b2863aaf4c954b238c3d7a01688f36db31031ee2db35a66d04ce71aa06751b09b3f1e619d3ab9857243946a9178e4_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "1ffc553c568f82f625ab64b871f3c3d2638b2863aaf4c954b238c3d7a01688f36db31031ee2db35a66d04ce71aa06751b09b3f1e619d3ab9857243946a9178e4_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_2"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_3"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_4"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_5"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_6"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_7"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_8"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_9"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_10"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_11"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_12"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_13"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_14"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_15"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_16"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_17"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_18"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_19"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_20"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_21"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_22"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_23"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_24"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "82f4bcbd2478a06a0b70559a104ff53ca8de808d640763b79b2606bd7ac32931b0933cb904c66a5b241ee832a5640e116cfe160b84d79b9b44c5de3e7c01335d_25"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "1ffc553c568f82f625ab64b871f3c3d2638b2863aaf4c954b238c3d7a01688f36db31031ee2db35a66d04ce71aa06751b09b3f1e619d3ab9857243946a9178e4_2"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "1ffc553c568f82f625ab64b871f3c3d2638b2863aaf4c954b238c3d7a01688f36db31031ee2db35a66d04ce71aa06751b09b3f1e619d3ab9857243946a9178e4_3"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "1ffc553c568f82f625ab64b871f3c3d2638b2863aaf4c954b238c3d7a01688f36db31031ee2db35a66d04ce71aa06751b09b3f1e619d3ab9857243946a9178e4_4"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/deduplication.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "1ffc553c568f82f625ab64b871f3c3d2638b2863aaf4c954b238c3d7a01688f36db31031ee2db35a66d04ce71aa06751b09b3f1e619d3ab9857243946a9178e4_5"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/helper.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "d21391804c5b0ae7854d1b6b395e02fcdb394b77a9435fb07b3833e7741e54b240b62d34bcd01784f4754a2e5d660f9bb252c4eaae6a4ad271a7f737bed6f89d_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/helper.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "d21391804c5b0ae7854d1b6b395e02fcdb394b77a9435fb07b3833e7741e54b240b62d34bcd01784f4754a2e5d660f9bb252c4eaae6a4ad271a7f737bed6f89d_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/helper.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "d21391804c5b0ae7854d1b6b395e02fcdb394b77a9435fb07b3833e7741e54b240b62d34bcd01784f4754a2e5d660f9bb252c4eaae6a4ad271a7f737bed6f89d_2"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/helper.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "deduplicationLogger",
+       "$M": "info"
+      },
+      "id": "91d9a84aa15e4344f37855862b194c3e2154ebbefc71bcead286c189e89f9a3510618588d3ddaf83a7210196e2f44ea36ddc611442324273a4d05619a80782b8_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/helper.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "deduplicationLogger",
+       "$M": "info"
+      },
+      "id": "91d9a84aa15e4344f37855862b194c3e2154ebbefc71bcead286c189e89f9a3510618588d3ddaf83a7210196e2f44ea36ddc611442324273a4d05619a80782b8_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/finding/helper.py",
+      "metavars": {
+       "$1": "warning",
+       "$LOG": "logger",
+       "$M": "warning"
+      },
+      "id": "9205fa24853f31e7c6ce9657beebf23fbc7e711456986dc10932545262dab9481dd915ed56aa767f402610049509161964e22b81e240e5374ba98a8973598998_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/finding/ui/forms.py",
+      "metavars": {
+       "$X": "html"
+      },
+      "id": "417a75135ba73b807e829cf8eca29fec46cd88fbf3a6e0f5cf5a33bf2739b4ea1fbe13c40043147d04b01e74c2bce7ee3798ec7c13ded41c6de59e0880f8c002_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/finding/ui/views.py",
+      "metavars": {
+       "$X": "'Finding template added successfully. You may edit it <a href=\"{}\">here</a>.'.format(reverse(\"edit_template\"args(template.id)))"
+      },
+      "id": "5ff6fbcce1d6666eace3b296d33efc4180e7073b5c1746d8ee904e685c936492ac0711d30a26661b0325c09fa23fef202ef914205faba9b20f770454db5d7851_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/forms.py",
+      "metavars": {
+       "$X": "\"\\n\".join(output)"
+      },
+      "id": "a8d6cb75441fcd61506460f4b31080a3ad13031ba3409b00695e70f45016faeb55e40b0a11505a06406f379de304194c58a952b4aed288a5890cbf704da20bdb_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-csrf-exempt",
+      "path": "dojo/github/ui/views.py",
+      "metavars": {
+       "$VIEW": "webhook"
+      },
+      "id": "dcc171073ed7b2b859d03a251c56fdacd31a862cbfd6cd2e042438721f2298bbc0d86cf8a2481b5e51ee9bd5df49cd0c6099437781a438e3b2d61e6ed47e8e0d_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/importers/base_importer.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "96bd14cb055f5ade4a09b69527f9d37104fe44d9fafa02a94017bf7b1e25e7482a213b54ba7502e6520dfef10beb6df8129dd918cbc22544aca455b7109baf79_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/importers/base_importer.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "96bd14cb055f5ade4a09b69527f9d37104fe44d9fafa02a94017bf7b1e25e7482a213b54ba7502e6520dfef10beb6df8129dd918cbc22544aca455b7109baf79_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/importers/base_importer.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "10b260c5a44a2099e30843ddd7ea868a6d94c5de58a1f2290d51679ead89395692724d0214e3e43f128fbd5fe7486c0bfb9f930e08ddebc29703c73154c147e8_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/importers/base_importer.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "96bd14cb055f5ade4a09b69527f9d37104fe44d9fafa02a94017bf7b1e25e7482a213b54ba7502e6520dfef10beb6df8129dd918cbc22544aca455b7109baf79_2"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/importers/default_importer.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "ec59000bfb4b7131231ab8cafe7d650dc3da59828079f0d733cbc6a7ab94188e21e87e50c3a697501e2aab656ae738d3c096e3833a9f8f06a7b3df4d7fa55bce_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/importers/default_reimporter.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "09a6670274f2a943f19ae160f432602811286d8d0fd7ce7dabc955a20a0a866a312390481ee0493d6c89b1ca754650fcb693fe8913ea554c05f92ed1d66a0fb3_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/importers/default_reimporter.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "9e60b74a213b14d4fbf390360c9936b6033d7cd780b0b310dec017fa3f90fcb93a23494eea35bf9465cf6ad9c85504a32389d1bc375b75703e461f89f7bcadf9_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/importers/default_reimporter.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "9e60b74a213b14d4fbf390360c9936b6033d7cd780b0b310dec017fa3f90fcb93a23494eea35bf9465cf6ad9c85504a32389d1bc375b75703e461f89f7bcadf9_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/importers/default_reimporter.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "9e60b74a213b14d4fbf390360c9936b6033d7cd780b0b310dec017fa3f90fcb93a23494eea35bf9465cf6ad9c85504a32389d1bc375b75703e461f89f7bcadf9_2"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/importers/default_reimporter.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "09a6670274f2a943f19ae160f432602811286d8d0fd7ce7dabc955a20a0a866a312390481ee0493d6c89b1ca754650fcb693fe8913ea554c05f92ed1d66a0fb3_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/importers/default_reimporter.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "09a6670274f2a943f19ae160f432602811286d8d0fd7ce7dabc955a20a0a866a312390481ee0493d6c89b1ca754650fcb693fe8913ea554c05f92ed1d66a0fb3_2"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/importers/default_reimporter.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "09a6670274f2a943f19ae160f432602811286d8d0fd7ce7dabc955a20a0a866a312390481ee0493d6c89b1ca754650fcb693fe8913ea554c05f92ed1d66a0fb3_3"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/importers/default_reimporter.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "9e60b74a213b14d4fbf390360c9936b6033d7cd780b0b310dec017fa3f90fcb93a23494eea35bf9465cf6ad9c85504a32389d1bc375b75703e461f89f7bcadf9_3"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/importers/default_reimporter.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "9e60b74a213b14d4fbf390360c9936b6033d7cd780b0b310dec017fa3f90fcb93a23494eea35bf9465cf6ad9c85504a32389d1bc375b75703e461f89f7bcadf9_4"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/importers/default_reimporter.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "09a6670274f2a943f19ae160f432602811286d8d0fd7ce7dabc955a20a0a866a312390481ee0493d6c89b1ca754650fcb693fe8913ea554c05f92ed1d66a0fb3_4"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/importers/default_reimporter.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "9e60b74a213b14d4fbf390360c9936b6033d7cd780b0b310dec017fa3f90fcb93a23494eea35bf9465cf6ad9c85504a32389d1bc375b75703e461f89f7bcadf9_5"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/importers/default_reimporter.py",
+      "metavars": {
+       "$1": "error",
+       "$LOG": "logger",
+       "$M": "error"
+      },
+      "id": "277a019823e75f66e4ef7dd0ad5d0cb085e12a675984fd180f71674e38b1ca549e509e2b09f39e9301479b784750e8d291db1a8c8a42be97cb957069a837464e_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/importers/default_reimporter.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "09a6670274f2a943f19ae160f432602811286d8d0fd7ce7dabc955a20a0a866a312390481ee0493d6c89b1ca754650fcb693fe8913ea554c05f92ed1d66a0fb3_5"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/importers/default_reimporter.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "09a6670274f2a943f19ae160f432602811286d8d0fd7ce7dabc955a20a0a866a312390481ee0493d6c89b1ca754650fcb693fe8913ea554c05f92ed1d66a0fb3_6"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/importers/location_manager.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "5439dd87a4f35e1a6992ced9f3513e12898a00d8497d836125af393e3893b1ff4522863a98ba777520626422726daacb518ca08eb638e4a910203b222a18d3a5_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/importers/options.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "4bea89b95313f5b390ecb8af6df7d948e951684141a41a2f1246623d28249e3f09510860c2d5e597097d657b16bcbe833b12192afc46d01910abc632a421066c_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/jira/helper.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "75460e9f5a062f06f00fcb229e4f196f1728a0969597057fb2ff5e8d2c621c9585316a4d49097596d0dccea7d74db6f247566bc9cceaf967526cf6899af6b1ce_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/jira/helper.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "75460e9f5a062f06f00fcb229e4f196f1728a0969597057fb2ff5e8d2c621c9585316a4d49097596d0dccea7d74db6f247566bc9cceaf967526cf6899af6b1ce_1"
+     },
+     {
+      "rule": "py-broad-except-pass",
+      "path": "dojo/jira/helper.py",
+      "metavars": {
+       "$EXC": "JIRA_Project.DoesNotExist"
+      },
+      "id": "6121eeb2d6e1fcfcd4c97f20e31cc275d34172bc14c65d823b494cb0b4da3146680c1ac3370832a9bcd540309f0cd81f9ccede3a3737ad7c4c43140b24d7624e_0"
+     },
+     {
+      "rule": "py-broad-except-pass",
+      "path": "dojo/jira/helper.py",
+      "metavars": {
+       "$EXC": "ModuleNotFoundError"
+      },
+      "id": "4b3b393eda4da9981ea3843f873f984f72b4daded4925d4cd1c52ba0b02eb7a6f49cbe8a8d708eda6c518c38499ed19f294b938ca699caf60e56dd16edb6e14a_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/jira/helper.py",
+      "metavars": {
+       "$1": "warning",
+       "$LOG": "logger",
+       "$M": "warning"
+      },
+      "id": "521a13a2d814b9572f3b3acf0117d2e962def5237d5640ff92770fbbafdefafccd45cbc10a68979bbd224cbbf64b44f51a4542f3676319ff228054ae44acb901_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/jira/helper.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "75460e9f5a062f06f00fcb229e4f196f1728a0969597057fb2ff5e8d2c621c9585316a4d49097596d0dccea7d74db6f247566bc9cceaf967526cf6899af6b1ce_2"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/jira/helper.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "75460e9f5a062f06f00fcb229e4f196f1728a0969597057fb2ff5e8d2c621c9585316a4d49097596d0dccea7d74db6f247566bc9cceaf967526cf6899af6b1ce_3"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/jira/helper.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "75460e9f5a062f06f00fcb229e4f196f1728a0969597057fb2ff5e8d2c621c9585316a4d49097596d0dccea7d74db6f247566bc9cceaf967526cf6899af6b1ce_4"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/jira/helper.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "75460e9f5a062f06f00fcb229e4f196f1728a0969597057fb2ff5e8d2c621c9585316a4d49097596d0dccea7d74db6f247566bc9cceaf967526cf6899af6b1ce_5"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/jira/helper.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "75460e9f5a062f06f00fcb229e4f196f1728a0969597057fb2ff5e8d2c621c9585316a4d49097596d0dccea7d74db6f247566bc9cceaf967526cf6899af6b1ce_6"
+     }
+    ],
+    [
+     {
+      "rule": "py-csrf-exempt",
+      "path": "dojo/jira/views.py",
+      "metavars": {
+       "$VIEW": "webhook"
+      },
+      "id": "e602474371c93912998456158bd60d6ece7b735cf9b09da005e087e31bb264642dedb04b70bfb1fedb5c215ae12170df4c9cf07a683855f542034deb23349375_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/jira/views.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "7c518c45c4546ef6d4963a5a7ae97cd37f50e61d59cd9a4350637983970316deb730af2510cd31feff363f4b0a4c45eaeb10e1ebc51910d48aa7c5c34d869772_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/jira/views.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "7c518c45c4546ef6d4963a5a7ae97cd37f50e61d59cd9a4350637983970316deb730af2510cd31feff363f4b0a4c45eaeb10e1ebc51910d48aa7c5c34d869772_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/jira/views.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "7c518c45c4546ef6d4963a5a7ae97cd37f50e61d59cd9a4350637983970316deb730af2510cd31feff363f4b0a4c45eaeb10e1ebc51910d48aa7c5c34d869772_2"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/clear_celery_queue.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "be3dc6070bc31bbfdbad0c11639043f2470c8644fbfbffa7d072c71b539de6fe0a13fca2520eec0020570c61ae2e8a46244ed7c35f160098ba64d5c5247de9d0_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/clear_celery_queue.py",
+      "metavars": {
+       "$1": "error",
+       "$LOG": "logger",
+       "$M": "error"
+      },
+      "id": "4b42394b0663d18c5ca018ab5f6916445e702c453a9f13464ed83b9d643a353140e31e1da304a4fb0ad89e61993a81924f3dc6e14a0a6256686d7521f34f34c7_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/dedupe.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "d137f12c24f12a52e534283fe25096440cda0fa5d7003e3954f5634e54113423b5982465e6e082ba3f1bfd8a945e3e24038a3eb9c52cc29f137d1f7c15ef49ff_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/dedupe.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "d137f12c24f12a52e534283fe25096440cda0fa5d7003e3954f5634e54113423b5982465e6e082ba3f1bfd8a945e3e24038a3eb9c52cc29f137d1f7c15ef49ff_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/dedupe.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "cbe2ec1a2c731b12adf0f38eb95f3ad278e09b027a6ab9b37cb53566a95f85fc65661f9d7f429890b14d61e5fd6c4f35c5215b823b11edea70a2ee65867dadac_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/dedupe.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "cbe2ec1a2c731b12adf0f38eb95f3ad278e09b027a6ab9b37cb53566a95f85fc65661f9d7f429890b14d61e5fd6c4f35c5215b823b11edea70a2ee65867dadac_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/dedupe.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "d137f12c24f12a52e534283fe25096440cda0fa5d7003e3954f5634e54113423b5982465e6e082ba3f1bfd8a945e3e24038a3eb9c52cc29f137d1f7c15ef49ff_2"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/dedupe.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "d137f12c24f12a52e534283fe25096440cda0fa5d7003e3954f5634e54113423b5982465e6e082ba3f1bfd8a945e3e24038a3eb9c52cc29f137d1f7c15ef49ff_3"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/dupecheck.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "c90a77b8d5643345ab69761948a368189f29960b0f6c08205bc6dacd8819a644e5241204e70d2d1cbbe6a61ed3c0d1b6c006cf566eee58bf82749c0a85896619_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/import_all_unittest_scans.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "152daf4626b16e2f29d9c14b503a04c31e4febd3b9abe071932698551162598e5f403623c06a69fe28087bdf563f3ca5d2b5aa1db1a7e3887fb36a3bcffd9222_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/import_all_unittest_scans.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "2c8b2f10b8661830fc55d68e46aceea27c35d4e5ac82b95fb97e98f9c8f388c1942c9c1f89647bd1e68b312dbedd88a4dc58049c15ef056e9e9fdfb8ac521c92_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/import_all_unittest_scans.py",
+      "metavars": {
+       "$1": "error",
+       "$LOG": "logger",
+       "$M": "error"
+      },
+      "id": "13b54cc8088116cd4fabac14fb70f3274d51f3126240855a52652b92e8ef123ed2f73096749274adfb8f943c3f31caecb4e3985e41719e00dd520119f8420acf_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/import_unittest_scan.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "47f488fe3f9be590fbe0db6fbc9fad823e0c46fb2abe29f3e8d1ca4858bf5ab87f4da7833f2d2a293e2138a24136de883e8378f887c7834a6e841d0d0d9e1319_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/import_unittest_scan.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "47f488fe3f9be590fbe0db6fbc9fad823e0c46fb2abe29f3e8d1ca4858bf5ab87f4da7833f2d2a293e2138a24136de883e8378f887c7834a6e841d0d0d9e1319_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/import_unittest_scan.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "47f488fe3f9be590fbe0db6fbc9fad823e0c46fb2abe29f3e8d1ca4858bf5ab87f4da7833f2d2a293e2138a24136de883e8378f887c7834a6e841d0d0d9e1319_2"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/import_unittest_scan.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "47f488fe3f9be590fbe0db6fbc9fad823e0c46fb2abe29f3e8d1ca4858bf5ab87f4da7833f2d2a293e2138a24136de883e8378f887c7834a6e841d0d0d9e1319_3"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/import_unittest_scan.py",
+      "metavars": {
+       "$1": "exception",
+       "$LOG": "logger",
+       "$M": "exception"
+      },
+      "id": "7c391d68779c3fb66b9f635b7dfebb774eaad2029f63ec00f89e6c1d31657e93cc14d58868307ea148ac44599c60deb1329eebadb8778982995e7d7770a074c4_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/pghistory_backfill.py",
+      "metavars": {
+       "$1": "exception",
+       "$LOG": "logger",
+       "$M": "exception"
+      },
+      "id": "d1b966442ff8fb548041e3d91f8b47b9d9a1a699bf81d4937621e10706aaf9a8b1bf2c44636251d800375fe4b33fcc822e9f3b285b1d40996eb4d5a741a8e8c4_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/pghistory_backfill.py",
+      "metavars": {
+       "$1": "exception",
+       "$LOG": "logger",
+       "$M": "exception"
+      },
+      "id": "d1b966442ff8fb548041e3d91f8b47b9d9a1a699bf81d4937621e10706aaf9a8b1bf2c44636251d800375fe4b33fcc822e9f3b285b1d40996eb4d5a741a8e8c4_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/pghistory_backfill.py",
+      "metavars": {
+       "$1": "exception",
+       "$LOG": "logger",
+       "$M": "exception"
+      },
+      "id": "d1b966442ff8fb548041e3d91f8b47b9d9a1a699bf81d4937621e10706aaf9a8b1bf2c44636251d800375fe4b33fcc822e9f3b285b1d40996eb4d5a741a8e8c4_2"
+     }
+    ],
+    [
+     {
+      "rule": "py-sql-format",
+      "path": "dojo/management/commands/pghistory_backfill_simple.py",
+      "metavars": {
+       "$CUR": "cursor"
+      },
+      "id": "f67331de31cd0f8ab507401706712194c4b91641d5b2c4073aa6136430385eb07494c4e2bb4b2ec66d3a91bd838d9d0ec8b1176e8050aac043f19caea6f8ede8_0"
+     },
+     {
+      "rule": "py-sql-format",
+      "path": "dojo/management/commands/pghistory_backfill_simple.py",
+      "metavars": {
+       "$CUR": "cursor"
+      },
+      "id": "f67331de31cd0f8ab507401706712194c4b91641d5b2c4073aa6136430385eb07494c4e2bb4b2ec66d3a91bd838d9d0ec8b1176e8050aac043f19caea6f8ede8_1"
+     },
+     {
+      "rule": "py-sql-format",
+      "path": "dojo/management/commands/pghistory_backfill_simple.py",
+      "metavars": {
+       "$CUR": "cursor"
+      },
+      "id": "f67331de31cd0f8ab507401706712194c4b91641d5b2c4073aa6136430385eb07494c4e2bb4b2ec66d3a91bd838d9d0ec8b1176e8050aac043f19caea6f8ede8_2"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/pghistory_backfill_simple.py",
+      "metavars": {
+       "$1": "exception",
+       "$LOG": "logger",
+       "$M": "exception"
+      },
+      "id": "35d977ab5cfe19a9f9de546b0a183370390cb2ad2c8fc2f067aa4d90248b551086bc08d69c9c938e8ab5cb48088e092070cbee913ed20473fb50b3f9cd326d7f_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-sql-format",
+      "path": "dojo/management/commands/pghistory_clear.py",
+      "metavars": {
+       "$CUR": "cursor"
+      },
+      "id": "dd47224bd9331570da52c5ce8a59f73b4e724aad8e6d44f43163ce71c8e22ba76da2173baa75018fb5ff60e64e4c3edf28cebef41fa0af3ea8cda1608bbee68d_0"
+     },
+     {
+      "rule": "py-sql-format",
+      "path": "dojo/management/commands/pghistory_clear.py",
+      "metavars": {
+       "$CUR": "cursor"
+      },
+      "id": "dd47224bd9331570da52c5ce8a59f73b4e724aad8e6d44f43163ce71c8e22ba76da2173baa75018fb5ff60e64e4c3edf28cebef41fa0af3ea8cda1608bbee68d_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/pghistory_clear.py",
+      "metavars": {
+       "$1": "error",
+       "$LOG": "logger",
+       "$M": "error"
+      },
+      "id": "74fd325123a48936156d5ce21d2a7153c807d16cd458d7bb82fb082205b7d8100ddd972b0e90f49d2c50646c383a4c6af27f7ed1e7031cc0e49f98bc90bda10d_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/reimport_unittest_scan.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "9461bec389001349d7c3603d9c2a16d5b13e427ff7d8d25bba990a08e92f38a9a4f74c6c941b74502bea4f7b0394f7ee5b40eddbae1aa2d3dae68d04cdd16a9f_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/reimport_unittest_scan.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "9461bec389001349d7c3603d9c2a16d5b13e427ff7d8d25bba990a08e92f38a9a4f74c6c941b74502bea4f7b0394f7ee5b40eddbae1aa2d3dae68d04cdd16a9f_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/reimport_unittest_scan.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "9461bec389001349d7c3603d9c2a16d5b13e427ff7d8d25bba990a08e92f38a9a4f74c6c941b74502bea4f7b0394f7ee5b40eddbae1aa2d3dae68d04cdd16a9f_2"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/reimport_unittest_scan.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "9461bec389001349d7c3603d9c2a16d5b13e427ff7d8d25bba990a08e92f38a9a4f74c6c941b74502bea4f7b0394f7ee5b40eddbae1aa2d3dae68d04cdd16a9f_3"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/reimport_unittest_scan.py",
+      "metavars": {
+       "$1": "exception",
+       "$LOG": "logger",
+       "$M": "exception"
+      },
+      "id": "0e6f2b58ce6c9f0b3310ec32bfc15c5277cbdcd886c445bf33135e81f5e40069df6954bfb559bbd75ddb2d4d85a5d56134165be01dcb86f16ff2b4a91ce90615_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/management/commands/validatededupeconfig.py",
+      "metavars": {
+       "$1": "error",
+       "$LOG": "deduplicationLogger",
+       "$M": "error"
+      },
+      "id": "f51aeebd65c1c64cdb916b662df2ed3c7c2c9d208293dbe74f5ac661a127faa36818bbea1dd8ec79cab3998830f096e23bb4492cdbf524bf99431f5769ff3c03_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/middleware.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "d4ded8a6786c739009370ec4f653c5bd56d1572d092cc84d315f4fc7033cdf2c5ba039a01db4570aa087563dae080a95758a910f59733d7113b129ab0d53c316_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/notes/helper.py",
+      "metavars": {
+       "$1": "warning",
+       "$LOG": "logger",
+       "$M": "warning"
+      },
+      "id": "3e86a36e395e548cec50958251fe484314dd7d494afacca187da21f530f2998200dc9a775c5991f4494f3274feb9e9e936b3ace13afcbbf46a85122b565d05dc_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/notes/helper.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "6c213557b325a83409f7ffd9a95097747ad52b85ccde6c5325e1464c60f894aaea97b2397330c21823291d1b14ee11e504ad35f75f282b18f5b4723f4d3a115d_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/notes/signals.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "aefdec4ddc6cadc7265a0a12c9052277c624daa7977832f971738702fcf14edc76101d377503a0f99c862815d0756f6d489850efd7299de00b1c1bddb1748d34_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/notifications/helper.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "3bd500a85cc44c4d6ed57a9d240e0a282a9637d2e83f5e2f7540a3871481e66326987e98e94a5df04f89f1c33fb92ae5878ed72187eaec016a0fe3a7bcfdf258_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/notifications/helper.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "f90964855001bff311dcb1c921e64ec8e6e37f22f091c9ceba8bac7032ef0a859b1e7fee78d163995b5df43eafc4f8db6a5b0bc16c9a91dea41b0d245b2ae597_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/notifications/helper.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "3bd500a85cc44c4d6ed57a9d240e0a282a9637d2e83f5e2f7540a3871481e66326987e98e94a5df04f89f1c33fb92ae5878ed72187eaec016a0fe3a7bcfdf258_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/notifications/helper.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "3bd500a85cc44c4d6ed57a9d240e0a282a9637d2e83f5e2f7540a3871481e66326987e98e94a5df04f89f1c33fb92ae5878ed72187eaec016a0fe3a7bcfdf258_2"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/notifications/helper.py",
+      "metavars": {
+       "$1": "error",
+       "$LOG": "logger",
+       "$M": "error"
+      },
+      "id": "4a09a2c70b95a2ea1026d55f81e95d779bfe27720eaf5bc413e6fa98711cebe419004615b6ffc70fc10771a4c0fa6869925cac16d2e85223a8127854d0ce8cb6_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/notifications/helper.py",
+      "metavars": {
+       "$1": "error",
+       "$LOG": "logger",
+       "$M": "error"
+      },
+      "id": "4a09a2c70b95a2ea1026d55f81e95d779bfe27720eaf5bc413e6fa98711cebe419004615b6ffc70fc10771a4c0fa6869925cac16d2e85223a8127854d0ce8cb6_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/notifications/helper.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "3bd500a85cc44c4d6ed57a9d240e0a282a9637d2e83f5e2f7540a3871481e66326987e98e94a5df04f89f1c33fb92ae5878ed72187eaec016a0fe3a7bcfdf258_3"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/notifications/helper.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "3bd500a85cc44c4d6ed57a9d240e0a282a9637d2e83f5e2f7540a3871481e66326987e98e94a5df04f89f1c33fb92ae5878ed72187eaec016a0fe3a7bcfdf258_4"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/notifications/helper.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "3bd500a85cc44c4d6ed57a9d240e0a282a9637d2e83f5e2f7540a3871481e66326987e98e94a5df04f89f1c33fb92ae5878ed72187eaec016a0fe3a7bcfdf258_5"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/notifications/helper.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "3bd500a85cc44c4d6ed57a9d240e0a282a9637d2e83f5e2f7540a3871481e66326987e98e94a5df04f89f1c33fb92ae5878ed72187eaec016a0fe3a7bcfdf258_6"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/notifications/helper.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "3bd500a85cc44c4d6ed57a9d240e0a282a9637d2e83f5e2f7540a3871481e66326987e98e94a5df04f89f1c33fb92ae5878ed72187eaec016a0fe3a7bcfdf258_7"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/notifications/helper.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "3bd500a85cc44c4d6ed57a9d240e0a282a9637d2e83f5e2f7540a3871481e66326987e98e94a5df04f89f1c33fb92ae5878ed72187eaec016a0fe3a7bcfdf258_8"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/notifications/helper.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "3bd500a85cc44c4d6ed57a9d240e0a282a9637d2e83f5e2f7540a3871481e66326987e98e94a5df04f89f1c33fb92ae5878ed72187eaec016a0fe3a7bcfdf258_9"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/notifications/helper.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "f90964855001bff311dcb1c921e64ec8e6e37f22f091c9ceba8bac7032ef0a859b1e7fee78d163995b5df43eafc4f8db6a5b0bc16c9a91dea41b0d245b2ae597_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/notifications/helper.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "f90964855001bff311dcb1c921e64ec8e6e37f22f091c9ceba8bac7032ef0a859b1e7fee78d163995b5df43eafc4f8db6a5b0bc16c9a91dea41b0d245b2ae597_2"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/notifications/helper.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "f90964855001bff311dcb1c921e64ec8e6e37f22f091c9ceba8bac7032ef0a859b1e7fee78d163995b5df43eafc4f8db6a5b0bc16c9a91dea41b0d245b2ae597_3"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/notifications/tasks.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "bf86ab48e578563074592719d0ae2069fc6501ebcff6329482f175a425b44c01029e4ec1535c3f0bf1bb412c2833cfc2b26884526ab27f2ebb779002785c426a_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/product_announcements.py",
+      "metavars": {
+       "$X": "f\"{self.base_message} {self.ui_outreach}\""
+      },
+      "id": "25ec495633c8e021096cce62bea5f72d6be571b5c38d2ef75775dee11b98670cdaddfd7ca128f626bf3fdd0c1c36cf65f397e140a374f84f1541ceeff9baf836_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/product_announcements.py",
+      "metavars": {
+       "$1": "exception",
+       "$LOG": "logger",
+       "$M": "exception"
+      },
+      "id": "5111d83950ce27101b46acdd161b10de06af2f989329cc9d157c6a25332b522ed411f65f49e3f2953fc15181c03bb5759a302d1540a27c2b109e14926542a8cf_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/reports/ui/views.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "dd979f020ac46510be9b1d4a742ffcc5a23fad0caf32993c989c1e418ebafd88f76f87254e965ddcd8150e735188f89a890ae73cc622ead3e3d4a1efe4a9e35e_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/reports/widgets.py",
+      "metavars": {
+       "$X": "\"<div data-multiple='true'  class='panel panel-available-widget'><div class='panel-heading' title='Click \"\"and drag to move' data-toggle='tooltip'><div class='clearfix'><h5 style='width: 90%' class='pull-left'>\"\"<i class='fa-solid fa-scissors dd-card-icon' aria-hidden='true'></i>\"+self.get_html()+\"</h5><span class='fa-solid fa-up-down-left-right pull-right icon'></span></div></div>\"\"<form id='page-break'><input type='hidden' name='page-break'/></form></div>\""
+      },
+      "id": "ce50a26357a6f3f8873417edde967963c7eb104f9db051b539c651423523db4266730c9b358a614ee7344e2f90b4c8d1959dda7fc593bbf50ea8aef0ebfd183a_0"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/reports/widgets.py",
+      "metavars": {
+       "$X": "html"
+      },
+      "id": "3191023501d9f5849d3e012477213fb1096bbe5a3422aae0bf423bcbfb628fa5a28173f505921cd96c565d2e1b51550ac1439827f9474db880601a76d2948a28_0"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/reports/widgets.py",
+      "metavars": {
+       "$X": "html"
+      },
+      "id": "3191023501d9f5849d3e012477213fb1096bbe5a3422aae0bf423bcbfb628fa5a28173f505921cd96c565d2e1b51550ac1439827f9474db880601a76d2948a28_1"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/reports/widgets.py",
+      "metavars": {
+       "$X": "html"
+      },
+      "id": "3191023501d9f5849d3e012477213fb1096bbe5a3422aae0bf423bcbfb628fa5a28173f505921cd96c565d2e1b51550ac1439827f9474db880601a76d2948a28_2"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/reports/widgets.py",
+      "metavars": {
+       "$X": "html"
+      },
+      "id": "3191023501d9f5849d3e012477213fb1096bbe5a3422aae0bf423bcbfb628fa5a28173f505921cd96c565d2e1b51550ac1439827f9474db880601a76d2948a28_3"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/reports/widgets.py",
+      "metavars": {
+       "$X": "html"
+      },
+      "id": "3191023501d9f5849d3e012477213fb1096bbe5a3422aae0bf423bcbfb628fa5a28173f505921cd96c565d2e1b51550ac1439827f9474db880601a76d2948a28_4"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/reports/widgets.py",
+      "metavars": {
+       "$X": "html"
+      },
+      "id": "3191023501d9f5849d3e012477213fb1096bbe5a3422aae0bf423bcbfb628fa5a28173f505921cd96c565d2e1b51550ac1439827f9474db880601a76d2948a28_5"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/reports/widgets.py",
+      "metavars": {
+       "$X": "html"
+      },
+      "id": "3191023501d9f5849d3e012477213fb1096bbe5a3422aae0bf423bcbfb628fa5a28173f505921cd96c565d2e1b51550ac1439827f9474db880601a76d2948a28_6"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/reports/widgets.py",
+      "metavars": {
+       "$X": "html"
+      },
+      "id": "3191023501d9f5849d3e012477213fb1096bbe5a3422aae0bf423bcbfb628fa5a28173f505921cd96c565d2e1b51550ac1439827f9474db880601a76d2948a28_7"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/reports/widgets.py",
+      "metavars": {
+       "$X": "html"
+      },
+      "id": "3191023501d9f5849d3e012477213fb1096bbe5a3422aae0bf423bcbfb628fa5a28173f505921cd96c565d2e1b51550ac1439827f9474db880601a76d2948a28_8"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/settings/settings.dist.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "22666731be2427f77408d04760afee1168d8e082b86971469d98a52ef0e198969cf5cdd37eb436756dd59c50813f5b825aa36242d43c1fef0cedc183de4d934b_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/settings/settings.dist.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "22666731be2427f77408d04760afee1168d8e082b86971469d98a52ef0e198969cf5cdd37eb436756dd59c50813f5b825aa36242d43c1fef0cedc183de4d934b_1"
+     }
+    ],
+    [
+     {
+      "rule": "js-eval",
+      "path": "dojo/static/dojo/js/cvss_calculator.js",
+      "metavars": {
+       "$1": "setTimeout",
+       "$FN": "setTimeout",
+       "$X": "updateScores"
+      },
+      "id": "c347ddaaa7318de2669b6a196886de759abb3fd5ca2e6ac33893ce6667fe6d973cf1b8cfdbd83bc4a996fc6333bc2a7be04adf69f8f6431c9e843670ce48b30a_0"
+     },
+     {
+      "rule": "js-eval",
+      "path": "dojo/static/dojo/js/cvss_calculator.js",
+      "metavars": {
+       "$1": "setTimeout",
+       "$FN": "setTimeout",
+       "$X": "cvssCalculator"
+      },
+      "id": "2fd8e9f893c2481d4386b90593d916912f6c6c769b451515f221c0b7937c0be0750cf98f7072685e94b580243193344fa04484402f2832c58fd2724706b3546c_0"
+     }
+    ],
+    [
+     {
+      "rule": "js-eval",
+      "path": "dojo/static/dojo/js/index.js",
+      "metavars": {
+       "$1": "setTimeout",
+       "$FN": "setTimeout",
+       "$X": "done"
+      },
+      "id": "d6a5cf26cf23059250d1d94060555f74386eb5cdcb1dcf8eb055fd24500683048b4963402f59f2e00e26bfc961e9092b7191a336d0060d1fa763766d60b49d59_0"
+     },
+     {
+      "rule": "js-eval",
+      "path": "dojo/static/dojo/js/index.js",
+      "metavars": {
+       "$1": "setTimeout",
+       "$FN": "setTimeout",
+       "$X": "waitForJQuery"
+      },
+      "id": "57ec1df6d07e2a67fa24dee38152c6fc51e6c067aa30a7bf78b93cb98bf49c88285a4d09335b5f422754020885b7a85a3f9ddac052388dc1ffcaea70fa5b6930_0"
+     },
+     {
+      "rule": "js-weak-random",
+      "path": "dojo/static/dojo/js/index.js",
+      "metavars": {},
+      "id": "9b1535f62a336bcdb4bb359d947a2d7ec4249767eaee864a56e1a741d9c5c6e6725eaf1f51681fbd910a2c4dc3106348a5633222b86ccbddd9d9dc9a80930394_0"
+     }
+    ],
+    [
+     {
+      "rule": "js-inner-html",
+      "path": "dojo/static/dojo/js/metrics.js",
+      "metavars": {
+       "$1": "innerHTML",
+       "$EL": "row",
+       "$PROP": "innerHTML",
+       "$VAL": "'<td>'+week+'</td>'+'<td>'+values.Monday||0+'</td>'+'<td>'+values.Tuesday||0+'</td>'+'<td>'+values.Wednesday||0+'</td>'+'<td>'+values.Thursday||0+'</td>'+'<td>'+values.Friday||0+'</td>'+'<td>'+values.Saturday||0+'</td>'+'<td>'+values.Sunday||0+'</td>'"
+      },
+      "id": "e4f3d156378602dc83575b99d8587961c33894f8c79708abe362e724f93557f9336a89e553ca1a23a859dda11a9efe149494b2e7fbbc8d2e6ff4dd02b5b529fc_0"
+     }
+    ],
+    [
+     {
+      "rule": "js-eval",
+      "path": "dojo/static/dojo/js/vendor/alpine.min.js",
+      "metavars": {
+       "$1": "setTimeout",
+       "$FN": "setTimeout",
+       "$X": "t._x_transitioning.finish"
+      },
+      "id": "ccb243c289dbc64d7a89991397e28c03111b9cdcb52f07f991a5b952011a3d8e986690d97ebcaff6cfbf6cb5baf0cce4cbf15107a075293d1f60bd54dd23ce2a_0"
+     },
+     {
+      "rule": "js-eval",
+      "path": "dojo/static/dojo/js/vendor/alpine.min.js",
+      "metavars": {
+       "$1": "setTimeout",
+       "$FN": "setTimeout",
+       "$X": "o"
+      },
+      "id": "eea88b4a9f5138b1bbb643db9cdf55134c4b0918649ea33b5d836e14f9362958950e41a60eb913fec0bbaacc52f9f5b8e4eca874110a6515e75b25d28881b754_0"
+     },
+     {
+      "rule": "js-inner-html",
+      "path": "dojo/static/dojo/js/vendor/alpine.min.js",
+      "metavars": {
+       "$1": "innerHTML",
+       "$EL": "t",
+       "$PROP": "innerHTML",
+       "$VAL": "o"
+      },
+      "id": "caa66c89375aae1ded004e5945c6b1fd4927f8da4259980e1a60623380f877463df93bc17cf932723068d6eb73fc727a17239099b4ae52735d30b62f48b0f390_0"
+     },
+     {
+      "rule": "js-eval",
+      "path": "dojo/static/dojo/js/vendor/alpine.min.js",
+      "metavars": {
+       "$1": "setTimeout",
+       "$FN": "setTimeout",
+       "$X": "s"
+      },
+      "id": "33049d86dfe58c9e52ed414842fe1afd8205594b1c448508c2387b919de5b19844cb3c3ddcdec86cdb4a1d548ceb73bb166f964b757e88322f62531690247750_0"
+     }
+    ],
+    [
+     {
+      "rule": "js-child-process",
+      "path": "dojo/static/dojo/js/vendor/htmx.min.js",
+      "metavars": {
+       "$1": "exec",
+       "$CP": "t",
+       "$FN": "exec",
+       "$CMD": "e"
+      },
+      "id": "b8bccae479cf250ffe5a992f019aed79ca768681bd141b2b3b957585eb1cc0c79d53b29b2db8bc8f5f8beb2d7507ac6bbc3e029fcdbf58bcba685983c7a10742_0"
+     },
+     {
+      "rule": "js-eval",
+      "path": "dojo/static/dojo/js/vendor/htmx.min.js",
+      "metavars": {
+       "$1": "eval",
+       "$FN": "eval",
+       "$X": "e"
+      },
+      "id": "e8503a6c8feda633dba67678cf30775a7c0da045acdf0f8f995673e99b4983b462e598fe5183c5c6e9377dca20c4b4114383b9bf6cb8faff4cfd782ef715cb9d_0"
+     },
+     {
+      "rule": "js-console-log",
+      "path": "dojo/static/dojo/js/vendor/htmx.min.js",
+      "metavars": {
+       "$1": "log",
+       "$M": "log"
+      },
+      "id": "070c555f7402eff744e9ef26777770b274e38dd268dcfc183e3acef48effc991eff06b0be6e4bd017f9e2b85d8331e385b14583e92e5a2b45902f638ba195435_0"
+     },
+     {
+      "rule": "js-child-process",
+      "path": "dojo/static/dojo/js/vendor/htmx.min.js",
+      "metavars": {
+       "$1": "exec",
+       "$CP": "Ge",
+       "$FN": "exec",
+       "$CMD": "e.charAt(n)"
+      },
+      "id": "058c23f658957fc132d98b9ec3f7690ec888bd34c13d73cf7f5923462e755d328a4f3b40fe3bb25b4fa4d9dbcbda85298fe6ece82f3edcdd2860be4d3b0ebbb5_0"
+     },
+     {
+      "rule": "js-child-process",
+      "path": "dojo/static/dojo/js/vendor/htmx.min.js",
+      "metavars": {
+       "$1": "exec",
+       "$CP": "We",
+       "$FN": "exec",
+       "$CMD": "e.charAt(n+1)"
+      },
+      "id": "ad8b7d904e575b482ca6d94e1119ef218639f82fbc3d1a7e53149468fdb50db23a1ff3969cd4238345cbc5a0ce38b75883961370e75b8e6d452b426fed0b4721_0"
+     },
+     {
+      "rule": "js-child-process",
+      "path": "dojo/static/dojo/js/vendor/htmx.min.js",
+      "metavars": {
+       "$1": "exec",
+       "$CP": "Ge",
+       "$FN": "exec",
+       "$CMD": "e.charAt(0)"
+      },
+      "id": "a7b5444be07de4aaab310117fa61d36a67fac300bd748e0997888aa46f26f6b7b5ab20637890f20cef7567b86c27f6cf1c39fdb39de9e5c4c8a75083305bff15_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/survey/ui/forms.py",
+      "metavars": {
+       "$X": "popup_plus"
+      },
+      "id": "e0f3c6731f84f830c86a29f13d90ef1506870338e7b0cb8fbbc3df1463ddd593bdf4296cee24ce4e760013d3dc7d06f63b227f106fc30a2b914ec8fd2f006c66_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/tasks.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "2e9e1305b48610b0c96b889f8d77d16d4925f6a8e81f7e044708474f5186fde87e1eb707012f31b190e9c1703ce93fc5d278b111eadedf8005416c59914a7e86_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/tasks.py",
+      "metavars": {
+       "$1": "warning",
+       "$LOG": "logger",
+       "$M": "warning"
+      },
+      "id": "b08a52b2da328d3fe6969a5bc2d108119445303f84628ed6738c8ee56c22d47735a1c5f4949ec7047a7ab0f28f96be620d602bb030d723e491c4bbecb24478ae_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/tasks.py",
+      "metavars": {
+       "$1": "warning",
+       "$LOG": "logger",
+       "$M": "warning"
+      },
+      "id": "b08a52b2da328d3fe6969a5bc2d108119445303f84628ed6738c8ee56c22d47735a1c5f4949ec7047a7ab0f28f96be620d602bb030d723e491c4bbecb24478ae_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/tasks.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "2e9e1305b48610b0c96b889f8d77d16d4925f6a8e81f7e044708474f5186fde87e1eb707012f31b190e9c1703ce93fc5d278b111eadedf8005416c59914a7e86_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/tasks.py",
+      "metavars": {
+       "$1": "error",
+       "$LOG": "logger",
+       "$M": "error"
+      },
+      "id": "77c2bf6909f2d1d8d01c32a3e6cbbc748f6e10c128600a8595fac94e301f6ce4df42c51f04f0222dead4d173a8449ca0df95fdc5fe728ba4a7ceaaadb6a10bb1_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/templatetags/as_json.py",
+      "metavars": {
+       "$X": "json.dumps(value)"
+      },
+      "id": "5f6e5960653aea95daa3a2aa5c4dd96643e6a6ea04491a1e05516188d0f4d060e0f0806c88840af266398a8aee1b8155d5b8a5d923fe2c358be9a7e6c938d169_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/templatetags/display_tags.py",
+      "metavars": {
+       "$X": "bleach.clean(markdown_text tags markdown_tags attributes markdown_attrs css_sanitizer CSSSanitizer(allowed_css_properties markdown_styles))"
+      },
+      "id": "9cc3fb76821db55ea710e425545a3827bc0b23f12de2ea100fe98c56a7938f87a644f1d9a8216c1f7592e837be8f90eb6f31aca27570b79e712155a55f2b3ad0_0"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/templatetags/display_tags.py",
+      "metavars": {
+       "$X": "bleach.clean(message attributes allowed_attributes css_sanitizer CSSSanitizer(allowed_css_properties[\"color\"\"font-weight\"]))"
+      },
+      "id": "1b87fcd221b88540a9d92763897b8f0e152478af6cfc865785da6c9f9b39d0826bad5cde0b4b15df73c829885af439e76d3dbb3a27443a1c22978b41fad06bd8_0"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/templatetags/display_tags.py",
+      "metavars": {
+       "$X": "__docs__ __docs__"
+      },
+      "id": "ecc54a9a16dc4b69513cc3b5da55a22cf8419a2ab0a6eb22959d3def5902aa6d16ef183967b4425990dbe991b8f29be7e0a25da3f8b399052f2fa50ad130953a_0"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/templatetags/display_tags.py",
+      "metavars": {
+       "$X": "title"
+      },
+      "id": "2f7e2115f31853f8c064e6d2b47be1d0d82952ec9cfa7c2666e52907fb0da89fa81168ca5741172ff9077ecd21c6623b52dd75a3226c8567f9bd284ffa6351f4_0"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/templatetags/display_tags.py",
+      "metavars": {
+       "$X": "stars(5 5\"Very High\")"
+      },
+      "id": "c8f25daa4948f99e16e2890295a6cb5f1ffd82a2ed0807b1e35492d4570df522581a47965cd8977b76aa320146bb80374add542c7b6b99dee22e308e058cd2ff_0"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/templatetags/display_tags.py",
+      "metavars": {
+       "$X": "stars(4 5\"High\")"
+      },
+      "id": "fed26c4028f8bd0f961bcffda131c7c812fbf5e71e48d0d255ae9efd6c2b858b06195b202ad6938ca19dc6274dea71ca3d4d8f25069b8697d2925ef0fde01617_0"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/templatetags/display_tags.py",
+      "metavars": {
+       "$X": "stars(3 5\"Medium\")"
+      },
+      "id": "6b876a7692a6b06aa9c0f580573ff4e7aae40b99bdb908f66ca48eb419d4e39047305e4c99895e99bca51ba99770c2e96dd74175a054f8a11c45df7ee7ba1ecd_0"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/templatetags/display_tags.py",
+      "metavars": {
+       "$X": "stars(2 5\"Low\")"
+      },
+      "id": "2c797ce6bad5fd4465075af7fa2bc8756993131671c170ec6ea0e92a41c66fa72629cc23d416510368ee0230ee5095b568b410bd1729a0aa4924d01755e9f4c2_0"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/templatetags/display_tags.py",
+      "metavars": {
+       "$X": "stars(1 5\"Very Low\")"
+      },
+      "id": "ccab196c28809f626509a0a8ef1db0607a74ea085a76f2b7d55323d42f5f7ed761b10c2f9ac0cd32e9f52a054c84e63cf737b1cee5637916ab647af33449373f_0"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/templatetags/display_tags.py",
+      "metavars": {
+       "$X": "stars(0 5\"None\")"
+      },
+      "id": "24280f9bd601068f644592e02e1c968d2f2a5dad1fa3897c705b802ea3fcb606c4a67f4a46358c22faa1544ef6e39d510234e7fd72329af9a10e12d7fced36cd_0"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/templatetags/display_tags.py",
+      "metavars": {
+       "$X": "icon(\"users\"\"External Audience\")"
+      },
+      "id": "f53338789e4be570ff9e162740040a83b24ff0bce7cae06663d47afd13447f2bc836f02c2c059290856269d13062ef3001e7692b8c1a6c0944977d66de2b2a6d_0"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/templatetags/display_tags.py",
+      "metavars": {
+       "$X": "icon(\"cloud\"\"Internet Accessible\")"
+      },
+      "id": "7ff61ea78e3001bb646e1f94e5caa31059134f038101f26704ec9d9acc1d0cca56aff37af0aa467220ffc2e4c29bc16ea77d9cf3df64278d34b417d3cdeaa438_0"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/templatetags/display_tags.py",
+      "metavars": {
+       "$X": "html%(icon color icon inherited_text esc(jira_project.jira_instance)esc(jira_project.project_key)esc(jira_project.component)esc(jira_project.push_all_issues)esc(jira_project.enable_engagement_epic_mapping)esc(jira_project.push_notes))"
+      },
+      "id": "5684aecf34508b04c1299d2dfbc687f94e0edbc5749af92bef6c0432c7624468d00539cd2ebbb2cceca2ae7b06c3deaeeddd4ec49d6362d778f0ef7ad5f70575_0"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/templatetags/display_tags.py",
+      "metavars": {
+       "$X": "html%(icon color icon common_fields endpoints extra_fields)"
+      },
+      "id": "9579c0f7ca17be02b8d35dd23028f3df818368210222d3a714048c4836666f0aaf3d34c694b5847f02079d9b4ad7b81d0309b1a984c5467198f099b344a66230_0"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/templatetags/display_tags.py",
+      "metavars": {
+       "$X": "html%(icon color icon common_fields esc(s.get(\"locations\"None))extra_fields)"
+      },
+      "id": "660a33dde2bffd28b2fa9a09bba3295656dc2a5f8eede8d7f9aa1564d6bd81150b2f17e937337e9b4c119e32a19e9ce3019da3ce5f0bec324a25e9e8006ce855_0"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/templatetags/display_tags.py",
+      "metavars": {
+       "$X": "html%list_of_status_changes"
+      },
+      "id": "07bbebb3d585218aecc2ef55d2128c664e8b02c2fff5b6f7a83fb58311cc9c070a98ee5b78e82349ed44ec509dc2e551c1dea96b5e3f25becd96c1527da1cea1_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/templatetags/get_banner.py",
+      "metavars": {
+       "$X": "bleach.clean(value attributes allowed_attributes css_sanitizer CSSSanitizer(allowed_css_properties[\"color\"\"font-weight\"]))"
+      },
+      "id": "483c0cba45e72d78512cbb9ed4f684adb983c60c0ca383d2ddbb3d59273ae00f58ea3ef48ac5f129425310f0f07be43ef83033339e26bddf3314f32de1dc6b03_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/templatetags/navigation_tags.py",
+      "metavars": {
+       "$X": "inputs"
+      },
+      "id": "81a42519928714b325442dfcf60c26f5b719718ac07939b74c0e45c7856321520d51dd51035bb1dc1063158d8e1c4e2648ef4d60cbfc68bf52e5b499725579d0_0"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/templatetags/navigation_tags.py",
+      "metavars": {
+       "$X": "link"
+      },
+      "id": "a50cf05cf297ec0809e797396f7619af563ad43f389b448cf0e61da0371094d7b108d1f8346c460fdc352f817670198cd7aff83b835c43de5948974ba9b6ffbe_0"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/templatetags/navigation_tags.py",
+      "metavars": {
+       "$X": "\"Previous\""
+      },
+      "id": "78a6131738ae87a0e19c8a774367417fd04bbf0a5da084f1587d9e52b2e27732e816488537a3787b80962a46ce0bb77621ade6b4ac14291d9569cb13cef32f8b_0"
+     },
+     {
+      "rule": "py-mark-safe",
+      "path": "dojo/templatetags/navigation_tags.py",
+      "metavars": {
+       "$X": "\"Next\""
+      },
+      "id": "24cb0978df0658d1e4b7734e379ae282cb24213ff705b2c638ebb963ea35761a49a879fe25e3363593e92ce1f9217632facc87355226d360466d6a411e894085_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/test/models.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "965b06de792cc73108f94a65e3aa4f5e9672533e4e255fcbbcd9f5e10d9b11ac638a502c4a48bfd06869df741ff9c903755855715a44a065a552553404463af4_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/test/models.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "965b06de792cc73108f94a65e3aa4f5e9672533e4e255fcbbcd9f5e10d9b11ac638a502c4a48bfd06869df741ff9c903755855715a44a065a552553404463af4_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/test/models.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "965b06de792cc73108f94a65e3aa4f5e9672533e4e255fcbbcd9f5e10d9b11ac638a502c4a48bfd06869df741ff9c903755855715a44a065a552553404463af4_2"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/test/models.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "965b06de792cc73108f94a65e3aa4f5e9672533e4e255fcbbcd9f5e10d9b11ac638a502c4a48bfd06869df741ff9c903755855715a44a065a552553404463af4_3"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/test/models.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "965b06de792cc73108f94a65e3aa4f5e9672533e4e255fcbbcd9f5e10d9b11ac638a502c4a48bfd06869df741ff9c903755855715a44a065a552553404463af4_4"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/test/models.py",
+      "metavars": {
+       "$1": "warning",
+       "$LOG": "deduplicationLogger",
+       "$M": "warning"
+      },
+      "id": "12fd0087bc4aafe9c32139578a6e9623383f6e2936690da1ecc3d98d571f4e6c59c4fa48c8dd63a435531e0c8ea46f64a66844953aa8058d6596b89a866fe51c_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/test/models.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "965b06de792cc73108f94a65e3aa4f5e9672533e4e255fcbbcd9f5e10d9b11ac638a502c4a48bfd06869df741ff9c903755855715a44a065a552553404463af4_5"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/test/models.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "965b06de792cc73108f94a65e3aa4f5e9672533e4e255fcbbcd9f5e10d9b11ac638a502c4a48bfd06869df741ff9c903755855715a44a065a552553404463af4_6"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/test/models.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "965b06de792cc73108f94a65e3aa4f5e9672533e4e255fcbbcd9f5e10d9b11ac638a502c4a48bfd06869df741ff9c903755855715a44a065a552553404463af4_7"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/test/models.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "deduplicationLogger",
+       "$M": "debug"
+      },
+      "id": "965b06de792cc73108f94a65e3aa4f5e9672533e4e255fcbbcd9f5e10d9b11ac638a502c4a48bfd06869df741ff9c903755855715a44a065a552553404463af4_8"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/test/ui/views.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "9c91cdae796cd2890d9fc091af8f5cb4f7df4ee437aa333acf86e3cb56b95fd3d7b1a7041f5eeb5f9b9f570b06658b1b3c8d87833a06426b24375a6578fdc603_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/test/ui/views.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "9c91cdae796cd2890d9fc091af8f5cb4f7df4ee437aa333acf86e3cb56b95fd3d7b1a7041f5eeb5f9b9f570b06658b1b3c8d87833a06426b24375a6578fdc603_1"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/tools/acunetix/parse_acunetix_xml.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "1616bce3a9229b2fb4fcae885bea1e7336ce7f65dadf71f3dd0221b0081d91ebe1a9012e4550aebc290ef7d0568f3bd566e5b2c625f0b1ec91952c648c314f47_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/tools/api_bugcrowd/importer.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "aee7d3da3727cb12f9c1b41a0d6dd2b4036efb0726c7a211ecc1e68c845086d7b915d3893af2086c96dd95953619b3bde929c24a1ef973aa6644cea9eadfd466_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/tools/api_sonarqube/importer.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "f05817f887cb03f70f7e806be86c71849c953a0ef892124a54cff0cb8700c287ab7f37a26f4749db0c08ed8543662cf3b6e126ce8df57bb4e1f45a248086e3c3_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/tools/api_sonarqube/importer.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "f05817f887cb03f70f7e806be86c71849c953a0ef892124a54cff0cb8700c287ab7f37a26f4749db0c08ed8543662cf3b6e126ce8df57bb4e1f45a248086e3c3_1"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/tools/api_sonarqube/updater.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "6548cd76b1014fe2690863726e3d7de0bb4ad3e3bfaf89400407d42bb6bd0702f6e2ecbbe6ae1cfea8cd764eaa2bdfd470acdeeacc65a1cdeb63e2d778021513_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-broad-except-pass",
+      "path": "dojo/tools/appcheck_web_application_scanner/engines/base.py",
+      "metavars": {
+       "$EXC": "CVSSError CVSSError CVSSError"
+      },
+      "id": "b6dd1a72f60896287933f40cb354168fc8f257e02027013d67537f2b48d6ebdc940efc3bb4fc50ffa7cd57567a55f5f1fce50d4113be91feae2fc081af2ea3f8_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/tools/fortify/fpr_parser.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "a22f7bf183fabca958f441f629b8ffebe87dd5b7d5cb63310f4a93aad866e2727ccc3b877a0edf54d0a1074d4702caea691c449dd2c5441bf89fad8774ef465b_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/tools/fortify/fpr_parser.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "a22f7bf183fabca958f441f629b8ffebe87dd5b7d5cb63310f4a93aad866e2727ccc3b877a0edf54d0a1074d4702caea691c449dd2c5441bf89fad8774ef465b_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "dojo/tools/fortify/fpr_parser.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "a22f7bf183fabca958f441f629b8ffebe87dd5b7d5cb63310f4a93aad866e2727ccc3b877a0edf54d0a1074d4702caea691c449dd2c5441bf89fad8774ef465b_2"
+     }
+    ],
+    [
+     {
+      "rule": "py-broad-except-pass",
+      "path": "dojo/tools/hcl_appscan/parser.py",
+      "metavars": {
+       "$EXC": "UnboundLocalError"
+      },
+      "id": "f1818825e09f0156390f2723fb6bf3c59c8cac8f61cc2f5653f080c4c620b366a0fa09657c0c873df745370463955701f94fd0e0e65d64b8748015860f07fccd_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-broad-except-pass",
+      "path": "dojo/utils.py",
+      "metavars": {
+       "$EXC": "Language_Type.DoesNotExist"
+      },
+      "id": "3b37b01de2c6a4fc98ea9ead34bf076b4d9d9435cee50528bb7a8993f6402bc90d3271a334c70483e71542cf1240356da37af842c5d94eb5a29f336d5a73421a_0"
+     },
+     {
+      "rule": "py-broad-except-pass",
+      "path": "dojo/utils.py",
+      "metavars": {
+       "$EXC": "ModuleNotFoundError"
+      },
+      "id": "9bee74c827568a2c380eaea13e89be3b4d570fb6960f9c550dd2f0022ab23b6144a76e53fe3c536196c02931bf0f6b8ad29a3fad30ba5d514f420822cd48540e_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-sql-format",
+      "path": "dojo/utils_cascade_delete.py",
+      "metavars": {
+       "$CUR": "cur"
+      },
+      "id": "d585a71ce96b9e4214863e36935271e9236ea348520b5168cc8585251407e1a4b2f0f08916cb63a3aa74123dd67c8b8a1b5e833240eb8a4672648d840c5cad14_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-subprocess-call",
+      "path": "scripts/update_performance_test_counts.py",
+      "metavars": {
+       "$1": "Popen",
+       "$CALL": "Popen",
+       "$CMD": "cmd"
+      },
+      "id": "80ccb2a0d8c9a56cb3e14389e2657c5d9a6affdeaeb99ab6a8981f7294da1e1e2d99f37b480d547388ff4570f6d2841d0aa31b117ef34aebe5d177eaac9eb24c_0"
+     },
+     {
+      "rule": "py-subprocess-call",
+      "path": "scripts/update_performance_test_counts.py",
+      "metavars": {
+       "$1": "Popen",
+       "$CALL": "Popen",
+       "$CMD": "cmd"
+      },
+      "id": "80ccb2a0d8c9a56cb3e14389e2657c5d9a6affdeaeb99ab6a8981f7294da1e1e2d99f37b480d547388ff4570f6d2841d0aa31b117ef34aebe5d177eaac9eb24c_1"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "tests/base_test_class.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "ac0a0d6dbc52c96214f3c2bd8c840d6f546be47c258720217a18d3edd1a22c36718c0e9cc76c22eee79153511423569207552774228451e1c300c7d00279a339_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "tests/base_test_class.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "ac0a0d6dbc52c96214f3c2bd8c840d6f546be47c258720217a18d3edd1a22c36718c0e9cc76c22eee79153511423569207552774228451e1c300c7d00279a339_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "tests/base_test_class.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "ac0a0d6dbc52c96214f3c2bd8c840d6f546be47c258720217a18d3edd1a22c36718c0e9cc76c22eee79153511423569207552774228451e1c300c7d00279a339_2"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "tests/base_test_class.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "ac0a0d6dbc52c96214f3c2bd8c840d6f546be47c258720217a18d3edd1a22c36718c0e9cc76c22eee79153511423569207552774228451e1c300c7d00279a339_3"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "tests/base_test_class.py",
+      "metavars": {
+       "$1": "info",
+       "$LOG": "logger",
+       "$M": "info"
+      },
+      "id": "ac0a0d6dbc52c96214f3c2bd8c840d6f546be47c258720217a18d3edd1a22c36718c0e9cc76c22eee79153511423569207552774228451e1c300c7d00279a339_4"
+     }
+    ],
+    [
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/api_v3/test_apiv3_users.py",
+      "metavars": {
+       "$1": "PASSWORD",
+       "$NAME": "_PASSWORD",
+       "$VALUE": "Zx9!qWtvB2mnLP4k"
+      },
+      "id": "c38ca9fc843446c67e1721a00e799f6efd6844572868a7115d3f4f660e1b8f617d72022ae0d62ad9f77ea772fcdc7e2dbe127aa5c2961486a0ec878da34d0e79_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-weak-hash",
+      "path": "unittests/scans/devskim/crypto.py",
+      "metavars": {
+       "$1": "md5",
+       "$H": "md5"
+      },
+      "id": "5497ac39f43a44662615355c900b18329cac61729bc7224134bdce530babafc9b6d27dfe38f3a6c49e412fd1f693860dc2503d1f7673a0bb69dcb84d400b6553_0"
+     },
+     {
+      "rule": "py-weak-hash",
+      "path": "unittests/scans/devskim/crypto.py",
+      "metavars": {
+       "$1": "sha1",
+       "$H": "sha1"
+      },
+      "id": "9822c0e9cac6cf0222e8b3de1efbd8aeecaf61dd9dea1d14611f40c2b462dda8018420c60556f618776b8fda6f2ef00cc18b7de578c717d64a10ca7ec9c4437b_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-weak-hash",
+      "path": "unittests/scans/devskim/hash.py",
+      "metavars": {
+       "$1": "md5",
+       "$H": "md5"
+      },
+      "id": "4dda4231eb742301c4b6b5ab516e6ae05e1fde9feb8fa269194455389594447725d5aea280f88dc65ea84f0d63841f0246cbc492e99a9a85aadc03f803753084_0"
+     }
+    ],
+    [
+     {
+      "rule": "js-inner-html",
+      "path": "unittests/scans/devskim/render.js",
+      "metavars": {
+       "$1": "innerHTML",
+       "$EL": "target",
+       "$PROP": "innerHTML",
+       "$VAL": "payload"
+      },
+      "id": "90366f5566f0ef334379a6498a740f27e1bc8530af90d42f468fae814bdd43c7f0b074723715feb684e41034551be92e0cbb8fc9dca55a9ccdfb8d1a324bef04_0"
+     },
+     {
+      "rule": "js-eval",
+      "path": "unittests/scans/devskim/render.js",
+      "metavars": {
+       "$1": "eval",
+       "$FN": "eval",
+       "$X": "expression"
+      },
+      "id": "a7cb84398887128224e17eb3fd1d3d2d1a5186d6e0950206afe24e35db206d56ea710d08d57c3020de1d80efb4300ba5105e43c1c07a83c050f2eb1f7051a056_0"
+     }
+    ],
+    [
+     {
+      "rule": "js-weak-hash",
+      "path": "unittests/scans/njsscan/hash.js",
+      "metavars": {
+       "$1": "md5",
+       "$CRYPTO": "crypto",
+       "$ALG": "md5"
+      },
+      "id": "6660c1413efaf7ef1562acbf5429c34fb5dfc17304f09504e9e5a80d508172c3d11fe9967dede19996c3cc9b6c6986b3ef6c5974cd7c48011cb8a45d5e1c3968_0"
+     }
+    ],
+    [
+     {
+      "rule": "js-child-process",
+      "path": "unittests/scans/njsscan/server.js",
+      "metavars": {
+       "$1": "exec",
+       "$CP": "exec",
+       "$FN": "exec",
+       "$CMD": "'ls '+req.query.dir"
+      },
+      "id": "c201d832aa0e8a8b1eec2fa8cf4e58a544dca492ce4656dbfa42a539b8603ccd90321444938d8f8761a63eebab0c85a14f6aff4fef6787d14f391bd3a4bb7f17_0"
+     },
+     {
+      "rule": "js-eval",
+      "path": "unittests/scans/njsscan/server.js",
+      "metavars": {
+       "$1": "eval",
+       "$FN": "eval",
+       "$X": "req.query.expression"
+      },
+      "id": "830e92e0220edf2c4a0a81c9341b48a8fa5537836c9480a6cd64676940a3ffadcd178252a795388be8eea55acfefcf3243f8167ebebd5a1da9b466638fded96a_0"
+     },
+     {
+      "rule": "js-weak-hash",
+      "path": "unittests/scans/njsscan/server.js",
+      "metavars": {
+       "$1": "md5",
+       "$CRYPTO": "crypto",
+       "$ALG": "md5"
+      },
+      "id": "de60202f27ba7ab6af79550300e68eefd1eb7e381217943b123fd5cd8493f198901fe6cdb56e5bab42ca3591000fd3fc23cdde36915da88de324432ce06a2698_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_account_recovery_email_limit.py",
+      "metavars": {
+       "$1": "PASSWORD",
+       "$NAME": "PASSWORD",
+       "$VALUE": "Unused-Pass-1234!"
+      },
+      "id": "c65936d720367ecac23922c7e50e52b9b3b600228b48240f4ebcebfe078cb3ecbcb9e7bf8990ceaddfcfbf1ad14ce4e022da61375fda94a6be7706ed33c5a02e_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_adminsite.py",
+      "metavars": {
+       "$1": "password",
+       "$NAME": "password",
+       "$VALUE": "testTEST1234!@#$"
+      },
+      "id": "17ea3e3ef834dc94ac7db00e0254111a3c1508edc3b1da7702d3d7571ac449d1999927ba71f2e11c2af412641a11a9136453ce36506fcb98287fa22a78a9c2c5_0"
+     },
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_adminsite.py",
+      "metavars": {
+       "$1": "password",
+       "$NAME": "password",
+       "$VALUE": "testTEST1234!@#$"
+      },
+      "id": "17ea3e3ef834dc94ac7db00e0254111a3c1508edc3b1da7702d3d7571ac449d1999927ba71f2e11c2af412641a11a9136453ce36506fcb98287fa22a78a9c2c5_1"
+     },
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_adminsite.py",
+      "metavars": {
+       "$1": "password",
+       "$NAME": "password",
+       "$VALUE": "testTEST1234!@#$"
+      },
+      "id": "17ea3e3ef834dc94ac7db00e0254111a3c1508edc3b1da7702d3d7571ac449d1999927ba71f2e11c2af412641a11a9136453ce36506fcb98287fa22a78a9c2c5_2"
+     },
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_adminsite.py",
+      "metavars": {
+       "$1": "password",
+       "$NAME": "password",
+       "$VALUE": "testTEST1234!@#$"
+      },
+      "id": "17ea3e3ef834dc94ac7db00e0254111a3c1508edc3b1da7702d3d7571ac449d1999927ba71f2e11c2af412641a11a9136453ce36506fcb98287fa22a78a9c2c5_3"
+     }
+    ],
+    [
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_apiv2_engagement.py",
+      "metavars": {
+       "$1": "PASSWORD",
+       "$NAME": "PASSWORD",
+       "$VALUE": "testTEST1234!@#$"
+      },
+      "id": "9401e161a06952f8788bc973fd67d77513b5de5f5039d0e04db67d40ac38fe9fe74fc043689f5aac54c84aa3e7619947458c37630bcd15046ecc37013da627da_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_apiv2_metadata_cross_tenant_authz.py",
+      "metavars": {
+       "$1": "PASSWORD",
+       "$NAME": "PASSWORD",
+       "$VALUE": "testTEST1234!@#$"
+      },
+      "id": "117ddbb4a17b5e7f0b549d479c1ae1a229f4a12044f119bd55a7734cb0d4aeb26a13dc3f2a7ee2ee8c34305046906b0f23cadd26550ed554b4383efca3e6ce25_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_apiv2_notifications.py",
+      "metavars": {
+       "$1": "password",
+       "$NAME": "password",
+       "$VALUE": "testTEST1234!@#$"
+      },
+      "id": "bf43028794233c29e90de2466c48e2d813f984e33d51e2b107607adf97191c907bc655fab17b003e555c6c4527dfd13ecfe7ff6fc3e6c778f1e4d708cab217b9_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_apiv2_token.py",
+      "metavars": {
+       "$1": "password",
+       "$NAME": "password",
+       "$VALUE": "testTEST1234!@#$"
+      },
+      "id": "ca0868d562f68e8b711d5010dd6b7c1b54c6df8874366df2e04fa911fcdc58466ae421d10e07d2480759bbc23d6a2bfb0a2ffb28238be665fda42047d0b51484_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_apiv2_user.py",
+      "metavars": {
+       "$1": "password",
+       "$NAME": "password",
+       "$VALUE": "testTEST1234!@#$"
+      },
+      "id": "55aa0578e3a2c47c68ae0e8e0e103037ce61b9ee4e7247c6cd10ac0dd75f3a4dd8f9da88b6bbdfbede6b0fe76f25353c6124d9400049dbb67493d748e954678e_0"
+     },
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_apiv2_user.py",
+      "metavars": {
+       "$1": "password",
+       "$NAME": "password",
+       "$VALUE": "testTEST1234!@#$"
+      },
+      "id": "55aa0578e3a2c47c68ae0e8e0e103037ce61b9ee4e7247c6cd10ac0dd75f3a4dd8f9da88b6bbdfbede6b0fe76f25353c6124d9400049dbb67493d748e954678e_1"
+     },
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_apiv2_user.py",
+      "metavars": {
+       "$1": "password",
+       "$NAME": "password",
+       "$VALUE": "testTEST1234!@#$"
+      },
+      "id": "55aa0578e3a2c47c68ae0e8e0e103037ce61b9ee4e7247c6cd10ac0dd75f3a4dd8f9da88b6bbdfbede6b0fe76f25353c6124d9400049dbb67493d748e954678e_2"
+     },
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_apiv2_user.py",
+      "metavars": {
+       "$1": "password",
+       "$NAME": "password",
+       "$VALUE": "testTEST1234!@#$"
+      },
+      "id": "55aa0578e3a2c47c68ae0e8e0e103037ce61b9ee4e7247c6cd10ac0dd75f3a4dd8f9da88b6bbdfbede6b0fe76f25353c6124d9400049dbb67493d748e954678e_3"
+     },
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_apiv2_user.py",
+      "metavars": {
+       "$1": "password",
+       "$NAME": "password",
+       "$VALUE": "testTEST1234!@#$"
+      },
+      "id": "55aa0578e3a2c47c68ae0e8e0e103037ce61b9ee4e7247c6cd10ac0dd75f3a4dd8f9da88b6bbdfbede6b0fe76f25353c6124d9400049dbb67493d748e954678e_4"
+     },
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_apiv2_user.py",
+      "metavars": {
+       "$1": "password",
+       "$NAME": "password",
+       "$VALUE": "testTEST1234!@#$"
+      },
+      "id": "55aa0578e3a2c47c68ae0e8e0e103037ce61b9ee4e7247c6cd10ac0dd75f3a4dd8f9da88b6bbdfbede6b0fe76f25353c6124d9400049dbb67493d748e954678e_5"
+     },
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_apiv2_user.py",
+      "metavars": {
+       "$1": "password",
+       "$NAME": "password",
+       "$VALUE": "testTEST1234!@#$"
+      },
+      "id": "55aa0578e3a2c47c68ae0e8e0e103037ce61b9ee4e7247c6cd10ac0dd75f3a4dd8f9da88b6bbdfbede6b0fe76f25353c6124d9400049dbb67493d748e954678e_6"
+     },
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_apiv2_user.py",
+      "metavars": {
+       "$1": "password",
+       "$NAME": "password",
+       "$VALUE": "testTEST1234!@#$"
+      },
+      "id": "55aa0578e3a2c47c68ae0e8e0e103037ce61b9ee4e7247c6cd10ac0dd75f3a4dd8f9da88b6bbdfbede6b0fe76f25353c6124d9400049dbb67493d748e954678e_7"
+     },
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_apiv2_user.py",
+      "metavars": {
+       "$1": "password",
+       "$NAME": "password",
+       "$VALUE": "testTEST1234!@#$"
+      },
+      "id": "55aa0578e3a2c47c68ae0e8e0e103037ce61b9ee4e7247c6cd10ac0dd75f3a4dd8f9da88b6bbdfbede6b0fe76f25353c6124d9400049dbb67493d748e954678e_8"
+     }
+    ],
+    [
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_apply_finding_template.py",
+      "metavars": {
+       "$1": "SECRET",
+       "$NAME": "SECRET",
+       "$VALUE": "TENANT_B_SECRET_TEMPLATE_BODY"
+      },
+      "id": "77395acbba437dbf4f0a8ae3e94b9e421ba07f4f6bbbb50935acd8bf232043d9835619ec955e33486a60e9a164b0eeb022d643b80cf5085b0275df8f7cca691f_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_configuration_default_checks.py",
+      "metavars": {
+       "$1": "SECRET",
+       "$NAME": "SHIPPED_SECRET",
+       "$VALUE": "hhZCp@D28z!n@NED*yB!ROMt+WzsY*iq"
+      },
+      "id": "ff5ea1e6302393f86c7861d8936d82d90a9390f694f8f0fe95d3085e26cffa5c0fe0eada9eb3e5b4846cd22ac46f68aba139f480dd57b9fa3acbd603d39bf6b9_0"
+     },
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_configuration_default_checks.py",
+      "metavars": {
+       "$1": "SECRET",
+       "$NAME": "CONFIGURED_SECRET",
+       "$VALUE": "a-real-random-secret-key"
+      },
+      "id": "81eb6ee9ffa8e95070ed26e2c2840dbf122685bd28f60e49d533a5f49b1ecb746099be1d92a276f4d2fe6f2d6033631bfe72023ad003bde79eef5e931e3dcf33_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-sql-format",
+      "path": "unittests/test_dedupe_delete_commit_race.py",
+      "metavars": {
+       "$CUR": "cursor"
+      },
+      "id": "7087d8a681f41ed83185baa3764420478316a506528cf6f8afecad60285e00110308a6e78aa17e35ead4bb77092347c2ca2d9990d1e4b538f1d653fecd8aeeb3_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_fk_reassignment_authorization.py",
+      "metavars": {
+       "$1": "PASSWORD",
+       "$NAME": "PASSWORD",
+       "$VALUE": "testTEST1234!@#$"
+      },
+      "id": "5f515305db7a3811af7170921808a97f58d141a38e7049eb133b399bf30df4680ae4f42d7b0967890c3996abd217aa1a2375ac731c09a944c68fa41037a9aefd_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_forced_password_reset_api.py",
+      "metavars": {
+       "$1": "PASSWORD",
+       "$NAME": "OLD_PASSWORD",
+       "$VALUE": "oldTEST1234!@#$"
+      },
+      "id": "33dfeaf15c5eb5e7bb906ad24848f0e4a041aeb843b8a1489bfd468e18d6bf3a6100a1a379639fbdc4e24cbe28eb027665c8b61396f70383a94710159d28dfd6_0"
+     },
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_forced_password_reset_api.py",
+      "metavars": {
+       "$1": "PASSWORD",
+       "$NAME": "NEW_PASSWORD",
+       "$VALUE": "newTEST5678!@#$"
+      },
+      "id": "fa1f78dbe92e36e61f03697823392d654c80ca2c67a7734580977bd2f724ed0449eda82d16a57158d1199c0c83af35251a8f49b77bb14ccdcce277e01902b240_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "unittests/test_importers_performance.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "bd4b5979a1b887199d138e538c8ae05e864593fa1e6bfeeacee6b50396b3dd4f78ef608947cf862efdecfb13f0a9237f1a79d40263a7aaf62055f9382043a746_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "unittests/test_importers_performance.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "bd4b5979a1b887199d138e538c8ae05e864593fa1e6bfeeacee6b50396b3dd4f78ef608947cf862efdecfb13f0a9237f1a79d40263a7aaf62055f9382043a746_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "unittests/test_importers_performance.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "bd4b5979a1b887199d138e538c8ae05e864593fa1e6bfeeacee6b50396b3dd4f78ef608947cf862efdecfb13f0a9237f1a79d40263a7aaf62055f9382043a746_2"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "unittests/test_importers_performance.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "bd4b5979a1b887199d138e538c8ae05e864593fa1e6bfeeacee6b50396b3dd4f78ef608947cf862efdecfb13f0a9237f1a79d40263a7aaf62055f9382043a746_3"
+     }
+    ],
+    [
+     {
+      "rule": "py-sql-format",
+      "path": "unittests/test_importers_test_tags_deadlock.py",
+      "metavars": {
+       "$CUR": "cursor"
+      },
+      "id": "92b9f3cd5abab59caec91c9179f0de94d4f2c1945e6e71dfe9b6f366b746c34f6c3a501ad55bdabaafcf70f98558796dc2741ea311823eedd37812c3ef5be6de_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_jira_instance_edit.py",
+      "metavars": {
+       "$1": "PASSWORD",
+       "$NAME": "PASSWORD",
+       "$VALUE": "stored-jira-password"
+      },
+      "id": "4727bc7fcc23ad68abb9b8d02d0869f143f81111071beff1673f51dd8ac830548c653c09c129a779e657c3543a83094bb0d0afd165be339de2b96a0c807ca5ef_0"
+     },
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_jira_instance_edit.py",
+      "metavars": {
+       "$1": "PASSWORD",
+       "$NAME": "NEW_PASSWORD",
+       "$VALUE": "new-jira-password"
+      },
+      "id": "64526acaca5db2c98c86f3effe83af20355f28643475d32fa2f9b42196fff34f299515daec9912648e321d0a7208089b7e346d5335709cc64bf9059262d1f751_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_jira_webhook.py",
+      "metavars": {
+       "$1": "secret",
+       "$NAME": "self.correct_secret",
+       "$VALUE": "12345"
+      },
+      "id": "24f14a6b24c3ff0c11b0dfd7151f52664651de86b29d44fe5e8ef16f324ef48827871713409d98f7bbd4f0bee54287a2f5b74ae321305ff4342794785728b74f_0"
+     },
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_jira_webhook.py",
+      "metavars": {
+       "$1": "secret",
+       "$NAME": "self.incorrect_secret",
+       "$VALUE": "1234567890"
+      },
+      "id": "2ba3f4af37a485a73bac180aeca78c37bcee46df59febe349eaa97dc58bd71119bfd53c5fa6a46fa7186320b7b9f56dd9344e8e3bc01cea509a9217cc796d51c_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_location_meta_scoping.py",
+      "metavars": {
+       "$1": "PASSWORD",
+       "$NAME": "PASSWORD",
+       "$VALUE": "testTEST1234!@#$"
+      },
+      "id": "06be883421dfb28da9ce0d3808aa5b8590e1adde9234524b50139c68011882b3963d0a6bb1879b6812b9315420947ee2481a385c8c6ffbe2752fd0fe6e0055aa_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_location_reference_scoped_writes.py",
+      "metavars": {
+       "$1": "PASSWORD",
+       "$NAME": "PASSWORD",
+       "$VALUE": "testTEST1234!@#$"
+      },
+      "id": "974523282a2e25aeba18c642214a5e099c70079e97d794405dcdc623fe37872626ae3b8c1810c55385bfe9bcdf08f42739872b9e532db19b9823afca8d013135_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "unittests/test_sla_calculations.py",
+      "metavars": {
+       "$1": "error",
+       "$LOG": "logger",
+       "$M": "error"
+      },
+      "id": "d2c5a44259ca53d59dca49f5aaee52d01286e7b303d2f321736a60a4649f72ce6a7a515280122f0938d5c1e9b7d56eee640da435d252b45a938887fcaa2fa43b_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "unittests/test_sla_calculations.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "61396d38a3d41f84eaf9db3f8f6f37b71a5de48fdb953a3649458f15ea89ed9f7acad8d3f467a5281c184dd1228942963280d6f26e3d86a303afe6bdc839608f_0"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "unittests/test_sla_calculations.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "61396d38a3d41f84eaf9db3f8f6f37b71a5de48fdb953a3649458f15ea89ed9f7acad8d3f467a5281c184dd1228942963280d6f26e3d86a303afe6bdc839608f_1"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "unittests/test_sla_calculations.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "61396d38a3d41f84eaf9db3f8f6f37b71a5de48fdb953a3649458f15ea89ed9f7acad8d3f467a5281c184dd1228942963280d6f26e3d86a303afe6bdc839608f_2"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "unittests/test_sla_calculations.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "61396d38a3d41f84eaf9db3f8f6f37b71a5de48fdb953a3649458f15ea89ed9f7acad8d3f467a5281c184dd1228942963280d6f26e3d86a303afe6bdc839608f_3"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "unittests/test_sla_calculations.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "61396d38a3d41f84eaf9db3f8f6f37b71a5de48fdb953a3649458f15ea89ed9f7acad8d3f467a5281c184dd1228942963280d6f26e3d86a303afe6bdc839608f_4"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "unittests/test_sla_calculations.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "61396d38a3d41f84eaf9db3f8f6f37b71a5de48fdb953a3649458f15ea89ed9f7acad8d3f467a5281c184dd1228942963280d6f26e3d86a303afe6bdc839608f_5"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "unittests/test_sla_calculations.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "61396d38a3d41f84eaf9db3f8f6f37b71a5de48fdb953a3649458f15ea89ed9f7acad8d3f467a5281c184dd1228942963280d6f26e3d86a303afe6bdc839608f_6"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "unittests/test_sla_calculations.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "61396d38a3d41f84eaf9db3f8f6f37b71a5de48fdb953a3649458f15ea89ed9f7acad8d3f467a5281c184dd1228942963280d6f26e3d86a303afe6bdc839608f_7"
+     },
+     {
+      "rule": "py-logging-fstring",
+      "path": "unittests/test_sla_calculations.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "61396d38a3d41f84eaf9db3f8f6f37b71a5de48fdb953a3649458f15ea89ed9f7acad8d3f467a5281c184dd1228942963280d6f26e3d86a303afe6bdc839608f_8"
+     }
+    ],
+    [
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_tool_config_credential_disclosure.py",
+      "metavars": {
+       "$1": "PASSWORD",
+       "$NAME": "PASSWORD",
+       "$VALUE": "stored-password-value"
+      },
+      "id": "9cd7fe73cef25d4bde5406d3d30c09b4d120d650bc846e24effb3e2f1cb9b89ce6ab5cc33a7caab214ef6806139620af67470172288e4f919bc6d4c3c4940208_0"
+     },
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_tool_config_credential_disclosure.py",
+      "metavars": {
+       "$1": "API_KEY",
+       "$NAME": "API_KEY",
+       "$VALUE": "stored-api-key-value"
+      },
+      "id": "2bafb8fdac82b0fd6fdcd3edcb8dd0aa3a8232ac1c106534692e4fc0dd226d05fbb47f5f6900a65850969ce2fa7b594dc0b5147f05c9fefd58defb960a6d341d_0"
+     },
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_tool_config_credential_disclosure.py",
+      "metavars": {
+       "$1": "PASSWORD",
+       "$NAME": "NEW_PASSWORD",
+       "$VALUE": "replacement-password-value"
+      },
+      "id": "16928f84332349bca5bf17325ca2cf8d9eb7468fcf031c5c4a0d3e27fa9f520cee9dacaf9d805b94763435e09bd8c04023048ee2c7e23bc6c824482f6763b340_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/test_user_validators.py",
+      "metavars": {
+       "$1": "password",
+       "$NAME": "self.current_password",
+       "$VALUE": "Or1gina1P@ssw0rd"
+      },
+      "id": "81719f9c563d33a0046941d72996bdaef5e2fe515545363fad9d41e65051e5dd4867fa1baeb9fdeae80349f7c0975e9c383be74ae426db6fb25e662d0a861f5d_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/tools/test_api_bugcrowd_importer.py",
+      "metavars": {
+       "$1": "api_key",
+       "$NAME": "cls.tool_configuration.api_key",
+       "$VALUE": "API_KEY"
+      },
+      "id": "d15ec334bb9c959e95e249d66c50fe8ef3eae6c6fec98c50ddf53e58ee04fb456908e5443e2b608a1e6827a8bf926d6f8b57b0f2a31d6004a57ee32d9a09c041_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/tools/test_api_cobalt_importer.py",
+      "metavars": {
+       "$1": "api_key",
+       "$NAME": "cls.tool_configuration.api_key",
+       "$VALUE": "API_KEY"
+      },
+      "id": "d0a0210c3a963b5b58eb276dd111a99ea02e8b398e4a9ddf5380aab18a3b67c29fa46ca879c9fc2f070284ef5e78b0faaa283fcfa51894fa1916f0011eb9f1e6_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-hardcoded-secret",
+      "path": "unittests/tools/test_api_edgescan_importer.py",
+      "metavars": {
+       "$1": "api_key",
+       "$NAME": "cls.tool_configuration.api_key",
+       "$VALUE": "API_KEY"
+      },
+      "id": "0518e344659e2266b1fbe37019be864e726b53bc4bca3e2f92aea016ffd745731e097cb191871cff89be15c807d8d78814d39bd940bb6f8f92ed3339dd36797e_0"
+     }
+    ],
+    [
+     {
+      "rule": "py-logging-fstring",
+      "path": "unittests/tools/test_checkmarx_one_parser.py",
+      "metavars": {
+       "$1": "debug",
+       "$LOG": "logger",
+       "$M": "debug"
+      },
+      "id": "26214539401b09a80e806229c3d771ab30329bc3f7fb6ea9a42ba771fc668399457b4dc79b632d889ddd5f5345b27de15560c05cbb77a838f9ceaa9bbc77e600_0"
+     }
+    ]
+   ]
+  }
+ ]
+}

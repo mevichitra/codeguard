@@ -1,0 +1,5 @@
+# Research-only dependencies of the finding-identity harness; not part of codeguard.
+# pip install -e . && pip install -r research/finding_identity/requirements.txt
+bandit==1.9.4
+semgrep==1.180.0
+PyYAML==6.0.1

@@ -1,17 +1,18 @@
-"""Run CodeGuard on one file version and attach every scheme's key to each finding."""
+"""Run an analyzer on one file version and attach every scheme's key to each finding."""
 
 from __future__ import annotations
 
-import warnings
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
 
 import codeguard.rules  # noqa: F401  (registers the built-in rules)
 from codeguard.engine.registry import REGISTRY
-from codeguard.engine.runner import AnalysisRunner
 from codeguard.lang.base import Language
 from codeguard.lang.registry import language_for_path
 
+from .analyzers import Analyzer, make_analyzer
 from .matching import Observation, collisions
 from .schemes import FileContext, keys_for
 
@@ -41,10 +42,23 @@ class ScanResult:
 
 
 class Scanner:
-    """Scans file versions, caching by (blob, path) so a version is analysed once."""
+    """Scans file versions, caching by (blob, path) so a version is analysed once.
 
-    def __init__(self, rule_ids: list[str], schemes: Sequence[str]) -> None:
-        self._runner = AnalysisRunner(rule_ids=rule_ids)
+    *analyzer* is ``codeguard`` (runs *rule_ids*), ``bandit`` or ``semgrep`` (runs the
+    rules in *semgrep_rules*, by default ``semgrep_rules.yml``); see :mod:`analyzers`.
+    """
+
+    def __init__(
+        self,
+        rule_ids: list[str],
+        schemes: Sequence[str],
+        *,
+        analyzer: str = "codeguard",
+        semgrep_rules: Path | None = None,
+    ) -> None:
+        self.analyzer: Analyzer = make_analyzer(
+            analyzer, rule_ids=rule_ids, semgrep_rules=semgrep_rules
+        )
         self._schemes = tuple(schemes)
         self._cache: dict[tuple[str, str], ScanResult | None] = {}
         self.versions_scanned = 0
@@ -59,32 +73,40 @@ class Scanner:
             return self._cache[key]
         result = self._scan(path, data)
         self._cache[key] = result
-        if result is not None:
+        if result is not None and self.analyzer.supports(path):
             self.versions_scanned += 1
             self.observations += len(result.observations)
             for scheme, n in result.collisions.items():
                 self.collision_totals[scheme] += n
         return result
 
+    def describe(self) -> dict[str, Any]:
+        """The analyzer's name, version and configuration."""
+        return self.analyzer.describe()
+
     def _scan(self, path: str, data: bytes) -> ScanResult | None:
         lang = language_for_path(path)
         if lang is None or len(data) > MAX_BYTES:
             return None
         text = data.decode("utf-8", errors="replace")
-        try:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                findings = self._runner.run(text, filename=path, language=lang)
-        except (SyntaxError, ValueError, RecursionError):
+        is_python = lang is Language.PYTHON
+        if not self.analyzer.supports(path):
+            # Not a failure: the analyzer has nothing to say about this kind of file.
+            ctx = FileContext.build(path, text, is_python=False)
+            return ScanResult([], ctx.lines, collisions([], self._schemes))
+        findings = self.analyzer.analyze(path, text)
+        if findings is None:
             self.parse_failures += 1
             return None
-        ctx = FileContext.build(path, text, is_python=lang is Language.PYTHON)
+        ctx = FileContext.build(path, text, is_python=is_python)
         observations = [
             Observation(
-                rule=f.rule_id,
-                line=f.location.line,
-                col=f.location.col,
-                keys=keys_for(f.rule_id, f.location.line, ctx, self._schemes),
+                rule=f.rule,
+                line=f.line,
+                col=f.col,
+                keys=keys_for(f.rule, f.line, ctx, self._schemes, meta=f.meta),
+                message=f.meta.message,
+                lines=ctx.lines,
             )
             for f in findings
         ]
