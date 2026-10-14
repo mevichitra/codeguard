@@ -1,10 +1,14 @@
-"""Command line: ``python -m research.finding_identity {replay,summarize,drift,drift-summary}``."""
+"""Command line: ``python -m research.finding_identity <command>``.
+
+Commands: replay, summarize, drift, drift-summary, batch, corpus, stats.
+"""
 
 from __future__ import annotations
 
 import argparse
 from pathlib import Path
 
+from . import commands
 from .drift import add_arguments as add_drift_arguments
 from .drift import run as run_drift
 from .gitrepo import GitRepo
@@ -43,7 +47,12 @@ def main(argv: list[str] | None = None) -> None:
     dp.add_argument("results", nargs="+", type=Path)
     dp.add_argument("--csv", type=Path, help="also write one row per span and scheme to this CSV")
 
+    corpus_commands = commands.register(sub)
+
     args = parser.parse_args(argv)
+    if args.command in corpus_commands:
+        corpus_commands[args.command](args)
+        return
     if args.command == "drift":
         run_drift(args)
         return
