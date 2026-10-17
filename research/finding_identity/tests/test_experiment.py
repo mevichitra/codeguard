@@ -116,6 +116,41 @@ def test_cli_subcommand(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> N
         main(["transform", str(tmp_path / "src"), "--transforms", "ai_refactor"])
 
 
+def test_cli_uses_a_commit_of_a_repository_without_checkout(tmp_path: Path) -> None:
+    import os
+    import subprocess
+
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@example.com"}
+    env |= {"GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@example.com"}
+
+    def git(repo: Path, *args: str) -> str:
+        done = subprocess.run(
+            ["git", "-C", str(repo), *args], check=True, env=env, capture_output=True, text=True
+        )
+        return done.stdout.strip()
+
+    src = tmp_path / "src"
+    _fixture(src)
+    git(src, "init", "-q")
+    git(src, "add", ".")
+    git(src, "commit", "-qm", "pinned")
+    pinned = git(src, "rev-parse", "HEAD")
+    for f in src.rglob("*.py"):  # a later commit with no findings at all
+        f.write_text("x = 1\n")
+    git(src, "commit", "-qam", "later")
+    bare = tmp_path / "bare.git"  # like a corpus clone: history but no working tree
+    subprocess.run(["git", "clone", "-q", "--bare", str(src), str(bare)], check=True)
+
+    out = tmp_path / "out"
+    argv = ["transform", str(bare), "--ref", pinned, "--transforms", "insert_top"]
+    main([*argv, "--samples", "1", "--categories", "security", "--out", str(out)])
+    summary = json.loads((out / "summary.json").read_text())
+    assert summary["head"] == pinned
+    assert {row[0] for row in _rows(out)} == {"insert_top"}
+    cases = [json.loads(line) for line in (out / "cases.jsonl").read_text().splitlines()]
+    assert cases and all(not c["path"].startswith("/") for c in cases)
+
+
 def test_ground_truth_follows_the_finding_into_a_split_line() -> None:
     old = [Observation("R", 1, 1, {})]
     new = [Observation("R", 3, 5, {})]

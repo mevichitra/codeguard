@@ -268,7 +268,14 @@ python -m research.finding_identity transform https://github.com/DefectDojo/djan
 
 # A subset of transformations, on a local directory
 python -m research.finding_identity transform path/to/src --transforms rename_local,extract_helper
+
+# A pinned commit of a corpus clone (clones made by `batch` have no working tree)
+python -m research.finding_identity transform research/finding_identity/.repos/zulip \
+    --ref <pinned sha> --label zulip --samples 40
 ```
+
+With a local repository and `--ref`, the Python files of that commit are exported to a
+temporary directory and `summary.json` records the commit as `head`.
 
 `--samples` is the number of files with findings to use; `--seed` fixes the sample and
 the target findings. Results go to `results/transform-<label>/` (git-ignored):
