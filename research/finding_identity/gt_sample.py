@@ -207,7 +207,9 @@ def write_sample(
                 "note": "",
             }
         )
-    (out / "sample.md").write_text("\n".join(md) + "\n", encoding="utf-8")
+    # Quoted source can end lines in spaces; the repository's hooks strip them.
+    text = "\n".join(row.rstrip() for row in "\n".join(md).split("\n"))
+    (out / "sample.md").write_text(text.rstrip("\n") + "\n", encoding="utf-8")
     with (out / "sample.csv").open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0]))
         w.writeheader()
