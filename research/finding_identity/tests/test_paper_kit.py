@@ -47,3 +47,24 @@ def test_latex_table_marks_missing_schemes() -> None:
     tex = latex_table({("line", "false_new"): e}, None, facts)
     assert "\\texttt{line} & 10.0 {\\scriptsize(10.0--10.0)} & -- &" in tex
     assert "\\texttt{sonar\\_branch} & -- &" in tex
+
+
+def test_rq2_pools_counts_over_repositories(tmp_path: Path) -> None:
+    from research.finding_identity.paper_kit import load_matrices, rq2_estimates
+
+    def write(label: str, false_new: int, known: int) -> None:
+        d = tmp_path / f"transform-{label}"
+        d.mkdir()
+        head = "transform,scheme,false_new,target_known,hidden,introduced\n"
+        rows = f"insert_top,line,{false_new},{known},0,0\ninsert_top,other,0,{known},0,0\n"
+        (d / "matrix.csv").write_text(head + rows)
+
+    write("a", 2, 4)
+    write("b", 1, 6)
+    matrices = load_matrices(tmp_path, ["a", "b", "missing"])
+    assert list(matrices) == ["a", "b"]
+    table = rq2_estimates(matrices, ["line"], resamples=50, seed=1)
+    fn = table[("insert_top", "line", "false_new")]
+    assert (fn.num, fn.den, fn.rate) == (3, 10, 0.3)
+    assert table[("insert_top", "line", "hidden")].rate is None  # nothing introduced
+    assert not any(key[1] == "other" for key in table)

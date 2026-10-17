@@ -1,12 +1,16 @@
-"""Tables and numbers for the paper, from corpus replays (RQ1).
+"""Tables, figures and numbers for the paper: RQ1 from corpus replays, RQ2 from the
+transformation experiment.
 
-``python -m research.finding_identity.paper_kit --codeguard <results> --bandit <results>``
-reads one batch of replays per analyzer and writes, to ``--out``:
+``python -m research.finding_identity.paper_kit --codeguard <results> --bandit <results>
+--transform <results>`` reads one batch of replays per analyzer, and the
+``transform-<label>`` directories of the experiment, and writes to ``--out``:
 
 - ``rq1.csv``: per analyzer, scheme and metric, the pooled rate with its cluster
   bootstrap 95% CI over repositories, and the per-repository median;
 - ``table_rq1.tex``: Table II of the paper (LaTeX, ``booktabs``);
-- ``numbers.md``: every number the RQ1 section cites, with its source.
+- ``numbers.md``: every number the RQ1 section cites, with its source;
+- ``rq2.csv`` and ``fig_rq2.pdf``: the invariance matrix pooled over repositories, with
+  cluster-bootstrap intervals, and Fig. 1 of the paper (needs matplotlib).
 
 Besides the metrics of :mod:`stats`, the false-new rate is split by whether the file was
 renamed in the commit, from each replay's ``findings.jsonl`` (``--details``). Every
@@ -18,6 +22,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -260,10 +265,135 @@ def numbers_markdown(
     return "\n".join(out) + "\n"
 
 
+# ---------------------------------------------------------------------------
+# RQ2: the invariance matrix
+# ---------------------------------------------------------------------------
+
+#: Transformations that introduce a finding: their row shows the hidden rate.
+DUPLICATES = ("duplicate_above", "duplicate_below")
+
+
+def load_matrices(results: Path, labels: Sequence[str]) -> dict[str, list[dict[str, str]]]:
+    """``{label: matrix.csv rows}`` for each ``transform-<label>`` under *results*."""
+    out = {}
+    for label in labels:
+        path = results / f"transform-{label}" / "matrix.csv"
+        if path.exists():
+            with path.open(newline="", encoding="utf-8") as f:
+                out[label] = list(csv.DictReader(f))
+    return out
+
+
+def rq2_estimates(
+    matrices: dict[str, list[dict[str, str]]],
+    schemes: Sequence[str],
+    resamples: int,
+    seed: int,
+) -> dict[tuple[str, str, str], Estimate]:
+    """``{(transform, scheme, metric): estimate}``, metric ``false_new`` or ``hidden``."""
+    labels = list(matrices)
+    draws = bootstrap_draws(len(labels), resamples, seed)
+    cells: dict[tuple[str, str, str], list[tuple[int, int]]] = {}
+    for i, label in enumerate(labels):
+        for row in matrices[label]:
+            if row["scheme"] not in schemes:
+                continue
+            for metric, num, den in (
+                ("false_new", "false_new", "target_known"),
+                ("hidden", "hidden", "introduced"),
+            ):
+                key = (row["transform"], row["scheme"], metric)
+                pairs = cells.setdefault(key, [(0, 0)] * len(labels))
+                pairs[i] = (int(row[num]), int(row[den]))
+    return {key: estimate(pairs, draws) for key, pairs in cells.items()}
+
+
+def write_rq2_csv(path: Path, table: dict[tuple[str, str, str], Estimate]) -> None:
+    with path.open("w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["transform", "scheme", "metric", "num", "den", "rate", "ci_lo", "ci_hi"])
+        for (transform, scheme, metric), e in table.items():
+            lo, hi = e.ci if e.ci else (None, None)
+            w.writerow([transform, scheme, metric, e.num, e.den, e.rate, lo, hi])
+
+
+#: Sequential blue ramp, light to dark (steps 100 to 700 of the reference palette).
+_RAMP = (
+    "#cde2fb", "#b7d3f6", "#9ec5f4", "#86b6ef", "#6da7ec", "#5598e7", "#3987e5",
+    "#2a78d6", "#256abf", "#1c5cab", "#184f95", "#104281", "#0d366b",
+)  # fmt: skip
+_INK = "#0b0b0b"
+_INK_SECONDARY = "#52514e"
+_EMPTY = "#f0efec"
+
+
+def heatmap(
+    table: dict[tuple[str, str, str], Estimate],
+    transforms: Sequence[str],
+    schemes: Sequence[str],
+    path: Path,
+) -> bool:
+    """Fig. 1: false-new rate per transformation and scheme, and the hidden rate for the
+    duplicating transformations, as one heatmap. False without matplotlib."""
+    try:
+        import matplotlib
+
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        from matplotlib.colors import BoundaryNorm, ListedColormap
+        from matplotlib.patches import Rectangle
+    except ImportError:
+        print("matplotlib is not installed; skipping fig_rq2.pdf", file=sys.stderr)
+        return False
+    matplotlib.rcParams.update({"pdf.fonttype": 42, "font.size": 7})
+    upper = [t for t in transforms if t not in DUPLICATES]
+    lower = [t for t in transforms if t in DUPLICATES]
+    cmap = ListedColormap(list(_RAMP))
+    norm = BoundaryNorm([i * 100 / len(_RAMP) for i in range(len(_RAMP) + 1)], len(_RAMP))
+    fig, axes = plt.subplots(
+        2,
+        1,
+        figsize=(3.5, 0.24 * (len(upper) + len(lower)) + 1.0),
+        gridspec_kw={"height_ratios": [len(upper), len(lower)], "hspace": 0.08},
+        sharex=True,
+    )
+    panels = ((axes[0], upper, "false_new"), (axes[1], lower, "hidden"))
+    for ax, rows, metric in panels:
+        for y, transform in enumerate(rows):
+            for x, scheme in enumerate(schemes):
+                e = table.get((transform, scheme, metric))
+                if e is None or e.rate is None:
+                    ax.add_patch(Rectangle((x - 0.5, y - 0.5), 1, 1, color=_EMPTY))
+                    ax.text(x, y, "n/a", ha="center", va="center", color=_INK_SECONDARY)
+                    continue
+                value = 100 * e.rate
+                colour = cmap(norm(min(value, 99.999)))
+                ax.add_patch(
+                    Rectangle((x - 0.5, y - 0.5), 1, 1, facecolor=colour, edgecolor="white", lw=1)
+                )
+                ink = "white" if value >= 50 else _INK
+                ax.text(x, y, f"{value:.0f}", ha="center", va="center", color=ink)
+        ax.set_xlim(-0.5, len(schemes) - 0.5)
+        ax.set_ylim(len(rows) - 0.5, -0.5)
+        ax.set_yticks(range(len(rows)), [t.replace("_", " ") for t in rows])
+        ax.tick_params(length=0, colors=_INK)
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+        label = "false new (%)" if metric == "false_new" else "hidden (%)"
+        ax.set_ylabel(label, color=_INK_SECONDARY)
+    axes[0].xaxis.set_ticks_position("top")
+    axes[0].set_xticks(range(len(schemes)), schemes, rotation=35, ha="left")
+    axes[1].tick_params(labelbottom=False)
+    fig.savefig(path, bbox_inches="tight")
+    plt.close(fig)
+    return True
+
+
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(prog="python -m research.finding_identity.paper_kit")
     ap.add_argument("--codeguard", type=Path, required=True, help="batch results, CodeGuard")
     ap.add_argument("--bandit", type=Path, help="batch results, Bandit")
+    ap.add_argument("--transform", type=Path, help="directory of transform-<label> results")
     ap.add_argument("--corpus", type=Path, default=HERE / "corpus.csv")
     ap.add_argument("--out", type=Path, default=HERE / "paper")
     ap.add_argument("--resamples", type=int, default=10_000)
@@ -291,7 +421,21 @@ def main(argv: list[str] | None = None) -> None:
     (args.out / "numbers.md").write_text(
         numbers_markdown(results, facts, sources), encoding="utf-8"
     )
-    print(f"wrote rq1.csv, table_rq1.tex and numbers.md to {args.out}")
+    written = ["rq1.csv", "table_rq1.tex", "numbers.md"]
+    if args.transform:
+        matrices = load_matrices(args.transform, labels)
+        if not matrices:
+            raise SystemExit(f"no transform-<label>/matrix.csv under {args.transform}")
+        from .transforms import DETERMINISTIC  # needs libcst, so only for RQ2
+
+        rq2 = rq2_estimates(matrices, TABLE_SCHEMES, args.resamples, args.seed)
+        write_rq2_csv(args.out / "rq2.csv", rq2)
+        written.append(f"rq2.csv ({len(matrices)} repositories)")
+        present = [t for t in DETERMINISTIC if any(k[0] == t for k in rq2)]
+        if heatmap(rq2, present, TABLE_SCHEMES, args.out / "fig_rq2.pdf"):
+            heatmap(rq2, present, TABLE_SCHEMES, args.out / "fig_rq2.png")
+            written.append("fig_rq2.pdf")
+    print(f"wrote {', '.join(written)} to {args.out}")
 
 
 if __name__ == "__main__":
