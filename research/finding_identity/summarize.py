@@ -111,3 +111,88 @@ def summarize(paths: Sequence[Path], csv_out: Path | None = None) -> None:
             writer = csv.DictWriter(fh, fieldnames=list(all_rows[0]))
             writer.writeheader()
             writer.writerows(all_rows)
+
+
+# ---------------------------------------------------------------------------
+# Drift (long-span) results: one table per span
+# ---------------------------------------------------------------------------
+
+
+def drift_rates(summary: dict[str, Any]) -> list[dict[str, Any]]:
+    """One row per span and scheme, for plotting rates against span length."""
+    rows = []
+    for entry in summary["spans"]:
+        for r in rates({"label": summary.get("label", ""), **entry}):
+            rows.append(
+                {
+                    "label": r["label"],
+                    "span": entry["span"],
+                    **{k: v for k, v in r.items() if k != "label"},
+                }
+            )
+    return rows
+
+
+def merge_drift(summaries: Sequence[dict[str, Any]]) -> dict[str, Any]:
+    """Pool several drift runs span by span, over the spans every run has."""
+    common = set.intersection(*({e["span"] for e in s["spans"]} for s in summaries))
+    spans = []
+    for k in sorted(common):
+        entries = [e for s in summaries for e in s["spans"] if e["span"] == k]
+        pooled = merge(entries)
+        for key in ("files", "renamed_files", "skipped_files"):
+            pooled["totals"][key] = sum(e["totals"][key] for e in entries)
+        spans.append({"span": k, **pooled})
+    return {"label": "ALL", "spans": spans}
+
+
+def print_span_pivot(rows: Sequence[dict[str, Any]], field: str, title: str) -> None:
+    """Schemes down, spans across: one rate per cell."""
+    spans = sorted({r["span"] for r in rows})
+    cells = {(r["scheme"], r["span"]): r[field] for r in rows}
+    head = f"{title:<12} " + " ".join(f"{'k=' + str(k):>8}" for k in spans)
+    print(head)
+    print("-" * len(head))
+    for scheme in dict.fromkeys(r["scheme"] for r in rows):
+        print(f"{scheme:<12} " + " ".join(f"{_pct(cells[(scheme, k)]):>8}" for k in spans))
+
+
+def print_drift(summary: dict[str, Any]) -> list[dict[str, Any]]:
+    if "anchor" in summary:
+        print(
+            f"\n{summary['label']}: anchor {summary['anchor'][:12]}, "
+            f"{summary['anchor_back']} first-parent commits behind {summary['ref']}"
+        )
+    else:
+        print(f"\n{summary['label']}: pooled")
+    for entry in summary["spans"]:
+        gt = entry["totals"]["gt"]
+        commit = f" (c_{entry['span']} = {entry['commit'][:12]})" if "commit" in entry else ""
+        print(
+            f"\nspan {entry['span']}{commit}: {entry['totals']['files']} files with findings, "
+            f"{gt['old']} anchor findings, {gt['known']} persisting "
+            f"({gt['known_equal']} moved, {gt['known_edited']} edited), "
+            f"{gt['introduced']} introduced"
+        )
+        print_table(rates({"label": summary["label"], **entry}))
+    rows = drift_rates(summary)
+    print()
+    print_span_pivot(rows, "false_new_rate", "false-new %")
+    print()
+    print_span_pivot(rows, "hidden_rate", "hidden %")
+    return rows
+
+
+def summarize_drift(paths: Sequence[Path], csv_out: Path | None = None) -> None:
+    """Per-span rate tables for drift runs; pools them into "ALL" when there are several."""
+    summaries = [json.loads((p / "summary.json").read_text(encoding="utf-8")) for p in paths]
+    all_rows: list[dict[str, Any]] = []
+    for s in summaries:
+        all_rows += print_drift(s)
+    if len(summaries) > 1:
+        all_rows += print_drift(merge_drift(summaries))
+    if csv_out is not None:
+        with csv_out.open("w", newline="", encoding="utf-8") as fh:
+            writer = csv.DictWriter(fh, fieldnames=list(all_rows[0]))
+            writer.writeheader()
+            writer.writerows(all_rows)

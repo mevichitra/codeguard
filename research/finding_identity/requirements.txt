@@ -9,5 +9,5 @@ PyYAML==6.0.1
 # The controlled transformation experiment (`transform` subcommand).
 libcst>=1.1
 black>=24.1        # reformat; falls back to `ruff format` when absent
-matplotlib>=3.8    # optional: --heatmap
+matplotlib>=3.8    # optional: transform --heatmap, stats --plot
 anthropic>=0.40    # optional: ai_refactor
