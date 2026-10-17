@@ -54,6 +54,19 @@ def test_is_done_requires_matching_sha_and_enough_pairs(tmp_path: Path) -> None:
     assert not is_done(entry, opts)
 
 
+def test_is_done_requires_the_same_analyzer(tmp_path: Path) -> None:
+    entry = _entry("x", SHA_A)
+    codeguard = BatchOptions(commits=10, out=tmp_path, workdir=tmp_path / "repos")
+    bandit = BatchOptions(commits=10, out=tmp_path, workdir=tmp_path, analyzer="bandit")
+    _write_summary(codeguard, "x", SHA_A, 10)
+    # Replays from before analyzer.json was written all used CodeGuard.
+    assert is_done(entry, codeguard) and not is_done(entry, bandit)
+    (tmp_path / "x" / "analyzer.json").write_text(json.dumps({"analyzer": "bandit"}))
+    assert is_done(entry, bandit) and not is_done(entry, codeguard)
+    (tmp_path / "x" / "analyzer.json").write_text("{not json")
+    assert not is_done(entry, bandit) and not is_done(entry, codeguard)
+
+
 def test_resume_skips_done_and_survives_failures(tmp_path: Path) -> None:
     opts = BatchOptions(commits=10, out=tmp_path / "out", workdir=tmp_path / "repos")
     entries = [_entry("done", SHA_A), _entry("stale", SHA_A), _entry("new", SHA_A)]
@@ -143,6 +156,35 @@ def test_run_one_end_to_end(tmp_path: Path) -> None:
     assert sec["schemes"]["line"]["false_new"] == 1
     assert not (opts.workdir / "tiny").exists()
     assert run_batch([entry], opts)[0]["status"] == "skipped"
+
+
+def test_run_one_with_bandit(tmp_path: Path) -> None:
+    pytest.importorskip("bandit")
+    upstream = tmp_path / "upstream"
+    upstream.mkdir()
+    _git(upstream, "init", "-q")
+    versions = [
+        "import subprocess\n\n\ndef run(cmd):\n    subprocess.call(cmd, shell=True)\n",
+        "import os\nimport subprocess\n\n\ndef run(cmd):\n    subprocess.call(cmd, shell=True)\n",
+    ]
+    for i, text in enumerate(versions):
+        (upstream / "app.py").write_text(text)
+        _git(upstream, "add", "app.py")
+        _git(upstream, "commit", "-q", "-m", f"v{i}")
+    head = _git(upstream, "rev-parse", "HEAD").strip()
+
+    opts = BatchOptions(
+        commits=1, out=tmp_path / "out", workdir=tmp_path / "repos", analyzer="bandit"
+    )
+    entry = _entry("tiny", head, url=upstream.as_uri())
+    statuses = run_batch([entry], opts)
+    assert statuses[0]["status"] == "ok", (opts.out / "_logs" / "tiny.log").read_text()
+    analyzer = json.loads((opts.out / "tiny" / "analyzer.json").read_text())
+    assert analyzer["analyzer"] == "bandit"
+    summary = json.loads((opts.out / "tiny" / "summary.json").read_text())
+    assert summary["label"] == "tiny"  # no "-bandit" suffix: the batch names the run
+    assert summary["totals"]["gt"]["known"] >= 1
+    assert "sonar" in summary["totals"]["schemes"]
 
 
 # ---------------------------------------------------------------------------

@@ -432,6 +432,17 @@ repository). Failures do not stop the batch: each attempt is appended to
 `results/_logs/<label>.log`; the command exits with status 1 if any repository failed.
 `--only a,b` restricts the run, `--delete-clones` removes each clone after its replay.
 
+`--analyzer bandit|semgrep` replays the corpus with that analyzer's findings (see
+[Analyzers](#analyzers)); results go to `results/corpus-<analyzer>/` unless `--out` is
+given. Bandit reads Python only, so its batch leaves out the JavaScript repositories. A
+result directory counts as done only for the analyzer named in its `analyzer.json`, so
+runs of different analyzers never satisfy each other's resume check.
+
+```bash
+python -m research.finding_identity batch research/finding_identity/corpus.csv \
+    --commits 200 --jobs 4 --analyzer bandit
+```
+
 Every replay also records its totals **per rule category** (`by_category` in
 `summary.json`, with the same `totals` and `collisions` blocks as the summary itself).
 Scheme keys include the rule ID and the ground truth pairs findings of the same rule

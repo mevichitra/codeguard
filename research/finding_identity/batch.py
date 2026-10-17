@@ -38,14 +38,33 @@ class BatchOptions:
     details: bool = False
     timeout: float | None = None
     delete_clones: bool = False
+    #: What produces the findings: ``codeguard``, ``bandit`` or ``semgrep``.
+    analyzer: str = "codeguard"
 
 
 def summary_path(opts: BatchOptions, label: str) -> Path:
     return opts.out / label / "summary.json"
 
 
+def recorded_analyzer(result_dir: Path) -> str | None:
+    """The analyzer named in *result_dir*'s ``analyzer.json``; ``codeguard`` if it has none.
+
+    Replays from before ``analyzer.json`` existed all used CodeGuard. ``None`` if the file
+    cannot be read.
+    """
+    path = result_dir / "analyzer.json"
+    if not path.exists():
+        return "codeguard"
+    try:
+        name = json.loads(path.read_text(encoding="utf-8")).get("analyzer")
+    except (OSError, ValueError, AttributeError):
+        return None
+    return name if isinstance(name, str) else None
+
+
 def is_done(entry: CorpusEntry, opts: BatchOptions) -> bool:
-    """True if a finished replay of *entry* at its pinned SHA covers ``opts.commits``."""
+    """True if a finished replay of *entry* at its pinned SHA, by ``opts.analyzer``,
+    covers ``opts.commits``."""
     path = summary_path(opts, entry.label)
     if not path.exists():
         return False
@@ -53,7 +72,11 @@ def is_done(entry: CorpusEntry, opts: BatchOptions) -> bool:
         summary = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return False
-    return bool(summary.get("head") == entry.sha and summary.get("commit_pairs", 0) >= opts.commits)
+    return bool(
+        summary.get("head") == entry.sha
+        and summary.get("commit_pairs", 0) >= opts.commits
+        and recorded_analyzer(path.parent) == opts.analyzer
+    )
 
 
 def prepare(entry: CorpusEntry, opts: BatchOptions) -> Path:
@@ -88,6 +111,8 @@ def run_one(entry: CorpusEntry, opts: BatchOptions) -> None:
     ]
     if opts.details:
         cmd.append("--details")
+    if opts.analyzer != "codeguard":
+        cmd += ["--analyzer", opts.analyzer]
     with log_path.open("w", encoding="utf-8") as log:
         log.write(" ".join(cmd) + "\n")
         log.flush()
