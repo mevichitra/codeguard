@@ -1,4 +1,7 @@
-"""Command line: ``python -m research.finding_identity {replay,summarize} ...``."""
+"""Command line: ``python -m research.finding_identity <command>``.
+
+Commands: replay, summarize, transform, drift, drift-summary, batch, corpus, stats.
+"""
 
 from __future__ import annotations
 
@@ -6,12 +9,14 @@ import argparse
 import json
 from pathlib import Path
 
-from . import transform_cli
+from . import commands, transform_cli
+from .drift import add_arguments as add_drift_arguments
+from .drift import run as run_drift
 from .gitrepo import GitRepo
 from .replay import replay
 from .scan import Scanner, rule_ids_for
 from .schemes import ANALYZERS, schemes_for
-from .summarize import summarize
+from .summarize import summarize, summarize_drift
 
 HERE = Path(__file__).parent
 
@@ -50,10 +55,25 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("--csv", type=Path, help="also write the rows to this CSV file")
 
     transform_cli.add_parser(sub)
+    add_drift_arguments(sub.add_parser("drift", help="score an anchor commit against later ones"))
+    dp = sub.add_parser("drift-summary", help="print per-span rate tables for drift results")
+    dp.add_argument("results", nargs="+", type=Path)
+    dp.add_argument("--csv", type=Path, help="also write one row per span and scheme to this CSV")
+
+    corpus_commands = commands.register(sub)
 
     args = parser.parse_args(argv)
     if args.command == "transform":
         transform_cli.run(args)
+        return
+    if args.command in corpus_commands:
+        corpus_commands[args.command](args)
+        return
+    if args.command == "drift":
+        run_drift(args)
+        return
+    if args.command == "drift-summary":
+        summarize_drift(args.results, args.csv)
         return
     if args.command == "summarize":
         summarize(args.results, args.csv)

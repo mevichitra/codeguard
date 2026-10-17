@@ -90,6 +90,19 @@ class GitRepo:
             )
         return out
 
+    def files(self, commit: str) -> dict[str, str]:
+        """``{path: blob sha}`` for every regular file in *commit*'s tree."""
+        raw = self._git("ls-tree", "-r", "-z", "--full-tree", commit)
+        out: dict[str, str] = {}
+        for entry in raw.decode("utf-8", "surrogateescape").split("\0"):
+            if not entry:
+                continue
+            meta, path = entry.split("\t", 1)
+            mode, kind, sha = meta.split()
+            if kind == "blob" and mode not in _SKIP_MODES:
+                out[path] = sha
+        return out
+
     def blob(self, sha: str) -> bytes:
         """Contents of blob *sha*, through one long-running ``git cat-file --batch``."""
         if self._batch is None:

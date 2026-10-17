@@ -108,6 +108,41 @@ The summary reports, per scheme:
 Only files that changed in a commit are compared. Every scheme trivially keeps the findings
 in untouched files, so including them would only inflate the counts.
 
+## Long spans (drift mode)
+
+Consecutive commits are an easy test: in the pilot (Flask, 100 commits; DefectDojo, 200
+commits) 690 of 695 persisting findings had only moved, and every content-based scheme
+lost 0-1.4% of them. Real baselines are created once and compared with much later
+versions, so `drift` measures long spans. It picks an **anchor** commit c0, `--anchor-back`
+first-parent commits behind `--ref`, and compares c0 with c_k, the k-th first-parent
+commit after it, for each span k in `--spans`. Outcomes and metrics are the same as above,
+reported per span.
+
+**Chained ground truth.** A direct c0 -> c_k diff mis-maps code that moved and loses lines
+that were rewritten a little at a time. Instead, each anchor finding's line is followed
+through every intermediate first-parent commit: for each step whose diff touches the
+file it is in, the line is mapped with the same line diff as above (`linemap.map_lines`),
+and renames are followed per step (`git diff -M`). A finding persists to c_k when its
+chain is unbroken (file not deleted, line mapped at every step) and a finding with the
+same rule sits at the mapped line in c_k. It counts as **edited** when any step mapped
+its line as edited, otherwise as **moved**.
+
+**What is compared.** For span k: the files of c0 whose lineage changed in steps 1..k,
+the files they became at c_k, and the files added since c0. Files never touched in the
+span are left out, as in the consecutive mode. Keys always use the file's own path at
+each end, so a renamed file loses its findings under every scheme; the ground truth
+still counts them as persisting, which is the point.
+
+**Cost.** Only c0 and each c_k are scanned. Intermediate commits are read only as blob
+contents of files that hold tracked findings (through `git cat-file --batch`), to compute
+the line maps.
+
+Each drift result directory holds `summary.json` (one entry per span, with the same
+`totals` and `collisions` as a replay summary plus `chains`: anchor findings tracked,
+chains still alive at c_k, and how many of those were edited) and, with `--details`,
+`findings.jsonl` (one record per finding at c_k, with its span, path, the anchor path of
+its true predecessor and each scheme's outcome).
+
 ## Usage
 
 From the repository root, with CodeGuard installed (`pip install -e .`):
@@ -125,15 +160,29 @@ python -m research.finding_identity replay https://github.com/pallets/flask --co
 python -m research.finding_identity replay https://github.com/pallets/flask --commits 200 --analyzer semgrep
 
 # Rate tables for one or more runs; pools all runs into an "ALL" table
-python -m research.finding_identity summarize research/finding_identity/results/* --csv rates.csv
+python -m research.finding_identity summarize research/finding_identity/results/flask \
+    research/finding_identity/results/django-DefectDojo --csv rates.csv
+
+# Long spans: anchor 200 first-parent commits back, compare it with 1, 10, 50, 100, 200
+python -m research.finding_identity drift https://github.com/pallets/flask \
+    --anchor-back 200 --spans 1,10,50,100,200
+python -m research.finding_identity drift https://github.com/DefectDojo/django-DefectDojo \
+    --ref dev --anchor-back 200 --spans 1,10,50,100,200 --details
+
+# One table per span and scheme x span pivots; the CSV has one row per run, span and
+# scheme (pooled "ALL" rows too), ready to plot false-new and hidden rate against span
+python -m research.finding_identity drift-summary research/finding_identity/results/drift/* \
+    --csv drift.csv
 ```
 
-Clones go to `.repos/` and results to `results/<label>/`; both are git-ignored. The label
-defaults to the repository name, with `-bandit` or `-semgrep` appended for those
-analyzers. Each result directory holds `summary.json`, `analyzer.json` (analyzer, version
-and configuration), `pairs.jsonl` (one line per commit pair) and, with `--details`,
-`findings.jsonl` (one line per compared finding with its true status and each scheme's
-outcome, for sampling and manual checks).
+Clones go to `.repos/` and results to `results/<label>/` (drift: `results/drift/<label>/`);
+both are git-ignored, as is `tables/` (see [Statistics](#statistics)); the aggregated
+tables of the corpus run are committed under `paper/`. The label defaults to the
+repository name, with `-bandit` or `-semgrep` appended for those analyzers. Each result
+directory holds `summary.json`, `analyzer.json` (analyzer, version and configuration),
+`pairs.jsonl` (one line per commit pair) and, with `--details`, `findings.jsonl` (one
+line per compared finding with its true status and each scheme's outcome, for sampling
+and manual checks).
 
 Tests:
 
@@ -271,6 +320,185 @@ cached in `.cache/ai/` (git-ignored) under a hash of the model and prompt, so a 
 with the same cache reproduces the edits; `--ai-offline` uses the cache only. Replies
 that do not parse or that rename the function count as "n/a".
 
+## Corpus
+
+`corpus.csv` lists the repositories of the study, each pinned to one commit. Columns:
+`label`, `url`, `branch`, `sha` (the pinned commit), `pinned` (date of pinning),
+`language` (backend language: `python`, or `javascript` for JavaScript/TypeScript),
+`framework`, `license` (SPDX), `rationale` (why it qualifies and where its
+security-relevant code is), and four columns measured at the pinned commit by
+`corpus check`: `commit_date`, `commits_2y`, `py_files`, `js_files`.
+
+### Selection criteria
+
+A repository is in the corpus when all of these hold:
+
+1. **Kind.** A deployable web *application* (or an application server distributed as a
+   package), not a library, framework, SDK, tutorial, template, sample or intentionally
+   vulnerable training project; and not a fork. Judged by hand from the project's own
+   description; the `rationale` column records it.
+2. **Language.** A Python back end (Flask, Django, FastAPI, or another Python web
+   framework: Pyramid, web.py, Frappe) or a JavaScript/TypeScript back end (Express,
+   Koa, Fastify, NestJS, Next.js API routes). The back-end language must have at least
+   100 source files that the harness analyses (vendored, generated and minified files
+   excluded) and more of them than the other language, so that every repository counts
+   cleanly as a Python or a JavaScript/TypeScript project.
+3. **Security-relevant code.** Handles HTTP requests from users and does at least one of:
+   builds SQL or other database queries, renders templates, runs subprocesses, accepts
+   file uploads, fetches user-supplied URLs, or implements authentication. Recorded in
+   `rationale`.
+4. **History.** At least 200 first-parent commits on the pinned branch in the 730 days
+   before the pinned commit (the replay needs 200 commit pairs; this also shows
+   sustained activity).
+5. **Activity.** The pinned commit is at most 90 days older than the pinning date.
+6. **Licence.** The root licence file (`LICENSE`, `LICENCE` or `COPYING`) is one
+   OSI-approved licence (MIT, BSD-2/3-Clause, Apache-2.0, MPL-2.0, GPL-2.0/3.0,
+   AGPL-3.0, LGPL, PostgreSQL) for the whole repository. Source-available licences
+   (Business Source, Sustainable Use, Functional Source, Elastic, Commons Clause) and
+   root licences that put some directories under other terms (typically an `ee/`
+   enterprise edition) are excluded, because the replay scans every directory.
+7. **No committed build output.** The repository does not track bundler output (minified,
+   content-hashed JavaScript) outside the paths the harness already skips (`dist/`,
+   `build/`, `node_modules/`, `*.min.js`, ...). Such files are rewritten wholesale by every
+   build and would swamp the real code's findings.
+8. **Branch.** The default branch, unless the project develops on another branch
+   (DefectDojo's `dev`, IntelOwl's `develop`: their default branches only receive
+   releases); the branch is recorded.
+
+Criteria 1, 3 and 7 are judged by hand. The file counts of criterion 2 and criteria 4, 5
+and 6 are measured from git alone at the pinned commit, so anyone can re-check them later
+with the same result:
+
+```bash
+python -m research.finding_identity corpus check research/finding_identity/corpus.csv
+```
+
+`corpus pin` re-pins every row (or `--only a,b`) to the current head of its branch; that
+is how the corpus was built, from a candidate list of 60 repositories on 2026-10-14. The
+35 that met every criterion (25 Python, 10 JavaScript/TypeScript) form the corpus; the 25
+that failed a criterion were dropped (reasons as `corpus check` reported them; "mixed"
+means the root licence puts some directories under other terms). Criterion 7 was added
+during the first batch run, when CTFd turned out to commit its Vite build output: its
+replay compared 12,944 findings in its first 75 commit pairs, against at most about 4,000
+over 200 pairs for any other repository. No other repository was affected. Its finished
+replay (200 pairs, 28 minutes) has 22,122 persisting findings, as many as the other 35
+repositories together (23,237); including it would raise the pooled `codeguard`
+false-new rate from 1.8% to 48.7% while the per-repository median stays at 0.5%.
+
+| Candidate | Reason |
+|---|---|
+| ctfd (CTFd/CTFd) | commits Vite build output (`CTFd/themes/*/static/assets/*-<hash>.js`) that the harness does not skip (criterion 7) |
+| paperless-ngx (paperless-ngx/paperless-ngx) | Python is not the majority language (410 py, 435 js) |
+| mathesar (mathesar-foundation/mathesar) | pinned commit is 93 days old; Python is not the majority language (235 py, 492 js) |
+| redash (getredash/redash) | only 194 first-parent commits in 730 days; Python is not the majority language (291 py, 577 js) |
+| superset (apache/superset) | Python is not the majority language (2988 py, 4187 js) |
+| dispatch (Netflix/dispatch) | pinned commit is 407 days old |
+| polar (polarsource/polar) | Python is not the majority language (2167 py, 2473 js) |
+| archery (hhyo/Archery) | only 102 first-parent commits in 730 days |
+| tandoor (TandoorRecipes/recipes) | licence file reads as non-osi (commons clause), declared AGPL-3.0 |
+| label-studio (HumanSignal/label-studio) | Python is not the majority language (746 py, 1951 js) |
+| plane (makeplane/plane) | Python is not the majority language (671 py, 3031 js) |
+| privacyidea (privacyidea/privacyidea) | Python is not the majority language (685 py, 989 js) |
+| authentik (goauthentik/authentik) | licence file reads as mixed (MIT), declared MIT |
+| posthog (PostHog/posthog) | licence file reads as mixed (MIT), declared MIT |
+| seahub (haiwen/seahub) | Python is not the majority language (1069 py, 1592 js) |
+| twenty (twentyhq/twenty) | licence file reads as mixed (AGPL-3.0), declared AGPL-3.0 |
+| strapi (strapi/strapi) | licence file reads as mixed (MIT), declared MIT |
+| medusa (medusajs/medusa) | licence file reads as mixed (MIT), declared MIT |
+| parse-server (parse-community/parse-server) | only 83 first-parent commits in 730 days |
+| umami (umami-software/umami) | only 87 first-parent commits in 730 days |
+| budibase (Budibase/budibase) | licence file reads as non-osi (business source license), declared GPL-3.0 |
+| rocketchat (RocketChat/Rocket.Chat) | licence file reads as mixed (MIT), declared MIT |
+| infisical (Infisical/infisical) | licence file reads as mixed (MIT), declared MIT |
+| dub (dubinc/dub) | licence file reads as mixed (AGPL-3.0), declared AGPL-3.0 |
+| novu (novuhq/novu) | licence file reads as missing, declared MIT |
+
+## Batch runs
+
+```bash
+# Replay every corpus repository at its pinned SHA, 4 repositories at a time
+python -m research.finding_identity batch research/finding_identity/corpus.csv \
+    --commits 200 --jobs 4
+```
+
+Each repository is fetched shallowly at its pinned SHA (no checkout) into `.repos/<label>`
+and replayed in its own `replay` process, so a crash or a `--timeout` only affects that
+repository. The batch is **resumable**: a repository whose `results/<label>/summary.json`
+was produced from the pinned SHA with at least `--commits` commit pairs is skipped, so
+rerunning the same command only retries failures and repositories that were not reached
+(`--force` reruns everything; a changed SHA or a larger `--commits` reruns that
+repository). Failures do not stop the batch: each attempt is appended to
+`results/batch.jsonl` (label, status, error, seconds) and each replay's output goes to
+`results/_logs/<label>.log`; the command exits with status 1 if any repository failed.
+`--only a,b` restricts the run, `--delete-clones` removes each clone after its replay.
+
+Every replay also records its totals **per rule category** (`by_category` in
+`summary.json`, with the same `totals` and `collisions` blocks as the summary itself).
+Scheme keys include the rule ID and the ground truth pairs findings of the same rule
+only, so each category is scored on its own findings and the categories add up exactly to
+the totals.
+
+## Statistics
+
+```bash
+python -m research.finding_identity stats research/finding_identity/results \
+    --corpus research/finding_identity/corpus.csv --out research/finding_identity/tables --plot
+```
+
+For each scope (`all` findings and `security` findings by default; `--scopes` takes any
+rule categories), each scheme and each metric (`false_new`, `false_new_moved`,
+`false_new_edited`, `hidden`, `mispair`, `collision`, defined as above), `stats` reports:
+
+- **pooled (micro) rate**: total numerator over total denominator across repositories,
+  with a **Wilson 95% interval**. Wilson assumes independent findings, so it is too narrow
+  for a corpus where findings in one repository are correlated;
+- **cluster bootstrap 95% interval** of the pooled rate: repositories are resampled with
+  replacement (10,000 resamples, fixed seed, the same resamples for every table), the
+  pooled rate is recomputed, and the 2.5th and 97.5th percentiles are taken. This is the
+  interval to quote;
+- **macro rate**: the mean of per-repository rates, with its own cluster bootstrap
+  interval. Pooled rates are dominated by the repositories with the most findings; macro
+  rates weigh every repository equally;
+- **median and interquartile range** of the per-repository rates (quantiles with linear
+  interpolation, numpy's default).
+
+A repository with a zero denominator for a metric (for example no persisting security
+findings) has no rate: it adds nothing to the pooled sums and is left out of the macro
+rate, median and quartiles; `repos_with_rate` counts the rest.
+
+Outputs in `--out`:
+
+| File | Contents |
+|---|---|
+| `pooled.csv` | one row per scope, scheme and metric: counts, pooled rate, Wilson and bootstrap intervals, macro rate and interval, median, quartiles |
+| `per_repo.csv` | one row per scope, repository, scheme and metric: numerator, denominator, rate |
+| `repos.csv` | one row per repository: pinned head, commit pairs, versions scanned, runtime, findings per scope |
+| `tables.md` | the pooled tables in Markdown |
+| `per_repo.md` | per-repository false-new rates of every scheme, per scope, in Markdown |
+| `false_new_by_repo.png` | with `--plot`: box plot of per-repository false-new rates per scheme, one panel per scope (needs `matplotlib`, see `requirements.txt`) |
+
+### Committed results
+
+`paper/` holds the aggregated outputs of the corpus run of 2026-10-14 (CodeGuard 2.2.0,
+200 commit pairs per repository, all rule categories), produced with:
+
+```bash
+python -m research.finding_identity batch research/finding_identity/corpus.csv --commits 200 --jobs 4
+python -m research.finding_identity stats research/finding_identity/results \
+    --corpus research/finding_identity/corpus.csv --out research/finding_identity/paper --plot
+```
+
+The batch took 14 min 44 s of wall-clock time for the 35 repositories on 4 cores
+(2,781 s summed over repositories, fetching included): 7,000 commit pairs, 34,275 file
+versions scanned, 36,232 findings, 8,703 of them security findings. Clones and per-commit
+results are not committed.
+
+That run predates the `sonar` and `bandit` schemes, so `paper/` has no columns for them.
+It also predates CodeGuard's fix for line separators (lines split on LF, CRLF and CR
+only), which can shift the `codeguard`-family keys slightly. Re-running the batch with
+`--force` (otherwise `batch` skips repositories whose results are already done) scores
+every scheme.
+
 ## Known limitations
 
 - The ground truth is a line diff. A finding whose anchor line is rewritten beyond the
@@ -283,3 +511,26 @@ that do not parse or that rename the function count as "n/a".
   so long histories take a while. It runs the study's own rules, not the Semgrep Registry.
 - The transformations are applied one at a time to one finding each; real commits mix
   them. `change_literal` and the `duplicate` transformations change behaviour on purpose.
+- Every scheme's key includes the file path, so a renamed or moved file makes every
+  scheme report its findings as new, even on unchanged lines. In the corpus run this is
+  most of the residual false-new rate of the text-based schemes (for example Ghost, which
+  renamed many `.js` files to `.ts`).
+
+Drift mode adds its own limits:
+
+- One anchor per run, so a span's numbers come from one pair of commits. Short spans in
+  particular are small samples; use several anchors (`--ref` at different commits) to
+  get variance.
+- A chain breaks for good at any step that rewrites the line beyond the threshold,
+  deletes the file, or moves the code to another file (git sees a deletion plus an
+  addition, not a move). The finding then counts as removed and its successor as
+  introduced, which can only make a scheme look like it *hides* a new finding when it in
+  fact kept an old one. A file deleted and later re-added at the same path also starts a
+  new lineage. Sample `false_known` records by hand.
+- Within one step, a block that moved past other changed lines is not followed: the line
+  diff sees a deletion plus an insertion. Chaining limits this to the commit that did the
+  move, instead of every later span.
+- Renames are those `git diff -M` detects between consecutive commits (50% similarity by
+  default); copies are not followed.
+- Shallow clones must reach the anchor: clones are made with depth `--anchor-back + 2`,
+  and an existing clone that is too shallow is reported, not deepened.

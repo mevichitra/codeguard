@@ -104,6 +104,18 @@ def evaluate(
     keep_records: bool = False,
 ) -> FileResult:
     gt_pairs = ground_truth(old, new, line_map)
+    return score(old, new, gt_pairs, schemes, keep_records=keep_records)
+
+
+def score(
+    old: Sequence[Observation],
+    new: Sequence[Observation],
+    gt_pairs: dict[int, tuple[int, str]],
+    schemes: Sequence[str],
+    *,
+    keep_records: bool = False,
+) -> FileResult:
+    """Score every scheme against true pairs ``{new index: (old index, kind)}``."""
     gt = {
         "old": len(old),
         "new": len(new),
