@@ -192,11 +192,41 @@ Availability: harness, ports, corpus, results and scripts in the repository
 
 ## Regenerating
 
-The tables, figures and claim values come from the corpus results with:
+Everything in this directory comes from four runs over the pinned corpus and two
+generators. From the repository root, with `pip install -e .` and
+`pip install -r research/finding_identity/requirements.txt` (about 40 minutes on 4 cores):
 
 ```bash
-python -m research.finding_identity stats research/finding_identity/results/corpus-v3 \
-    --corpus research/finding_identity/corpus.csv --out research/finding_identity/paper --plot
+P=research/finding_identity
+
+# RQ1: replays with CodeGuard (35 repositories) and Bandit (25 Python repositories)
+python -m research.finding_identity batch $P/corpus.csv --commits 200 --jobs 4 --details \
+    --out $P/results/corpus-v3
+python -m research.finding_identity batch $P/corpus.csv --commits 200 --jobs 4 --details \
+    --analyzer bandit --out $P/results/corpus-bandit
+
+# RQ2: the transformation experiment on each Python repository at its pinned commit
+python - <<'PY' | xargs -P 4 -L 1 sh -c \
+    'python -m research.finding_identity transform $0 --ref $1 --label $2 --samples 40 \
+         --out research/finding_identity/results/transform/transform-$2'
+import csv
+for r in csv.DictReader(open("research/finding_identity/corpus.csv")):
+    if r["language"] == "python":
+        print(f"research/finding_identity/.repos/{r['label']} {r['sha']} {r['label']}")
+PY
+
+# Table II, numbers.md, rq1.csv, rq2.csv, Fig. 1
+python -m research.finding_identity.paper_kit --codeguard $P/results/corpus-v3 \
+    --bandit $P/results/corpus-bandit --bandit-exclude B101 \
+    --transform $P/results/transform --corpus $P/corpus.csv --out $P/paper
+
+# tables.md, pooled.csv, per_repo.*, repos.csv, the per-repository box plot
+python -m research.finding_identity stats $P/results/corpus-v3 --corpus $P/corpus.csv \
+    --out $P/paper --plot
+
+# The ground-truth sample for the manual check (paper/ground_truth_check/)
+python -m research.finding_identity.gt_sample $P/results/corpus-v3
 ```
 
-(The commands for Table II, Fig. 1 and claims.md are added once the runs finish.)
+The bootstrap seed (20261014), the transformation seed (0) and the sample seed
+(20261017) are the defaults, so the commands reproduce the committed files.

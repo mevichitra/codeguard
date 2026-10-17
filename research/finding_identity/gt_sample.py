@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 """A stratified sample of ground-truth decisions, for a manual check.
 
 ``python -m research.finding_identity.gt_sample <results> --corpus corpus.csv --out <dir>``
@@ -98,8 +100,19 @@ def diff_hunks(repo: Path, old: str, new: str, path: str, old_path: str, line: i
         start = int(new_side[0])
         length = int(new_side[1]) if len(new_side) > 1 else 1
         if start - 6 <= line <= start + length + 6:
-            near.append("\n".join(hunk))
-    return "\n".join(near) or "(no diff hunk near this line)"
+            near.append(_clip(hunk))
+    return "\n".join(near[:MAX_HUNKS]) or "(no diff hunk near this line)"
+
+
+#: A diff shows at most this many hunks, each clipped to this many lines.
+MAX_HUNKS = 2
+MAX_HUNK_LINES = 40
+
+
+def _clip(hunk: list[str]) -> str:
+    if len(hunk) <= MAX_HUNK_LINES:
+        return "\n".join(hunk)
+    return "\n".join([*hunk[:MAX_HUNK_LINES], f"... ({len(hunk) - MAX_HUNK_LINES} more lines)"])
 
 
 def load_records(results: Path, labels: list[str]) -> list[tuple[str, Record, str]]:

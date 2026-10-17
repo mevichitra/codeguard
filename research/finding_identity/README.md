@@ -503,25 +503,27 @@ Outputs in `--out`:
 
 ### Committed results
 
-`paper/` holds the aggregated outputs of the corpus run of 2026-10-14 (CodeGuard 2.2.0,
-200 commit pairs per repository, all rule categories), produced with:
+`paper/` holds the outputs the paper is written from, produced on 2026-10-17 from the
+corpus pinned on 2026-10-14 (CodeGuard 2.2.0, Bandit 1.9.4, 200 commit pairs per
+repository, all rule categories):
 
-```bash
-python -m research.finding_identity batch research/finding_identity/corpus.csv --commits 200 --jobs 4
-python -m research.finding_identity stats research/finding_identity/results \
-    --corpus research/finding_identity/corpus.csv --out research/finding_identity/paper --plot
-```
+- `outline.md`: the plan of the paper; its *Regenerating* section has the exact commands
+  that produce every file below;
+- `claims.md`: every number the paper can cite, with its interval and source;
+- `table_rq1.tex`, `numbers.md`, `rq1.csv`: RQ1 from `paper_kit.py`, including the
+  false-new rate split by renamed files and Bandit's findings with and without B101;
+- `fig_rq2.pdf`, `rq2.csv`: RQ2, the invariance matrix pooled over the 25 Python
+  repositories (40 sampled files each);
+- `tables.md`, `pooled.csv`, `per_repo.csv`, `per_repo.md`, `repos.csv`,
+  `false_new_by_repo.png`: the `stats` tables for the CodeGuard replays;
+- `ground_truth_check/`: a seeded sample of 100 ground-truth decisions to check by hand.
 
-The batch took 14 min 44 s of wall-clock time for the 35 repositories on 4 cores
-(2,781 s summed over repositories, fetching included): 7,000 commit pairs, 34,275 file
-versions scanned, 36,232 findings, 8,703 of them security findings. Clones and per-commit
-results are not committed.
-
-That run predates the `sonar` and `bandit` schemes, so `paper/` has no columns for them.
-It also predates CodeGuard's fix for line separators (lines split on LF, CRLF and CR
-only), which can shift the `codeguard`-family keys slightly. Re-running the batch with
-`--force` (otherwise `batch` skips repositories whose results are already done) scores
-every scheme.
+The CodeGuard batch took 18 min 20 s of wall-clock time for the 35 repositories on 4
+cores, the Bandit batch 6 min 55 s for the 25 Python repositories, and the
+transformation runs 7 min 41 s. Clones and per-commit results are not committed. The
+replay results of the `line`, `line_text`, `github` and `codeguard` families are
+identical to those of the first corpus run (2026-10-14), which had no SonarQube or
+Bandit schemes.
 
 ## Known limitations
 

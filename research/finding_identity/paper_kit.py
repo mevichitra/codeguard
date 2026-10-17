@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 """Tables, figures and numbers for the paper: RQ1 from corpus replays, RQ2 from the
 transformation experiment.
 
@@ -250,6 +252,26 @@ def latex_table(
     return "\n".join(lines)
 
 
+#: A path with one of these parts counts as test code in the rule breakdown.
+TEST_PATH_PARTS = ("test", "conftest")
+
+
+def rule_breakdown(runs: Sequence[Run], top: int = 5) -> list[dict[str, Any]]:
+    """The *top* rules by persisting findings: counts, and how many are in test code."""
+    rows: dict[str, dict[str, int]] = {}
+    for run in runs:
+        with run.findings.open(encoding="utf-8") as f:
+            for line in f:
+                rec = json.loads(line)
+                if rec["rule"] in run.exclude:
+                    continue
+                row = rows.setdefault(rec["rule"], {"known": 0, "introduced": 0, "in_tests": 0})
+                row["known" if rec["truth"] == "known" else "introduced"] += 1
+                row["in_tests"] += any(p in rec["path"].lower() for p in TEST_PATH_PARTS)
+    ranked = sorted(rows.items(), key=lambda kv: -kv[1]["known"])[:top]
+    return [{"rule": rule, **row} for rule, row in ranked]
+
+
 def facts_for(runs: Sequence[Run]) -> dict[str, Any]:
     split = [_rename_split(r, "line") for r in runs]
     if any(r.exclude for r in runs):
@@ -267,6 +289,7 @@ def facts_for(runs: Sequence[Run]) -> dict[str, Any]:
         "excluded": sorted(set().union(*(r.exclude for r in runs))),
         "known_renamed": sum(s["false_new_renamed"][1] for s in split),
         "repos_with_renamed": sum(1 for s in split if s["false_new_renamed"][1]),
+        "rules": rule_breakdown(runs),
     }
 
 
@@ -304,6 +327,20 @@ def numbers_markdown(
             out.append(
                 f"| `{scheme}` | {metric} | {_pct(e.rate)} | {ci} | {_pct(e.median)} | "
                 f"{e.num:,}/{e.den:,} |"
+            )
+        out += [
+            "",
+            "Rules with the most persisting findings (share of all; findings in test code):",
+            "",
+            "| rule | persisting | introduced | in test code |",
+            "|---|---:|---:|---:|",
+        ]
+        for r in f["rules"]:
+            total = r["known"] + r["introduced"]
+            out.append(
+                f"| `{r['rule']}` | {r['known']:,} ({100 * r['known'] / f['known']:.1f}%) | "
+                f"{r['introduced']:,} ({100 * r['introduced'] / max(f['introduced'], 1):.1f}%) | "
+                f"{100 * r['in_tests'] / total:.0f}% |"
             )
         out.append("")
     out += ["Metrics:", ""] + [f"- `{name}`: {desc}." for name, desc in METRICS]
@@ -490,8 +527,10 @@ def main(argv: list[str] | None = None) -> None:
         write_rq2_csv(args.out / "rq2.csv", rq2)
         written.append(f"rq2.csv ({len(matrices)} repositories)")
         present = [t for t in DETERMINISTIC if any(k[0] == t for k in rq2)]
-        if heatmap(rq2, present, TABLE_SCHEMES, args.out / "fig_rq2.pdf"):
-            heatmap(rq2, present, TABLE_SCHEMES, args.out / "fig_rq2.png")
+        # No transformation renames a file, so the two SonarQube modes agree: one column.
+        columns = [s for s in TABLE_SCHEMES if s != "sonar_branch"]
+        if heatmap(rq2, present, columns, args.out / "fig_rq2.pdf"):
+            heatmap(rq2, present, columns, args.out / "fig_rq2.png")
             written.append("fig_rq2.pdf")
     print(f"wrote {', '.join(written)} to {args.out}")
 
