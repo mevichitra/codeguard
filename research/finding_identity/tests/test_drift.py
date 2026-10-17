@@ -22,8 +22,12 @@ from research.finding_identity.drift import chain_lines, drift, trace_files
 from research.finding_identity.gitrepo import Change, GitRepo
 from research.finding_identity.linemap import map_lines
 from research.finding_identity.scan import Scanner
-from research.finding_identity.schemes import ALL_SCHEMES
+from research.finding_identity.schemes import ABLATION_SCHEMES, ALL_SCHEMES, PRIMARY_SCHEMES
 from research.finding_identity.summarize import summarize_drift
+
+#: The key-based schemes other than ``line``; SonarQube's and Bandit's matchers are
+#: checked on their own.
+KEY_SCHEMES = PRIMARY_SCHEMES[1:] + ABLATION_SCHEMES
 
 ENV = {
     **os.environ,
@@ -121,16 +125,25 @@ def test_span_1_insertion_only_breaks_line_numbers(summary: dict[str, Any]) -> N
 
 def test_span_2_edit_loses_the_edited_finding(summary: dict[str, Any]) -> None:
     entry = _span(summary, 2)
-    for scheme in ALL_SCHEMES[1:]:
+    for scheme in (*KEY_SCHEMES, "sonar"):
         assert _outcomes(entry, scheme) == {"known_ok": 1, "false_new": 1}, scheme
         assert entry["totals"]["schemes"][scheme]["false_new_edited"] == 1
+    # Bandit's baseline ignores the location and the code: same rule, same message.
+    assert _outcomes(entry, "bandit") == {"known_ok": 2}
 
 
 def test_span_3_file_rename_breaks_every_path_based_key(summary: dict[str, Any]) -> None:
     entry = _span(summary, 3)
     # The ground truth follows lib.py -> pkg/lib.py, but every key includes the path.
-    for scheme in ALL_SCHEMES[1:]:
+    for scheme in KEY_SCHEMES:
         assert _outcomes(entry, scheme) == {"known_ok": 1, "false_new": 2}, scheme
+    # SonarQube's tracker compares the findings of the file pair, not their paths, so it
+    # keeps L; it still loses the edited E. Bandit compares the file name, so it loses L
+    # but keeps E.
+    assert _outcomes(entry, "sonar") == {"known_ok": 2, "false_new": 1}
+    assert _outcomes(entry, "bandit") == {"known_ok": 2, "false_new": 1}
+    assert entry["totals"]["schemes"]["sonar"]["false_new_edited"] == 1
+    assert entry["totals"]["schemes"]["bandit"]["false_new_edited"] == 0
 
 
 def test_span_4_function_rename_breaks_scoped_keys(summary: dict[str, Any]) -> None:
@@ -150,6 +163,9 @@ def test_span_5_new_finding_hidden_by_text_keys(summary: dict[str, Any]) -> None
     assert _outcomes(entry, "codeguard") == {"false_new": 3, "new_ok": 1}
     # GitHub's hash reads the text after the line, and code was appended after X.
     assert _outcomes(entry, "github") == {"false_new": 3, "new_ok": 1}
+    # SonarQube (same line hash) and Bandit (same message) also take N for E.
+    for scheme in ("sonar", "bandit"):
+        assert _outcomes(entry, scheme) == {"known_ok": 2, "false_new": 1, "false_known": 1}
 
 
 def test_summary_metadata(summary: dict[str, Any]) -> None:

@@ -194,7 +194,10 @@ def _compare_span(
     new: list[Observation] = []
     old_at: list[str] = []
     new_at: list[str] = []
-    for p, q in units:
+    #: Which file pair (index into *units*) each old and new finding belongs to.
+    old_unit: list[int] = []
+    new_unit: list[int] = []
+    for u, (p, q) in enumerate(units):
         old_res = old_scans[p] if p is not None else None
         new_res = new_scans[q] if q is not None else None
         if (p is not None and old_res is None) or (q is not None and new_res is None):
@@ -214,6 +217,8 @@ def _compare_span(
         new += new_obs
         old_at += [p or ""] * len(old_obs)
         new_at += [q or ""] * len(new_obs)
+        old_unit += [u] * len(old_obs)
+        new_unit += [u] * len(new_obs)
 
     # Chained ground truth: same rule at the line the anchor line was followed to.
     at_spot: dict[tuple[str, str, int], list[int]] = defaultdict(list)
@@ -234,15 +239,38 @@ def _compare_span(
             j = min(candidates, key=lambda k: abs(new[k].col - o.col))
             gt_pairs[j] = (i, "edited" if edited else "equal")
 
-    result = score(old, new, gt_pairs, schemes, keep_records=records is not None)
-    totals["gt"].update(result.gt)
-    for scheme, counts in result.by_scheme.items():
-        totals["schemes"][scheme].update(counts)
-    if records is not None:
-        for j, rec in enumerate(result.records):
-            truth = gt_pairs.get(j)
-            rec.update(span=span, path=new_at[j], old_path=old_at[truth[0]] if truth else None)
-            records.append(rec)
+    # Score file pair by file pair, as the consecutive mode does: SonarQube's tracker
+    # compares the findings and lines of one file, so pooling files would let it pair
+    # findings across files. The key-based schemes include the path and are unaffected.
+    by_unit: dict[int, tuple[list[int], list[int]]] = defaultdict(lambda: ([], []))
+    for i, u in enumerate(old_unit):
+        by_unit[u][0].append(i)
+    for j, u in enumerate(new_unit):
+        by_unit[u][1].append(j)
+    for _, (olds, news) in sorted(by_unit.items()):
+        local = {i: k for k, i in enumerate(olds)}
+        unit_gt = {
+            k: (local[gt_pairs[j][0]], gt_pairs[j][1]) for k, j in enumerate(news) if j in gt_pairs
+        }
+        result = score(
+            [old[i] for i in olds],
+            [new[j] for j in news],
+            unit_gt,
+            schemes,
+            keep_records=records is not None,
+        )
+        for key, count in result.gt.items():
+            totals["gt"][key] += count
+        for scheme, counts in result.by_scheme.items():
+            for key, count in counts.items():
+                totals["schemes"][scheme][key] += count
+        if records is not None:
+            for k, rec in enumerate(result.records):
+                j = news[k]
+                truth = gt_pairs.get(j)
+                old_path = old_at[truth[0]] if truth else None
+                rec.update(span=span, path=new_at[j], old_path=old_path)
+                records.append(rec)
     return {
         "totals": totals,
         "collisions": {"observations": len(old) + len(new), "by_scheme": collided},
