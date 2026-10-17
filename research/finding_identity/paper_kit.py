@@ -35,7 +35,12 @@ HERE = Path(__file__).parent
 
 #: Schemes in the paper's table, from the naive baseline to the shipped tools.
 TABLE_SCHEMES = ("line", "line_text", "github", "codeguard", "sonar", "sonar_branch", "bandit")
-ANALYZER_NAMES = {"codeguard": "CodeGuard", "bandit": "Bandit", "semgrep": "Semgrep"}
+ANALYZER_NAMES = {
+    "codeguard": "CodeGuard",
+    "bandit": "Bandit",
+    "bandit_all_rules": "Bandit (all rules)",
+    "semgrep": "Semgrep",
+}
 #: Metrics computed for every scheme: (name, description).
 METRICS = (
     ("false_new", "persisting findings reported as new"),
@@ -54,6 +59,9 @@ class Run:
     label: str
     summary: dict[str, Any]
     findings: Path
+    #: Rules left out. The metrics are then counted from ``findings.jsonl``, which does
+    #: not hold what collisions need, so the collision rate is not computed.
+    exclude: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True)
@@ -65,14 +73,16 @@ class Estimate:
     median: float | None
 
 
-def load_runs(results: Path, labels: Sequence[str] | None) -> list[Run]:
+def load_runs(
+    results: Path, labels: Sequence[str] | None, exclude: frozenset[str] = frozenset()
+) -> list[Run]:
     runs = []
     for summary in load_summaries([results], labels):
         label = summary["label"]
         findings = results / label / "findings.jsonl"
         if not findings.exists():
             raise SystemExit(f"{findings} is missing: replay with --details")
-        runs.append(Run(label, summary, findings))
+        runs.append(Run(label, summary, findings, exclude))
     return runs
 
 
@@ -82,7 +92,7 @@ def _rename_split(run: Run, scheme: str) -> dict[str, tuple[int, int]]:
     with run.findings.open(encoding="utf-8") as f:
         for line in f:
             rec = json.loads(line)
-            if rec["truth"] != "known":
+            if rec["truth"] != "known" or rec["rule"] in run.exclude:
                 continue
             renamed = str(rec.get("status", "")).startswith("R")
             cell = split["false_new_renamed" if renamed else "false_new_same_path"]
@@ -91,12 +101,36 @@ def _rename_split(run: Run, scheme: str) -> dict[str, tuple[int, int]]:
     return {k: (v[0], v[1]) for k, v in split.items()}
 
 
+def _record_counts(run: Run, scheme: str) -> dict[str, tuple[int, int]]:
+    """False-new, hidden and mispair counts from ``findings.jsonl``, without excluded rules."""
+    c = {"false_new": [0, 0], "hidden": [0, 0], "mispair": [0, 0]}
+    with run.findings.open(encoding="utf-8") as f:
+        for line in f:
+            rec = json.loads(line)
+            if rec["rule"] in run.exclude:
+                continue
+            outcome = rec["outcomes"][scheme]
+            if rec["truth"] == "known":
+                for name, hit in (("false_new", "false_new"), ("mispair", "mispaired")):
+                    c[name][0] += outcome == hit
+                    c[name][1] += 1
+            else:
+                c["hidden"][0] += outcome == "false_known"
+                c["hidden"][1] += 1
+    return {k: (v[0], v[1]) for k, v in c.items()}
+
+
 def repo_counts(runs: Sequence[Run], scheme: str) -> dict[str, list[tuple[int, int]]]:
     """Per metric, one ``(numerator, denominator)`` per repository, in *runs* order."""
     out: dict[str, list[tuple[int, int]]] = {name: [] for name, _ in METRICS}
     for run in runs:
-        for name in ("false_new", "hidden", "mispair", "collision"):
-            out[name].append(counts(run.summary, scheme, name))
+        if run.exclude:
+            for name, pair in _record_counts(run, scheme).items():
+                out[name].append(pair)
+            out["collision"].append((0, 0))
+        else:
+            for name in ("false_new", "hidden", "mispair", "collision"):
+                out[name].append(counts(run.summary, scheme, name))
         for name, pair in _rename_split(run, scheme).items():
             out[name].append(pair)
     return out
@@ -179,8 +213,9 @@ def latex_table(
     )
     if bandit:
         bd = facts["bandit"]
+        without = f" other than {', '.join(bd['excluded'])}" if bd["excluded"] else ""
         caption += (
-            f" Bandit findings: {bd['repos']} Python repositories, {bd['known']:,} "
+            f" Bandit findings{without}: {bd['repos']} Python repositories, {bd['known']:,} "
             f"persisting and {bd['introduced']:,} introduced findings."
         )
     lines = [
@@ -216,13 +251,20 @@ def latex_table(
 
 
 def facts_for(runs: Sequence[Run]) -> dict[str, Any]:
-    gt = [r.summary["totals"]["gt"] for r in runs]
     split = [_rename_split(r, "line") for r in runs]
+    if any(r.exclude for r in runs):
+        rc = [_record_counts(r, "line") for r in runs]
+        known = sum(c["false_new"][1] for c in rc)
+        introduced = sum(c["hidden"][1] for c in rc)
+    else:
+        known = sum(int(r.summary["totals"]["gt"]["known"]) for r in runs)
+        introduced = sum(int(r.summary["totals"]["gt"]["introduced"]) for r in runs)
     return {
         "repos": len(runs),
         "commit_pairs": sum(int(r.summary["commit_pairs"]) for r in runs),
-        "known": sum(int(g["known"]) for g in gt),
-        "introduced": sum(int(g["introduced"]) for g in gt),
+        "known": known,
+        "introduced": introduced,
+        "excluded": sorted(set().union(*(r.exclude for r in runs))),
         "known_renamed": sum(s["false_new_renamed"][1] for s in split),
         "repos_with_renamed": sum(1 for s in split if s["false_new_renamed"][1]),
     }
@@ -246,10 +288,13 @@ def numbers_markdown(
         out += [
             f"## {ANALYZER_NAMES[analyzer]} findings",
             "",
-            f"Source: `{sources[analyzer]}`. {f['repos']} repositories, "
+            f"Source: `{sources[analyzer]}`"
+            + (f", without rules {', '.join(f['excluded'])}" if f["excluded"] else "")
+            + f". {f['repos']} repositories, "
             f"{f['commit_pairs']:,} commit pairs, {f['known']:,} persisting and "
             f"{f['introduced']:,} introduced findings; {f['known_renamed']:,} persisting "
-            f"findings in renamed files, in {f['repos_with_renamed']} repositories.",
+            f"findings in renamed files, in {f['repos_with_renamed']} "
+            + ("repository." if f["repos_with_renamed"] == 1 else "repositories."),
             "",
             "| scheme | metric | rate | 95% CI | median | n |",
             "|---|---|---:|---|---:|---:|",
@@ -393,6 +438,12 @@ def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(prog="python -m research.finding_identity.paper_kit")
     ap.add_argument("--codeguard", type=Path, required=True, help="batch results, CodeGuard")
     ap.add_argument("--bandit", type=Path, help="batch results, Bandit")
+    ap.add_argument(
+        "--bandit-exclude",
+        default="",
+        help="comma-separated Bandit rules to leave out of the table (all rules stay in "
+        "numbers.md as 'bandit_all_rules')",
+    )
     ap.add_argument("--transform", type=Path, help="directory of transform-<label> results")
     ap.add_argument("--corpus", type=Path, default=HERE / "corpus.csv")
     ap.add_argument("--out", type=Path, default=HERE / "paper")
@@ -406,9 +457,16 @@ def main(argv: list[str] | None = None) -> None:
         sources["bandit"] = args.bandit
     results: dict[str, dict[tuple[str, str], Estimate]] = {}
     facts: dict[str, dict[str, Any]] = {}
-    for analyzer, path in sources.items():
+    exclude = frozenset(x.strip() for x in args.bandit_exclude.split(",") if x.strip())
+    jobs: list[tuple[str, Path, frozenset[str]]] = [("codeguard", args.codeguard, frozenset())]
+    if args.bandit:
+        jobs.append(("bandit", args.bandit, exclude))
+        if exclude:
+            jobs.append(("bandit_all_rules", args.bandit, frozenset()))
+            sources["bandit_all_rules"] = args.bandit
+    for analyzer, path, leave_out in jobs:
         wanted = [x for x in labels if (path / x / "summary.json").exists()]
-        runs = load_runs(path, wanted)
+        runs = load_runs(path, wanted, leave_out)
         facts[analyzer] = facts_for(runs)
         present = [s for s in TABLE_SCHEMES if all(s in r.summary["schemes"] for r in runs)]
         results[analyzer] = estimates(runs, present, args.resamples, args.seed)

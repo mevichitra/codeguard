@@ -14,7 +14,7 @@ def _run(tmp_path: Path, records: list[dict[str, object]]) -> Run:
 
 def test_rename_split_counts_persisting_findings_only(tmp_path: Path) -> None:
     def rec(truth: str, status: str, outcome: str) -> dict[str, object]:
-        return {"truth": truth, "status": status, "outcomes": {"s": outcome}}
+        return {"rule": "R", "truth": truth, "status": status, "outcomes": {"s": outcome}}
 
     run = _run(
         tmp_path,
@@ -68,3 +68,29 @@ def test_rq2_pools_counts_over_repositories(tmp_path: Path) -> None:
     assert (fn.num, fn.den, fn.rate) == (3, 10, 0.3)
     assert table[("insert_top", "line", "hidden")].rate is None  # nothing introduced
     assert not any(key[1] == "other" for key in table)
+
+
+def test_excluded_rules_leave_every_count(tmp_path: Path) -> None:
+    from research.finding_identity.paper_kit import _record_counts, repo_counts
+
+    def rec(rule: str, truth: str, outcome: str) -> dict[str, object]:
+        return {"rule": rule, "truth": truth, "status": "M", "outcomes": {"s": outcome}}
+
+    records = [
+        rec("B101", "known", "false_new"),
+        rec("B101", "new", "false_known"),
+        rec("B602", "known", "known_ok"),
+        rec("B602", "known", "mispaired"),
+        rec("B602", "new", "false_known"),
+        rec("B602", "new", "new_ok"),
+    ]
+    run = _run(tmp_path, records)
+    run = type(run)(run.label, run.summary, run.findings, frozenset({"B101"}))
+    assert _record_counts(run, "s") == {
+        "false_new": (0, 2),
+        "hidden": (1, 2),
+        "mispair": (1, 2),
+    }
+    counts = repo_counts([run], "s")
+    assert counts["false_new_same_path"] == [(0, 2)]
+    assert counts["collision"] == [(0, 0)]  # not computable from the records
