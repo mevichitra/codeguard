@@ -61,7 +61,9 @@ def test_codeguard_key_equals_runner_fingerprint() -> None:
     assert keys["codeguard"] == f.fingerprint
     # With no literals on the line, masking changes nothing: the two keys coincide.
     assert keys["cg_no_mask"] == keys["codeguard"]
-    others = [keys[s] for s in ALL_SCHEMES if s != "cg_no_mask"]
+    # Both SonarQube modes run the same tracker; they differ only across renamed files.
+    assert keys["sonar_branch"] == keys["sonar"]
+    others = [keys[s] for s in ALL_SCHEMES if s not in ("cg_no_mask", "sonar_branch")]
     assert len(set(others)) == len(others)
 
 

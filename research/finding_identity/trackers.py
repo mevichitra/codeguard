@@ -3,7 +3,12 @@
 Key schemes pair findings with equal keys (:func:`matching.scheme_pairs`). Two tools decide
 "same finding" differently, so their schemes plug in a matcher here instead:
 
-- ``sonar``: SonarQube's multi-pass issue tracker, ported line by line below.
+- ``sonar``: SonarQube's multi-pass issue tracker, ported line by line below. A renamed
+  file's findings are tracked against the old file, as in a pull-request analysis, which
+  takes renames from the SCM.
+- ``sonar_branch``: the same tracker as a branch analysis runs it. A renamed file is the
+  old file only if SonarQube's own file move detection says so (:func:`sonar_file_moved`);
+  otherwise its findings are all new.
 - ``bandit``: ``bandit -b baseline.json``, which asks only whether an *equal* issue exists
   in the baseline (set membership, not one-to-one pairing).
 
@@ -15,6 +20,7 @@ module does not import :mod:`matching`.
 from __future__ import annotations
 
 import hashlib
+import math
 from collections import defaultdict
 from collections.abc import Callable, Hashable, Iterable, Sequence
 from dataclasses import dataclass
@@ -857,4 +863,71 @@ def bandit_baseline(old: Sequence[Trackable], new: Sequence[Trackable]) -> dict[
     return pairs
 
 
-MATCHERS: dict[str, Matcher] = {"sonar": sonar_track, "bandit": bandit_baseline}
+# ---------------------------------------------------------------------------
+# SonarQube file move detection (branch analyses)
+# ---------------------------------------------------------------------------
+# Port of the per-pair decision of FileMoveDetectionStep (computeScoreMatrix and its
+# MIN_REQUIRED_SCORE, LOWER_BOUND_RATIO and UPPER_BOUND_RATIO) and of
+# SourceSimilarityImpl.score, in sonar-ce-task-projectanalysis
+# org/sonar/ce/task/projectanalysis/filemove, SonarQube 26.10.0.133078 (LGPL-3.0). The
+# step compares every removed file with every added file and elects the best-scoring
+# pairs; the harness already pairs files by git's rename detection, so only the decision
+# for that pair is ported. Pull-request analyses skip the step and take renames from the
+# SCM (PullRequestFileMoveDetectionStep).
+
+_MOVE_MIN_SCORE = 85
+_MOVE_LOWER_BOUND_RATIO = 0.84
+_MOVE_UPPER_BOUND_RATIO = 1.18
+
+
+def sonar_similarity(left: Sequence[str], right: Sequence[str]) -> int:
+    """``SourceSimilarityImpl.score``: 100 * (1 - edit distance / longer length), truncated."""
+    if not left and not right:
+        return 0
+    longest = max(len(left), len(right))
+    # A common prefix and suffix do not change the edit distance; dropping them first
+    # keeps the quadratic part to the lines that differ.
+    start = 0
+    while start < min(len(left), len(right)) and left[start] == right[start]:
+        start += 1
+    end = 0
+    while end < min(len(left), len(right)) - start and left[-1 - end] == right[-1 - end]:
+        end += 1
+    a, b = left[start : len(left) - end], right[start : len(right) - end]
+    cost = list(range(len(a) + 1))
+    for j in range(1, len(b) + 1):
+        new_cost = [j] + [0] * len(a)
+        for i in range(1, len(a) + 1):
+            replace = cost[i - 1] + (a[i - 1] != b[j - 1])
+            new_cost[i] = min(cost[i] + 1, new_cost[i - 1] + 1, replace)
+        cost = new_cost
+    return int(100 * (1.0 - cost[len(a)] / longest))
+
+
+def sonar_file_moved(old_lines: Sequence[str], new_lines: Sequence[str]) -> bool:
+    """Whether a branch analysis takes the added file for the removed one."""
+    old_count, new_count = len(old_lines), len(new_lines)
+    lower = math.floor(old_count * _MOVE_LOWER_BOUND_RATIO)
+    upper = math.ceil(old_count * _MOVE_UPPER_BOUND_RATIO)
+    if new_count >= upper or new_count <= lower:
+        return False
+    score = sonar_similarity(sonar_line_hashes(old_lines), sonar_line_hashes(new_lines))
+    return score >= _MOVE_MIN_SCORE
+
+
+def _sonar_branch_moved(old: Sequence[Trackable], new: Sequence[Trackable]) -> bool:
+    # Every finding of a file version carries that version's lines.
+    return sonar_file_moved(old[0].lines, new[0].lines)
+
+
+MATCHERS: dict[str, Matcher] = {
+    "sonar": sonar_track,
+    "sonar_branch": sonar_track,
+    "bandit": bandit_baseline,
+}
+
+#: For a renamed file: whether the scheme still takes it for the old file. A scheme
+#: listed here pairs nothing across a rename that its check rejects.
+RENAME_CHECKS: dict[str, Callable[[Sequence[Trackable], Sequence[Trackable]], bool]] = {
+    "sonar_branch": _sonar_branch_moved,
+}

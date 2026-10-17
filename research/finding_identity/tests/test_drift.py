@@ -141,6 +141,8 @@ def test_span_3_file_rename_breaks_every_path_based_key(summary: dict[str, Any])
     # keeps L; it still loses the edited E. Bandit compares the file name, so it loses L
     # but keeps E.
     assert _outcomes(entry, "sonar") == {"known_ok": 2, "false_new": 1}
+    # lib.py moved unchanged, so a branch analysis detects the move too.
+    assert _outcomes(entry, "sonar_branch") == {"known_ok": 2, "false_new": 1}
     assert _outcomes(entry, "bandit") == {"known_ok": 2, "false_new": 1}
     assert entry["totals"]["schemes"]["sonar"]["false_new_edited"] == 1
     assert entry["totals"]["schemes"]["bandit"]["false_new_edited"] == 0

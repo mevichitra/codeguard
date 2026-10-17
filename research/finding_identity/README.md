@@ -21,6 +21,7 @@ ports of their source code at a pinned version, checked against the original too
 | `line_text` | the exact text of the flagged line | |
 | `github` | GitHub code scanning's `primaryLocationLineHash`: a rolling hash over the 100 non-blank characters from the start of the line, plus an occurrence count | github/codeql-action `src/fingerprints.ts` |
 | `sonar` | SonarQube's issue tracker, a **multi-pass matcher**: (1) same rule, line, line hash and message; (2) same rule, line and line hash; (3) code moves, by unique 11-line block hashes and then by the longest identical block; (4) same rule, line hash and message; (5) same rule, line and message; (6) same rule and line hash. The line hash is the MD5 of the line without spaces and tabs | SonarQube 26.10.0.133078, `sonar-core` `issue/tracking/Tracker.java`, `AbstractTracker.java`, `BlockRecognizer.java`, `BlockHashSequence.java`, `hash/SourceLineHashesComputer.java` |
+| `sonar_branch` | the `sonar` tracker as a **branch analysis** runs it. A renamed file keeps its findings only if SonarQube's file move detection takes it for the old file: line counts within (0.84×, 1.18×) and a similarity of at least 85, where similarity is 100 × (1 − edit distance / longer length) over the line hashes. `sonar` is the **pull-request** analysis, which takes renames from the SCM | SonarQube 26.10.0.133078, `sonar-ce-task-projectanalysis` `filemove/FileMoveDetectionStep.java`, `SourceSimilarityImpl.java` |
 | `bandit` | `bandit -b baseline.json`: a result is known when an issue with the same text, severity, CWE, confidence, file, test name and test ID is in the baseline. No location at all, and **set membership**: once one such issue is baselined, any number of equal new ones are hidden | Bandit 1.9.4 `bandit/core/manager.py` (`_compare_baseline_results`), `bandit/core/issue.py` (`Issue.__eq__`) |
 | `semgrep` | Semgrep's `match_based_id` (JSON `extra.fingerprint`, SARIF `fingerprints["matchBasedId/v1"]`): BLAKE2b of the rule's patterns with metavariables replaced by the code they bound, the path and the rule ID, plus an ordinal among equal keys in the file. No line, column or matched code beyond the bindings. **Semgrep findings only** | Semgrep 1.180.0 `semgrep/rule_match.py` (`get_match_based_key`, `get_match_based_id`, `RuleMatches.add`), `semgrep/rule.py` (`formula_string`) |
 | `codeguard` | CodeGuard's `codeguard/v1` fingerprint: enclosing function/class plus the normalized statement (literals masked, comments and whitespace removed) | `src/codeguard/engine/fingerprint.py` |
@@ -28,9 +29,10 @@ ports of their source code at a pinned version, checked against the original too
 | `cg_no_mask` | ablation: `codeguard` without masking literals | |
 | `cg_raw` | ablation: `codeguard` without any normalization (scope plus raw line) | |
 
-`sonar` and `bandit` match with an algorithm rather than a key (`trackers.py`, plugged in
-through `trackers.MATCHERS`); their keys hold what that algorithm compares and are used
-only for the collision rate (`sonar`: rule and line hash). Bandit pairs nothing, so to
+`sonar`, `sonar_branch` and `bandit` match with an algorithm rather than a key
+(`trackers.py`, plugged in through `trackers.MATCHERS`); their keys hold what that
+algorithm compares and are used only for the collision rate (`sonar` and `sonar_branch`:
+rule and line hash). Bandit pairs nothing, so to
 score mispairs the `bandit` matcher pairs equal issues in line order and sends surplus
 new issues to the last equal old one.
 
@@ -43,7 +45,11 @@ Where a port fixes what the tool leaves to its environment:
   ranges; a SonarQube language plugin that reports such ranges hashes only those. Only
   the tracking of open issues runs (there are no closed issues to reopen between two
   consecutive versions). The tie-breaking order of `BlockRecognizer`, which iterates
-  `java.util.HashMap` key sets, is reproduced exactly by a port of `HashMap`.
+  `java.util.HashMap` key sets, is reproduced exactly by a port of `HashMap`. For
+  `sonar_branch`, the file move detection scores every removed file against every added
+  file and elects the best pairs; the harness already pairs files by git's rename
+  detection (`git diff -M`, 50% similarity), so only SonarQube's decision for that pair
+  is ported. A move SonarQube would find but git would not is therefore not modelled.
 - **Bandit.** Findings from other analyzers fill Bandit's fields with their closest
   equivalents: CodeGuard's description, severity, confidence, CWE and rule title;
   Semgrep's message, severity and the rule's `confidence` and `cwe` metadata.
