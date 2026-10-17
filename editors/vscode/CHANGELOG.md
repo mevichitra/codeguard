@@ -44,6 +44,8 @@ Requires `codeguard-cli` 2.2.0 or newer.
   command of the same name that the language server registered.
 - The status-bar spinner no longer spins forever when the server stops or fails, or
   when a scan never reports new results.
+- `LICENSE` now carries the verbatim Apache License 2.0 text, so licence scanners
+  detect the extension as Apache-2.0. The terms are unchanged.
 
 ## [0.1.0] - 2026-09-24
 
