@@ -43,6 +43,12 @@ def register(sub: Any) -> dict[str, Handler]:
         default="codeguard",
         help="what produces the findings; bandit replays only the Python repositories",
     )
+    bp.add_argument(
+        "--semgrep-rules",
+        type=Path,
+        help="for --analyzer semgrep: a rules file or a rules repository checkout "
+        "(default: semgrep_rules.yml)",
+    )
     bp.add_argument("--workdir", type=Path, default=HERE / ".repos", help="where to clone")
     bp.add_argument("--only", help="comma-separated labels to run (default: all)")
     bp.add_argument(
@@ -116,6 +122,7 @@ def _batch(args: argparse.Namespace) -> None:
         timeout=args.timeout,
         delete_clones=args.delete_clones,
         analyzer=args.analyzer,
+        semgrep_rules=args.semgrep_rules,
     )
     statuses = run_batch(entries, opts, jobs=args.jobs, force=args.force)
     if any(s["status"] == "failed" for s in statuses):

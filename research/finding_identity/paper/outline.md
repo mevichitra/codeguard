@@ -208,6 +208,13 @@ python -m research.finding_identity batch $P/corpus.csv --commits 200 --jobs 4 -
 python -m research.finding_identity batch $P/corpus.csv --commits 200 --jobs 4 --details \
     --analyzer bandit --out $P/results/corpus-bandit
 
+# RQ1, third analyzer: Semgrep with third-party rules (all 35 repositories), the
+# opengrep-rules fork of semgrep-rules at a pinned commit (README, "Semgrep's rules")
+git clone https://github.com/opengrep/opengrep-rules $P/.repos/opengrep-rules
+git -C $P/.repos/opengrep-rules checkout f1d2b562b414783763fd02a6ed2736eaed622efa
+python -m research.finding_identity batch $P/corpus.csv --commits 200 --jobs 4 --details \
+    --analyzer semgrep --semgrep-rules $P/.repos/opengrep-rules --out $P/results/corpus-semgrep
+
 # RQ2: the transformation experiment on each Python repository at its pinned commit
 python - <<'PY' | xargs -P 4 -L 1 sh -c \
     'python -m research.finding_identity transform $0 --ref $1 --label $2 --samples 40 \
@@ -221,6 +228,7 @@ PY
 # Table II, numbers.md, rq1.csv, rq2.csv, Fig. 1
 python -m research.finding_identity.paper_kit --codeguard $P/results/corpus-v3 \
     --bandit $P/results/corpus-bandit --bandit-exclude B101 \
+    --semgrep $P/results/corpus-semgrep \
     --transform $P/results/transform --corpus $P/corpus.csv --out $P/paper
 
 # tables.md, pooled.csv, per_repo.*, repos.csv, the per-repository box plot
