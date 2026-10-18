@@ -17,7 +17,11 @@ saying who settled it). With ``--results`` (the corpus replays the sample came f
 the report also estimates each content scheme's hidden rate after removing the
 ground-truth errors: every hidden finding of those schemes lies in the
 ``new_but_matched`` stratum, so its count is scaled by the share of that scheme's
-sampled matches that the adjudication confirms as truly new.
+sampled matches that the adjudication confirms as truly new. The replays may use a
+newer ground truth than the one the sample was drawn from: each sampled finding is then
+looked up in them, the scaling uses only the sampled findings they still count as
+introduced and hidden, and the report says how often their ground truth agrees with
+the adjudicated verdicts.
 """
 
 from __future__ import annotations
@@ -150,21 +154,97 @@ def report(
     return "\n".join(out)
 
 
-def corrected_hidden(
-    key: Sequence[Mapping[str, str]], adjudicated: Mapping[str, str], results: Path
-) -> list[str]:
-    """Markdown lines: each content scheme's hidden rate before and after correction."""
+def _item_id(repository: str, rec: Mapping[str, object]) -> tuple[str, str, str, str, str]:
+    return (
+        repository,
+        str(rec.get("commit")),
+        str(rec.get("path")),
+        str(rec.get("rule")),
+        str(rec.get("line")),
+    )
+
+
+def sampled_records(
+    key: Sequence[Mapping[str, str]], results: Path
+) -> tuple[dict[str, dict[str, object]], Counter[str], int]:
+    """The replay's record of each sampled finding (by item), plus each content scheme's
+    hidden count and the number of introduced findings in the replay."""
+    wanted = {
+        _item_id(r.get("repository", ""), {**r, "line": r.get("line")}): r["item"] for r in key
+    }
+    found: dict[str, dict[str, object]] = {}
     hidden: Counter[str] = Counter()
     introduced = 0
     for f in sorted(results.glob("*/findings.jsonl")):
         with f.open(encoding="utf-8") as fh:
             for line in fh:
                 rec = json.loads(line)
+                item = wanted.get(_item_id(f.parent.name, rec))
+                if item is not None:
+                    found[item] = rec
                 if rec["truth"] != "new":
                     continue
                 introduced += 1
                 for scheme in CONTENT_SCHEMES:
                     hidden[scheme] += rec["outcomes"][scheme] == "false_known"
+    return found, hidden, introduced
+
+
+def truth_holds(row: Mapping[str, str], verdict: str | None, rec: Mapping[str, object]) -> bool:
+    """Whether a replay's ground truth for a sampled finding agrees with its verdict."""
+    paired = rec["truth"] == "known" and str(rec.get("old_line")) == row["old_line"]
+    if verdict == "same":
+        return paired
+    if verdict == "different":
+        return not paired
+    if verdict == "new":
+        return rec["truth"] == "new"
+    return rec["truth"] == "known"  # existed
+
+
+def truth_agreement(
+    key: Sequence[Mapping[str, str]], adjudicated: Mapping[str, str], results: Path
+) -> list[str]:
+    """Markdown lines: how often the replay's ground truth agrees with the verdicts."""
+    found, _, _ = sampled_records(key, results)
+    out = [
+        "## Ground truth of the replays against the adjudicated verdicts",
+        "",
+        f"From `{results}`: {len(found)} of {len(key)} sampled findings found. *Holds*: the",
+        "replay's ground truth agrees with the final verdict (Wilson 95% interval).",
+        "",
+    ]
+    for group in ("kind", "stratum"):
+        tally: dict[str, Counter[str]] = {}
+        for row in key:
+            rec = found.get(row["item"])
+            verdict = adjudicated.get(row["item"])
+            if rec is None or judgement(verdict) == "unclear":
+                outcome = "undecided"
+            else:
+                outcome = "holds" if truth_holds(row, verdict, rec) else "fails"
+            name = _kind(row) if group == "kind" else row["stratum"]
+            for g in (name, "all"):
+                tally.setdefault(g, Counter())[outcome] += 1
+        out += [
+            f"| {group} | holds | fails | undecided | holds | 95% CI |",
+            "|---|---:|---:|---:|---:|---|",
+        ]
+        for g in [*sorted(n for n in tally if n != "all"), "all"]:
+            yes, no, und = tally[g]["holds"], tally[g]["fails"], tally[g]["undecided"]
+            ci = wilson(yes, yes + no)
+            rate = f"{100 * yes / (yes + no):.1f}%" if yes + no else "n/a"
+            cis = f"[{100 * ci[0]:.1f}, {100 * ci[1]:.1f}]" if ci else "n/a"
+            out.append(f"| {g} | {yes} | {no} | {und} | {rate} | {cis} |")
+        out.append("")
+    return out
+
+
+def corrected_hidden(
+    key: Sequence[Mapping[str, str]], adjudicated: Mapping[str, str], results: Path
+) -> list[str]:
+    """Markdown lines: each content scheme's hidden rate before and after correction."""
+    found, hidden, introduced = sampled_records(key, results)
     sample = [r for r in key if r["stratum"] == "new_but_matched"]
     out = [
         "## Hidden rates after correcting the ground truth",
@@ -178,7 +258,16 @@ def corrected_hidden(
         "|---|---:|---:|---:|---:|---|",
     ]
     for scheme in CONTENT_SCHEMES:
-        rows = [r for r in sample if scheme in r["disagreeing_schemes"].split()]
+
+        def still_hidden(r: Mapping[str, str], scheme: str = scheme) -> bool:
+            rec = found.get(r["item"])
+            if rec is None:  # not in these replays: trust the sample
+                return scheme in r["disagreeing_schemes"].split()
+            outcomes = rec["outcomes"]
+            assert isinstance(outcomes, dict)
+            return rec["truth"] == "new" and outcomes[scheme] == "false_known"
+
+        rows = [r for r in sample if still_hidden(r)]
         new = sum(judgement(adjudicated.get(r["item"])) == "confirms" for r in rows)
         ci = wilson(new, len(rows))
         rate = hidden[scheme] / introduced if introduced else 0.0
@@ -238,6 +327,7 @@ def main(argv: list[str] | None = None) -> None:
         text += "\nSources of the adjudicated verdicts:\n\n"
         text += "\n".join(f"- {n}: {src}" for src, n in sources.most_common()) + "\n"
         if args.results:
+            text += "\n" + "\n".join(truth_agreement(key, final, args.results))
             text += "\n" + "\n".join(corrected_hidden(key, final, args.results))
     out = args.out or args.key.parent / "agreement.md"
     out.write_text(text.rstrip("\n") + "\n", encoding="utf-8")

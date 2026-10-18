@@ -90,3 +90,42 @@ def test_corrected_hidden_scales_by_the_confirmed_share(tmp_path: Path) -> None:
     # Hidden 2 of 4 introduced (50%); half the sampled matches are truly new: 25%.
     row = next(x for x in lines if x.startswith("| `sonar`"))
     assert row.startswith("| `sonar` | 50.00% (2) | 2 | 1 | 25.00% |")
+
+
+def test_a_newer_replay_is_looked_up_item_by_item(tmp_path: Path) -> None:
+    from research.finding_identity.gt_agreement import corrected_hidden, truth_agreement
+
+    run = tmp_path / "repo"
+    run.mkdir()
+    where = {"commit": "c1", "path": "a.py", "rule": "R"}
+    base = {"line_text": "new_ok", "github": "new_ok", "codeguard": "new_ok"}
+    records = [
+        # A: the newer ground truth says it persisted (it moved), so it is not hidden.
+        {
+            **where,
+            "line": 5,
+            "truth": "known",
+            "old_line": 9,
+            "outcomes": {**base, "sonar": "known_ok"},
+        },
+        # B: still introduced and still hidden by sonar.
+        {**where, "line": 7, "truth": "new", "outcomes": {**base, "sonar": "false_known"}},
+        {**where, "line": 8, "truth": "new", "outcomes": {**base, "sonar": "new_ok"}},
+    ]
+    (run / "findings.jsonl").write_text("".join(json.dumps(r) + "\n" for r in records))
+    common = {
+        "repository": "repo",
+        **where,
+        "stratum": "new_but_matched",
+        "truth": "new",
+        "old_line": "",
+        "disagreeing_schemes": "sonar",
+    }
+    key = [{**common, "item": "A", "line": "5"}, {**common, "item": "B", "line": "7"}]
+    verdicts = {"A": "existed", "B": "new"}
+    lines = corrected_hidden(key, verdicts, tmp_path)
+    # Hidden 1 of 2 introduced; the one sampled finding still hidden is truly new.
+    row = next(x for x in lines if x.startswith("| `sonar`"))
+    assert row.startswith("| `sonar` | 50.00% (1) | 1 | 1 | 50.00% |")
+    agreement = "\n".join(truth_agreement(key, verdicts, tmp_path))
+    assert "| introduced | 2 | 0 | 0 | 100.0% |" in agreement
