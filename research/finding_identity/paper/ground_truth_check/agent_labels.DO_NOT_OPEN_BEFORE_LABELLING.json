@@ -1,0 +1,402 @@
+{
+ "F001": {
+  "verdict": "new",
+  "reason": "The await-in-loop line is a + line in a newly added test."
+ },
+ "F002": {
+  "verdict": "same",
+  "reason": "Same function definition, only shifted down; no diff near it."
+ },
+ "F003": {
+  "verdict": "same",
+  "reason": "Identical += line, only shifted; no diff near it."
+ },
+ "F004": {
+  "verdict": "same",
+  "reason": "Same referrer redirect moved into a new inner function."
+ },
+ "F005": {
+  "verdict": "same",
+  "reason": "Same loose-equality condition line, edited only in the role comparison."
+ },
+ "F006": {
+  "verdict": "same",
+  "reason": "Same var self in the revert method, function shifted by the commit."
+ },
+ "F007": {
+  "verdict": "new",
+  "reason": "The loose comparison is inside a large block of + lines adding nested-row loading."
+ },
+ "F008": {
+  "verdict": "new",
+  "reason": "The whole file is added by this commit."
+ },
+ "F009": {
+  "verdict": "same",
+  "reason": "Same open(temp_filepath) write, re-indented into a try block."
+ },
+ "F010": {
+  "verdict": "same",
+  "reason": "Identical empty catch, only shifted; no diff near it."
+ },
+ "F011": {
+  "verdict": "same",
+  "reason": "Same function at the same line, unchanged."
+ },
+ "F012": {
+  "verdict": "same",
+  "reason": "The after-filter awaited count checks in the loop were collapsed into one awaited call replacing the flagged line."
+ },
+ "F013": {
+  "verdict": "same",
+  "reason": "Same == comparison on the not_found error, file moved and statement rewritten as an if."
+ },
+ "F014": {
+  "verdict": "new",
+  "reason": "var sign is a + line added in the new rounding logic."
+ },
+ "F015": {
+  "verdict": "new",
+  "reason": "The MOCK_PASS line is within a block of + lines adding a new test."
+ },
+ "F016": {
+  "verdict": "same",
+  "reason": "Same var me line at the same position, unchanged."
+ },
+ "F017": {
+  "verdict": "same",
+  "reason": "Same var i line, only reformatted."
+ },
+ "F018": {
+  "verdict": "same",
+  "reason": "Same function definition, only shifted."
+ },
+ "F019": {
+  "verdict": "same",
+  "reason": "Same method definition, shifted by one line."
+ },
+ "F020": {
+  "verdict": "existed",
+  "reason": "The var loc declaration existed before; only its initializer was edited."
+ },
+ "F021": {
+  "verdict": "different",
+  "reason": "The old per-test document.body.innerHTML setup was replaced by a new shared helper writing to a created div."
+ },
+ "F022": {
+  "verdict": "same",
+  "reason": "Same method definition, only shifted."
+ },
+ "F023": {
+  "verdict": "same",
+  "reason": "Same feed function; only its signature lost a parameter."
+ },
+ "F024": {
+  "verdict": "new",
+  "reason": "The credentials unpacking is in a newly added _get method (+ lines), distinct from the existing _post occurrence."
+ },
+ "F025": {
+  "verdict": "same",
+  "reason": "Same hardcoded test password constant; only its value changed."
+ },
+ "F026": {
+  "verdict": "same",
+  "reason": "Same new_secret literal, shifted by one line."
+ },
+ "F027": {
+  "verdict": "new",
+  "reason": "The f-string execute is in a newly added test class."
+ },
+ "F028": {
+  "verdict": "existed",
+  "reason": "The errors.password message assignment existed before, only reworded and joined onto one line."
+ },
+ "F029": {
+  "verdict": "same",
+  "reason": "Same create_key line, shifted."
+ },
+ "F030": {
+  "verdict": "same",
+  "reason": "Same var geoJSONString line, shifted."
+ },
+ "F031": {
+  "verdict": "same",
+  "reason": "Same var title line at the same position."
+ },
+ "F032": {
+  "verdict": "same",
+  "reason": "Same var parts line, shifted by one."
+ },
+ "F033": {
+  "verdict": "same",
+  "reason": "Same hardcoded test password, shifted."
+ },
+ "F034": {
+  "verdict": "same",
+  "reason": "Same test function definition at the same line."
+ },
+ "F035": {
+  "verdict": "existed",
+  "reason": "The collection-branch collectionType == \"REST\" ternary was carried over from the moved file's rewritten subscription handler, which already had the same REST/GraphQL dispatch."
+ },
+ "F036": {
+  "verdict": "existed",
+  "reason": "No diff near the createUser definition, so the function existed unchanged at this position."
+ },
+ "F037": {
+  "verdict": "same",
+  "reason": "Same tokenNamePrefix literal in the same test, shifted."
+ },
+ "F038": {
+  "verdict": "same",
+  "reason": "Same hardcoded test password, shifted."
+ },
+ "F039": {
+  "verdict": "same",
+  "reason": "Same except/pass at the same line, unchanged."
+ },
+ "F040": {
+  "verdict": "same",
+  "reason": "The Manufacture else-if comparison is an unchanged context line, shifted by one."
+ },
+ "F041": {
+  "verdict": "new",
+  "reason": "The var card lookup is within the rewritten updatePermissions + lines."
+ },
+ "F042": {
+  "verdict": "new",
+  "reason": "The whole file is added by this commit."
+ },
+ "F043": {
+  "verdict": "same",
+  "reason": "Same data != \"null\" check, shifted."
+ },
+ "F044": {
+  "verdict": "same",
+  "reason": "Same role comparison in the selection loop, edited to normalise nulls."
+ },
+ "F045": {
+  "verdict": "same",
+  "reason": "Same merge of req.body into the checklist item, shifted by one."
+ },
+ "F046": {
+  "verdict": "same",
+  "reason": "Same status != COMPLETE ternary, shifted."
+ },
+ "F047": {
+  "verdict": "same",
+  "reason": "Same purchaseHourglass function; only a parameter was removed."
+ },
+ "F048": {
+  "verdict": "same",
+  "reason": "Same hardcoded admin password at the same line."
+ },
+ "F049": {
+  "verdict": "existed",
+  "reason": "The awaited recursive export in the loop was moved out of the removed withChildren block, de-indented."
+ },
+ "F050": {
+  "verdict": "same",
+  "reason": "Same f-string INSERT in the test, shifted."
+ },
+ "F051": {
+  "verdict": "new",
+  "reason": "The whole file is added by this commit."
+ },
+ "F052": {
+  "verdict": "new",
+  "reason": "var Tokenizer is part of the new select2 data-adapter code added by the commit."
+ },
+ "F053": {
+  "verdict": "same",
+  "reason": "Same var declaration of the tags widget, only renamed for tomselect."
+ },
+ "F054": {
+  "verdict": "new",
+  "reason": "The line is in a newly added test class."
+ },
+ "F055": {
+  "verdict": "same",
+  "reason": "Same awaited migration.migrate() in the migrations loop, carried into the rewritten runMigrations."
+ },
+ "F056": {
+  "verdict": "new",
+  "reason": "The whole test file is added by this commit."
+ },
+ "F057": {
+  "verdict": "same",
+  "reason": "Same MOCK_PASSWORD literal, shifted."
+ },
+ "F058": {
+  "verdict": "existed",
+  "reason": "The var loc declaration existed before; only its initializer was edited."
+ },
+ "F059": {
+  "verdict": "existed",
+  "reason": "The awaited update in the loop was moved out of the removed if-block, de-indented."
+ },
+ "F060": {
+  "verdict": "same",
+  "reason": "Same innerHTML copy of the document container; only the element variable was renamed."
+ },
+ "F061": {
+  "verdict": "same",
+  "reason": "Same MOCK_PASS literal in the same test, shifted."
+ },
+ "F062": {
+  "verdict": "same",
+  "reason": "Same hardcoded test password, shifted."
+ },
+ "F063": {
+  "verdict": "same",
+  "reason": "Same loose comparison against node.nodeid; only the loop variable was renamed."
+ },
+ "F064": {
+  "verdict": "same",
+  "reason": "Same MOCK_PASS literal just after the rewritten hunk, shifted by the same offset as neighbouring lines."
+ },
+ "F065": {
+  "verdict": "existed",
+  "reason": "The flagged function definition is an unchanged context line; the commit only added straight-line setup calls to an existing function."
+ },
+ "F066": {
+  "verdict": "same",
+  "reason": "Same MOCK_PASS literal, shifted."
+ },
+ "F067": {
+  "verdict": "existed",
+  "reason": "The awaited readJson in the loop existed before; the line was only edited to add a type parameter."
+ },
+ "F068": {
+  "verdict": "same",
+  "reason": "Same password literal in an unchanged test, shifted by a new test inserted above."
+ },
+ "F069": {
+  "verdict": "new",
+  "reason": "var siteLanguage is a + line added by the commit."
+ },
+ "F070": {
+  "verdict": "new",
+  "reason": "The create_key line is in a newly added test."
+ },
+ "F071": {
+  "verdict": "same",
+  "reason": "Same var selectedText line, shifted."
+ },
+ "F072": {
+  "verdict": "existed",
+  "reason": "The same var declaration list existed before, only joined onto one line."
+ },
+ "F073": {
+  "verdict": "new",
+  "reason": "The localCollections ternary with == is a newly added + line; the pre-existing comparison remains separately below."
+ },
+ "F074": {
+  "verdict": "new",
+  "reason": "The whole file is added by this commit."
+ },
+ "F075": {
+  "verdict": "same",
+  "reason": "Same f-string INSERT, shifted."
+ },
+ "F076": {
+  "verdict": "existed",
+  "reason": "No diff near the flagged method, so it existed unchanged."
+ },
+ "F077": {
+  "verdict": "new",
+  "reason": "var config is a + line added for the TomSelect setup."
+ },
+ "F078": {
+  "verdict": "new",
+  "reason": "The whole translation file is added by this commit."
+ },
+ "F079": {
+  "verdict": "same",
+  "reason": "Same f-string INSERT, shifted."
+ },
+ "F080": {
+  "verdict": "same",
+  "reason": "Same MOCK_PASS literal, shifted."
+ },
+ "F081": {
+  "verdict": "new",
+  "reason": "The starfleet comparison is a newly added branch; the old azure comparison moved to the following else-if."
+ },
+ "F082": {
+  "verdict": "same",
+  "reason": "Same var siteLanguage in loadCannedResponses, shifted."
+ },
+ "F083": {
+  "verdict": "new",
+  "reason": "The whole file is added by this commit."
+ },
+ "F084": {
+  "verdict": "same",
+  "reason": "Same purchase function; only a parameter was removed."
+ },
+ "F085": {
+  "verdict": "same",
+  "reason": "Same MOCK_PASSWORD literal, shifted."
+ },
+ "F086": {
+  "verdict": "new",
+  "reason": "The whole file is added by this commit."
+ },
+ "F087": {
+  "verdict": "same",
+  "reason": "Same awaited exists() check in the loop, edited only with a type cast."
+ },
+ "F088": {
+  "verdict": "same",
+  "reason": "Same awaited call in the loop; only an argument was added."
+ },
+ "F089": {
+  "verdict": "same",
+  "reason": "Same var matchingCard line, shifted."
+ },
+ "F090": {
+  "verdict": "same",
+  "reason": "Same handleNoShowFee declaration, only whitespace changed."
+ },
+ "F091": {
+  "verdict": "same",
+  "reason": "Same test method, shifted."
+ },
+ "F092": {
+  "verdict": "unclear",
+  "reason": "The admin seed block is shown as + lines, but the hunk header implies ~250 lines were removed earlier and the excerpt cannot show whether this block was moved from there."
+ },
+ "F093": {
+  "verdict": "existed",
+  "reason": "The expected password message existed before at the same place; only its text was edited."
+ },
+ "F094": {
+  "verdict": "new",
+  "reason": "The function is in a large block of + lines added by the commit."
+ },
+ "F095": {
+  "verdict": "new",
+  "reason": "var self = this is a + line added in initialize."
+ },
+ "F096": {
+  "verdict": "new",
+  "reason": "The credential literal is in a newly added test."
+ },
+ "F097": {
+  "verdict": "same",
+  "reason": "Same MOCK_PASS literal, shifted."
+ },
+ "F098": {
+  "verdict": "new",
+  "reason": "var perms is part of the rewritten permission-loading + lines."
+ },
+ "F099": {
+  "verdict": "new",
+  "reason": "var lastSyncedCardSelection is a + line added by the commit."
+ },
+ "F100": {
+  "verdict": "same",
+  "reason": "Same function; its signature gained an optional parameter."
+ }
+}
