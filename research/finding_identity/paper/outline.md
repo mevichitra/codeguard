@@ -218,7 +218,7 @@ for r in csv.DictReader(open("research/finding_identity/corpus.csv")):
         print(f"research/finding_identity/.repos/{r['label']} {r['sha']} {r['label']}")
 PY
 
-# Table II, numbers.md, rq1.csv, rq2.csv, Fig. 1
+# Table II, the gate table, numbers.md, rq1.csv, rq2.csv, Fig. 1
 python -m research.finding_identity.paper_kit --codeguard $P/results/corpus-v3 \
     --bandit $P/results/corpus-bandit --bandit-exclude B101 \
     --transform $P/results/transform --corpus $P/corpus.csv --out $P/paper
