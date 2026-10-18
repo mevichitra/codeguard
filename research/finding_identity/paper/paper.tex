@@ -2,6 +2,10 @@
 \usepackage[T1]{fontenc}
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 \usepackage{array}
 \usepackage{tabularx}
 \usepackage{url}
@@ -92,9 +96,16 @@ longest identical block; rule, line hash and message; rule, line and message; an
 finally rule and line hash. The line hash is the MD5 of the line without spaces and
 tabs. \texttt{sonar} and \texttt{sonar\_branch} differ only on renamed files. A
 pull-request analysis takes renames from the SCM. A branch analysis keeps a renamed
-file's findings only if its own file move detection accepts the rename: line counts
-within 0.84 to 1.18 times the old file's and a similarity of at least 85, computed from
-the edit distance between the two files' line hashes.
+file's findings only if its own file move detection accepts the rename. With $n$ and
+$n'$ the old and new line counts and $h$ and $h'$ the two files' sequences of line
+hashes, it requires
+\begin{equation}\label{eq:move}
+\lfloor 0.84\,n \rfloor < n' < \lceil 1.18\,n \rceil
+\ \ \text{and}\ \
+\Bigl\lfloor 100 \Bigl(1 - \frac{d(h, h')}{\max(n, n')}\Bigr) \Bigr\rfloor \ge 85,
+\end{equation}
+where $d$ is the Levenshtein distance between the two sequences, each line counting as
+one symbol.
 
 \begin{table}[t]
 \centering
@@ -130,21 +141,81 @@ message, in the same file, looks exactly like the first.
 
 \section{Method}\label{sec:method}
 
-\textit{Ground truth.} For each file a commit changes, a line diff maps old lines to new
-ones. Unchanged lines map exactly; within a replaced block, an old and a new line are
-paired when their similarity is at least 0.6. An old and a new finding are the same
-finding when they have the same rule and the old finding's line maps to the new
-finding's line. Renames come from \texttt{git diff -M}. The ground truth knows nothing
-about any scheme.
+\textit{Ground truth.} Let $O$ and $N$ be the findings in the old and the new version of
+a file that a commit changes; a finding $f$ has a rule $r(f)$, a line $\ell(f)$ and a
+column $c(f)$. Renamed files are paired by \texttt{git diff -M}. A line diff (Python's
+\texttt{difflib}) splits the two versions into unchanged and replaced blocks and yields
+a partial map $\mu$ from old lines to new ones. Unchanged lines map one to one. Inside a
+replaced block with old lines $a_1, \dots, a_p$ and new lines $b_1, \dots, b_q$, two
+lines, stripped of surrounding whitespace, are compared by
+\begin{equation}\label{eq:sim}
+s(a, b) = \frac{2M}{|a| + |b|},
+\end{equation}
+where $M$ is the number of characters in the matching blocks that Ratcliff and
+Obershelp's algorithm finds (difflib's \texttt{ratio}). The lines of the block are then
+paired in order so that their total similarity is largest, counting only pairs with
+$s \ge \theta = 0.6$:
+\begin{equation}\label{eq:align}
+B_{i,j} = \max \bigl( B_{i+1,j},\ B_{i,j+1},\ s(a_i, b_j) + B_{i+1,j+1} \bigr),
+\end{equation}
+where the third term applies only when $s(a_i, b_j) \ge \theta$, and
+$B_{p+1,j} = B_{i,q+1} = 0$. Tracing back from $B_{1,1}$ gives the pairs. A block with
+$pq > 4000$ is paired position by position instead ($a_k$ with $b_k$ when
+$s(a_k, b_k) \ge \theta$), which bounds the cost. Deleted lines, and lines replaced past
+the threshold, stay unmapped.
 
-\textit{Outcomes and metrics.} A finding of the new version is \emph{persisting} when
-the ground truth pairs it with an old finding, and \emph{introduced} otherwise. A scheme
-can pair a persisting finding with the right old finding, with a wrong one, or with none;
-it can leave an introduced finding unpaired or pair it with an old one. The
-\emph{false-new rate} is the share of persisting findings a scheme leaves unpaired, the
-\emph{hidden rate} the share of introduced findings it pairs. The \emph{collision rate}
-is the share of findings that share their key with another finding in the same file
-version, where pairing has to guess.
+The ground truth $T\colon N \rightharpoonup O$ pairs the findings. Taking old findings in
+order of line and column, it pairs each $o$ with the still unpaired $n \in N$ that has
+$r(n) = r(o)$ and $\ell(n) = \mu(\ell(o))$, choosing the column nearest $c(o)$. The
+\emph{persisting} findings are $K = \operatorname{dom} T$, the \emph{introduced} ones
+$I = N \setminus K$. No scheme takes part in this.
+
+\textit{Outcomes and metrics.} A scheme $\sigma$ gives its own partial pairing
+$P_\sigma\colon N \rightharpoonup O$. The four key schemes group the findings by key,
+sort each group by line and column in both versions, and pair the $i$-th old finding with
+the $i$-th new one. SonarQube and Bandit run their ported matchers, and
+\texttt{sonar\_branch} pairs nothing across a rename that \eqref{eq:move} rejects. A
+persisting finding $n$ is \emph{known} if $P_\sigma(n) = T(n)$, \emph{mispaired} if
+$P_\sigma(n)$ is another old finding and \emph{false new} if $P_\sigma(n)$ is undefined;
+an introduced finding is \emph{hidden} if $P_\sigma(n)$ is defined. Summed over all file
+pairs of a replay, the two main rates are
+\begin{equation}\label{eq:rates}
+\mathrm{FN}_\sigma = \frac{|K \setminus \operatorname{dom} P_\sigma|}{|K|},
+\qquad
+\mathrm{H}_\sigma = \frac{|I \cap \operatorname{dom} P_\sigma|}{|I|}.
+\end{equation}
+The \emph{collision rate} $\mathrm{C}_\sigma$ is the share of findings, over every file
+version the replay analyses, that share their $\sigma$ key with another finding in the
+same version. For those findings the pairing falls back on line order.
+Algorithm~\ref{alg:replay} puts the steps together; it skips files the analyzer does
+not read (vendored, generated and minified code).
+
+\begin{algorithm}[t]
+\caption{Replaying and scoring one repository}\label{alg:replay}
+\small
+\algrenewcommand\algorithmicindent{1em}
+\begin{algorithmic}[1]
+\Require a repository and branch, $k = 200$, schemes $\Sigma$
+\State $c_0, \dots, c_k \gets$ the last $k+1$ first-parent commits, oldest first
+\For{$t = 1, \dots, k$}
+  \ForAll{changed file $(p, p')$ from $c_{t-1}$ to $c_t$}
+    \State $O, N \gets$ findings in $p$ at $c_{t-1}$, in $p'$ at $c_t$
+      \Comment{$\emptyset$ if absent}
+    \State $\mu \gets$ line map by \eqref{eq:sim} and \eqref{eq:align}
+    \State $T \gets \textsc{GroundTruth}(O, N, \mu)$
+    \ForAll{$\sigma \in \Sigma$}
+      \State $P \gets \textsc{Pair}_\sigma(O, N)$
+      \State \textbf{if} $p \ne p'$ and $\sigma$ rejects it by \eqref{eq:move}:
+        $P \gets \emptyset$
+      \ForAll{$n \in N$}
+        \State count the outcome of $n$ for $\sigma$ from $T(n)$ and $P(n)$
+      \EndFor
+    \EndFor
+  \EndFor
+\EndFor
+\State \Return the counts per scheme and outcome
+\end{algorithmic}
+\end{algorithm}
 
 \textit{Corpus.} We chose 35 open-source web applications by written criteria: a
 deployable application rather than a library or a sample; a Python or JavaScript or
@@ -175,9 +246,14 @@ duplicate, blank, CRLF and CR-only lines. A Semgrep port reproduced all 716
 \texttt{match\_based\_id} values Semgrep emitted during two replays; we measured it on
 those two repositories only and leave it out here.
 
-\textit{Statistics.} Findings within a repository are correlated, so we report pooled
-rates with 95\% intervals from a cluster bootstrap over repositories (10,000
-resamples). A per-finding interval would be far too narrow: for \texttt{line\_text}'s
+\textit{Statistics.} Every rate is pooled over repositories: with $x_r$ and $y_r$ the
+numerator and denominator of \eqref{eq:rates} in repository $r$,
+$R = \sum_r x_r / \sum_r y_r$. Findings within a repository are correlated, so the 95\%
+interval comes from a cluster bootstrap. Each of $10{,}000$ resamples draws as many
+repositories as the corpus has, with replacement, and recomputes $R^{(b)}$; the interval
+runs from the 2.5th to the 97.5th percentile of the $R^{(b)}$. A resample with a zero
+denominator is dropped, and every table uses the same draws. A per-finding interval
+would be far too narrow: for \texttt{line\_text}'s
 false-new rate of 1.89\%, the Wilson interval is 1.73--2.08 and the cluster bootstrap
 gives 0.80--3.51.
 
