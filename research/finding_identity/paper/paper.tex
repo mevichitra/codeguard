@@ -290,8 +290,9 @@ same tag, every time. The Bandit port flags exactly the issues a live
 \texttt{bandit -b} run reports, including a hidden duplicate. The GitHub port reproduces
 the hashes that the CodeQL Action's own \texttt{fingerprints.ts} computes on reference inputs with
 duplicate, blank, CRLF and CR-only lines. Over the Semgrep run, the port
-reproduced 87,916 of the 87,924 \texttt{match\_based\_id} values Semgrep emitted; the
-other 8 sit on two lines of one calcom test file.
+reproduced 87,916 of the 87,924 \texttt{match\_based\_id} values Semgrep emitted. The
+other 8 were two taint results at one sink, which Semgrep numbers in source order but
+reports in message order; the port now does the same.
 
 \textit{Statistics.} Every rate is pooled over repositories: with $x_r$ and $y_r$ the
 numerator and denominator of \eqref{eq:rates} in repository $r$,
