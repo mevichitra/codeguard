@@ -49,23 +49,19 @@ def test_latex_table_marks_missing_schemes() -> None:
     assert "\\texttt{sonar\\_branch} & -- &" in tex
 
 
-def test_latex_table_adds_a_semgrep_group_and_row() -> None:
-    facts = {
-        "codeguard": {"repos": 1, "known": 10, "introduced": 2, "known_renamed": 0},
-        "semgrep": {"repos": 2, "known": 30, "introduced": 3},
-    }
-    cg = {("line", "false_new"): estimate([(1, 10)], [[0]])}
+def test_semgrep_table_has_a_row_for_semgreps_own_ids() -> None:
+    from research.finding_identity.paper_kit import semgrep_table
+
+    facts = {"semgrep": {"repos": 2, "known": 30, "introduced": 3, "known_renamed": 1}}
     sg = {
         ("line", "false_new"): estimate([(3, 30)], [[0]]),
         ("semgrep", "hidden"): estimate([(1, 4)], [[0]]),
     }
-    tex = latex_table(cg, None, facts, semgrep=sg)
-    assert "\\multicolumn{2}{c}{Semgrep findings}" in tex and "Bandit findings" not in tex
-    assert "\\begin{tabular}{lrrrrrrr}" in tex  # 5 CodeGuard columns, 2 Semgrep columns
-    assert "\\texttt{line} & 10.0 {\\scriptsize(10.0--10.0)} & -- & -- & -- & -- & 10.0" in tex
-    assert "\\texttt{semgrep} & -- & -- & -- & -- & -- & -- & 25.0" in tex
-    # Without Semgrep there is no semgrep row.
-    assert "\\texttt{semgrep}" not in latex_table(cg, None, facts)
+    tex = semgrep_table(sg, facts)
+    assert "\\label{tab:rq1-semgrep}" in tex and "\\begin{tabular}{lrrr}" in tex
+    assert "\\texttt{line} & 10.0 {\\scriptsize(10.0--10.0)} & -- & -- \\\\" in tex
+    assert "\\texttt{semgrep} & -- & 25.0 {\\scriptsize(25.0--25.0)} & -- \\\\" in tex
+    assert "2 repositories, 30 persisting and 3 introduced findings, 1 of" in tex
 
 
 def test_rq2_pools_counts_over_repositories(tmp_path: Path) -> None:

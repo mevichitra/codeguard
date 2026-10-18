@@ -195,9 +195,10 @@ Availability: harness, ports, corpus, results and scripts in the repository
 
 ## Regenerating
 
-Everything in this directory comes from four runs over the pinned corpus and two
+Everything in this directory comes from five runs over the pinned corpus and two
 generators. From the repository root, with `pip install -e .` and
-`pip install -r research/finding_identity/requirements.txt` (about 40 minutes on 4 cores):
+`pip install -r research/finding_identity/requirements.txt` (about 40 minutes on 4 cores,
+plus about 1.5 to 2 hours for the Semgrep run):
 
 ```bash
 P=research/finding_identity
@@ -225,7 +226,7 @@ for r in csv.DictReader(open("research/finding_identity/corpus.csv")):
         print(f"research/finding_identity/.repos/{r['label']} {r['sha']} {r['label']}")
 PY
 
-# Table II, numbers.md, rq1.csv, rq2.csv, Fig. 1
+# Table II, the Semgrep table (table_rq1_semgrep.tex), numbers.md, rq1.csv, rq2.csv, Fig. 1
 python -m research.finding_identity.paper_kit --codeguard $P/results/corpus-v3 \
     --bandit $P/results/corpus-bandit --bandit-exclude B101 \
     --semgrep $P/results/corpus-semgrep \
