@@ -10,7 +10,62 @@
   "old_path": "tools/scripts/test/ci-path-filters.test.js",
   "old_line": null,
   "line": 69,
-  "before": [],
+  "before": [
+   [
+    51,
+    "    assert.ok(docs.includes('**/*.md'));"
+   ],
+   [
+    52,
+    "    assert.ok(docs.includes('**/*.mdx'));"
+   ],
+   [
+    53,
+    "    assert.ok(anyCode.includes('!**/*.md'));"
+   ],
+   [
+    54,
+    "    assert.ok(anyCode.includes('!**/*.mdx'));"
+   ],
+   [
+    55,
+    "    assert.ok(e2e.includes('!**/*.md'));"
+   ],
+   [
+    56,
+    "    assert.ok(e2e.includes('!**/*.mdx'));"
+   ],
+   [
+    57,
+    "  });"
+   ],
+   [
+    58,
+    ""
+   ],
+   [
+    59,
+    "  it('skips code checks and E2E for ownership and docs changes, but keeps mixed changes', async () => {"
+   ],
+   [
+    60,
+    "    for (const filterName of ['any-code', 'e2e']) {"
+   ],
+   [
+    61,
+    "      const patterns = await getFilterPatterns(filterName);"
+   ],
+   [
+    62,
+    "      const matches = (path) =>"
+   ],
+   [
+    63,
+    "        patterns.every((pattern) => picomatch(pattern, { dot: true })(path));"
+   ]
+  ],
+  "before_line": 57,
+  "before_mapped": false,
   "after": [
    [
     65,
@@ -100,6 +155,8 @@
     "\tcompany,"
    ]
   ],
+  "before_line": 1354,
+  "before_mapped": true,
   "after": [
    [
     1447,
@@ -189,6 +246,8 @@
     "\tif with_valuation_rate:"
    ]
   ],
+  "before_line": 159,
+  "before_mapped": true,
   "after": [
    [
     181,
@@ -278,6 +337,8 @@
     "        if (!rows.length) {"
    ]
   ],
+  "before_line": 110,
+  "before_mapped": true,
   "after": [
    [
     108,
@@ -367,6 +428,8 @@
     "            reject(new Error(gettext('Connection with this configuration already present.')));"
    ]
   ],
+  "before_line": 813,
+  "before_mapped": true,
   "after": [
    [
     868,
@@ -456,6 +519,8 @@
     "        };"
    ]
   ],
+  "before_line": 128,
+  "before_mapped": true,
   "after": [
    [
     206,
@@ -507,7 +572,62 @@
   "old_path": "src/frontend/src/components/tables/InvenTreeTable.tsx",
   "old_line": null,
   "line": 940,
-  "before": [],
+  "before": [
+   [
+    773,
+    ""
+   ],
+   [
+    774,
+    "  // Update tableState.records when new data received"
+   ],
+   [
+    775,
+    "  useEffect(() => {"
+   ],
+   [
+    776,
+    "    tableState.setRecords(tableData ?? apiData ?? []);"
+   ],
+   [
+    777,
+    "  }, [tableData, apiData]);"
+   ],
+   [
+    778,
+    ""
+   ],
+   [
+    779,
+    "  const previewDrawer = usePreviewDrawerState();"
+   ],
+   [
+    780,
+    ""
+   ],
+   [
+    781,
+    "  // Callback to display \"preview\" view for a row (if available)"
+   ],
+   [
+    782,
+    "  const showRowPreview = useCallback("
+   ],
+   [
+    783,
+    "    (pk: string | number, targetUrl?: string) => {"
+   ],
+   [
+    784,
+    "      if (tableProps.modelType && pk) {"
+   ],
+   [
+    785,
+    "        previewDrawer.openPreview("
+   ]
+  ],
+  "before_line": 779,
+  "before_mapped": false,
   "after": [
    [
     936,
@@ -559,7 +679,14 @@
   "old_path": "tests/e2e/extension-helpers.ts",
   "old_line": null,
   "line": 540,
-  "before": [],
+  "before": [
+   [
+    1,
+    ""
+   ]
+  ],
+  "before_line": 1,
+  "before_mapped": false,
   "after": [
    [
     536,
@@ -649,6 +776,8 @@
     "            log.info(\"Course import %s: Upload complete\", course_key)"
    ]
   ],
+  "before_line": 142,
+  "before_mapped": true,
   "after": [
    [
     141,
@@ -738,6 +867,8 @@
     "          subscriptionId,"
    ]
   ],
+  "before_line": 904,
+  "before_mapped": true,
   "after": [
    [
     1122,
@@ -827,6 +958,8 @@
     "    old_data = snapshot_registration_data(registration)"
    ]
   ],
+  "before_line": 474,
+  "before_mapped": true,
   "after": [
    [
     470,
@@ -916,6 +1049,8 @@
     "    await apiSignout({ page });"
    ]
   ],
+  "before_line": 37,
+  "before_mapped": true,
   "after": [
    [
     25,
@@ -1005,6 +1140,8 @@
     "    runDispatchWithOutSyncing(() => {"
    ]
   ],
+  "before_line": 49,
+  "before_mapped": true,
   "after": [
    [
     38,
@@ -1056,7 +1193,62 @@
   "old_path": "erpnext/stock/doctype/landed_cost_voucher/landed_cost_voucher.js",
   "old_line": null,
   "line": 119,
-  "before": [],
+  "before": [
+   [
+    112,
+    "\t\t\t\t\t\tprecision(\"applicable_charges\", item)"
+   ],
+   [
+    113,
+    "\t\t\t\t\t);"
+   ],
+   [
+    114,
+    "\t\t\t\t\ttotal_charges += item.applicable_charges;"
+   ],
+   [
+    115,
+    "\t\t\t\t});"
+   ],
+   [
+    116,
+    ""
+   ],
+   [
+    117,
+    "\t\t\t\tif (total_charges != this.frm.doc.total_taxes_and_charges) {"
+   ],
+   [
+    118,
+    "\t\t\t\t\tvar diff = this.frm.doc.total_taxes_and_charges - flt(total_charges);"
+   ],
+   [
+    119,
+    "\t\t\t\t\titems.slice(-1)[0].applicable_charges += diff;"
+   ],
+   [
+    120,
+    "\t\t\t\t}"
+   ],
+   [
+    121,
+    "\t\t\t\trefresh_field(\"items\");"
+   ],
+   [
+    122,
+    "\t\t\t}"
+   ],
+   [
+    123,
+    "\t\t}"
+   ],
+   [
+    124,
+    "\t}"
+   ]
+  ],
+  "before_line": 118,
+  "before_mapped": false,
   "after": [
    [
     115,
@@ -1108,7 +1300,62 @@
   "old_path": "packages/features/bookings/lib/handleNewBooking/test/reschedule.test.ts",
   "old_line": null,
   "line": 806,
-  "before": [],
+  "before": [
+   [
+    687,
+    "          });"
+   ],
+   [
+    688,
+    "        },"
+   ],
+   [
+    689,
+    "        timeout"
+   ],
+   [
+    690,
+    "      );"
+   ],
+   [
+    691,
+    ""
+   ],
+   [
+    692,
+    "      describe(\"Event Type that requires confirmation\", () => {"
+   ],
+   [
+    693,
+    "        // NOTE: Tests for BOOKING_REQUESTED webhook have been moved to the new webhook architecture test suite"
+   ],
+   [
+    694,
+    "        // See packages/features/webhooks/lib/__tests__/ for tests using the producer/consumer pattern"
+   ],
+   [
+    695,
+    ""
+   ],
+   [
+    696,
+    "        test("
+   ],
+   [
+    697,
+    "          `should rechedule a booking, that requires confirmation, without confirmation - When booker is the organizer of the existing booking as well as the event-type"
+   ],
+   [
+    698,
+    "          1. Should cancel the existing booking"
+   ],
+   [
+    699,
+    "          2. Should delete existing calendar invite and Video meeting"
+   ]
+  ],
+  "before_line": 693,
+  "before_mapped": false,
   "after": [
    [
     802,
@@ -1198,6 +1445,8 @@
     "    var html = parseHTML("
    ]
   ],
+  "before_line": 633,
+  "before_mapped": true,
   "after": [
    [
     629,
@@ -1287,6 +1536,8 @@
     ""
    ]
   ],
+  "before_line": 77,
+  "before_mapped": true,
   "after": [
    [
     76,
@@ -1376,6 +1627,8 @@
     "    You must be authorized to edit the dataset and the groups that it belongs"
    ]
   ],
+  "before_line": 474,
+  "before_mapped": true,
   "after": [
    [
     496,
@@ -1465,6 +1718,8 @@
     "            plugin: Plugin module"
    ]
   ],
+  "before_line": 688,
+  "before_mapped": true,
   "after": [
    [
     685,
@@ -1516,7 +1771,62 @@
   "old_path": "ckan/public-midnight-blue/base/javascript/modules/data-viewer.js",
   "old_line": null,
   "line": 27,
-  "before": [],
+  "before": [
+   [
+    21,
+    "      $('.data-viewer-error', parent).removeClass('js-hide');"
+   ],
+   [
+    22,
+    "       this.el.hide();"
+   ],
+   [
+    23,
+    "    },"
+   ],
+   [
+    24,
+    ""
+   ],
+   [
+    25,
+    "    _onLoad: function() {"
+   ],
+   [
+    26,
+    "      var self = this;"
+   ],
+   [
+    27,
+    "      var loc = $('body').data('site-root');"
+   ],
+   [
+    28,
+    "      // see if page is in part of the same domain"
+   ],
+   [
+    29,
+    "      if (this.el.attr('src').substring(0, loc.length) === loc) {"
+   ],
+   [
+    30,
+    "        this._recalibrate();"
+   ],
+   [
+    31,
+    "        setTimeout(function() {"
+   ],
+   [
+    32,
+    "          self._recalibrate();"
+   ],
+   [
+    33,
+    "        }, this.options.timeout);"
+   ]
+  ],
+  "before_line": 27,
+  "before_mapped": false,
   "after": [
    [
     23,
@@ -1606,6 +1916,8 @@
     "      `;"
    ]
   ],
+  "before_line": 39,
+  "before_mapped": true,
   "after": [
    [
     97,
@@ -1695,6 +2007,8 @@
     ""
    ]
   ],
+  "before_line": 230,
+  "before_mapped": true,
   "after": [
    [
     260,
@@ -1784,6 +2098,8 @@
     "  let foodFactor;"
    ]
   ],
+  "before_line": 39,
+  "before_mapped": true,
   "after": [
    [
     33,
@@ -1835,7 +2151,62 @@
   "old_path": "geonode/geoserver/gwc.py",
   "old_line": null,
   "line": 50,
-  "before": [],
+  "before": [
+   [
+    35,
+    "    \"\"\""
+   ],
+   [
+    36,
+    "    A GeoWebCache REST client for interacting with the GWC API."
+   ],
+   [
+    37,
+    "    \"\"\""
+   ],
+   [
+    38,
+    ""
+   ],
+   [
+    39,
+    "    def __init__(self) -> None:"
+   ],
+   [
+    40,
+    "        self.base_url = f\"{ogc_server_settings.LOCATION}gwc/rest/\""
+   ],
+   [
+    41,
+    ""
+   ],
+   [
+    42,
+    "    def _post(self, urlpath, data):"
+   ],
+   [
+    43,
+    "        _user, _password = ogc_server_settings.credentials"
+   ],
+   [
+    44,
+    ""
+   ],
+   [
+    45,
+    "        url = f\"{self.base_url}{urlpath}\""
+   ],
+   [
+    46,
+    "        r = requests.post(url=url, data=data, auth=HTTPBasicAuth(_user, _password), timeout=30)"
+   ],
+   [
+    47,
+    "        logger.debug(f'POST response: code:{r.status_code} --> \"{r.text}\"')"
+   ]
+  ],
+  "before_line": 41,
+  "before_mapped": false,
   "after": [
    [
     46,
@@ -1925,6 +2296,8 @@
     " * @returns {Promise<number>} A free port"
    ]
   ],
+  "before_line": 17,
+  "before_mapped": true,
   "after": [
    [
     17,
@@ -2014,6 +2387,8 @@
     ""
    ]
   ],
+  "before_line": 1339,
+  "before_mapped": true,
   "after": [
    [
     1334,
@@ -2065,7 +2440,38 @@
   "old_path": "netbox/utilities/tests/test_ltree.py",
   "old_line": null,
   "line": 1184,
-  "before": [],
+  "before": [
+   [
+    989,
+    "        self.assertEqual(len(sorted_rows), 2)"
+   ],
+   [
+    990,
+    "        self.assertEqual([r[0] for r in sorted_rows], [_path(1), _path(1, 2)])"
+   ],
+   [
+    991,
+    "        self.assertEqual([r[1] for r in sorted_rows], ['root', 'root\\tchild'])"
+   ],
+   [
+    992,
+    ""
+   ],
+   [
+    993,
+    "        self.assertEqual(len(plain_rows), 2)"
+   ],
+   [
+    994,
+    "        self.assertEqual([r[0] for r in plain_rows], [_path(1), _path(1, 2)])"
+   ],
+   [
+    995,
+    ""
+   ]
+  ],
+  "before_line": 995,
+  "before_mapped": false,
   "after": [
    [
     1180,
@@ -2117,7 +2523,62 @@
   "old_path": "frontend/src/components/auth/utils/validator.jsx",
   "old_line": null,
   "line": 24,
-  "before": [],
+  "before": [
+   [
+    18,
+    "  const errors = {};"
+   ],
+   [
+    19,
+    "  if (!password) {"
+   ],
+   [
+    20,
+    "    errors.password = \"Required\";"
+   ],
+   [
+    21,
+    "  } else if (password.length < 12) {"
+   ],
+   [
+    22,
+    "    errors.password = \"Must be 12 characters or more\";"
+   ],
+   [
+    23,
+    "  } else if (!PASSWORD_REGEX.test(password)) {"
+   ],
+   [
+    24,
+    "    errors.password ="
+   ],
+   [
+    25,
+    "      \"The password is entirely numeric or contains special characters\";"
+   ],
+   [
+    26,
+    "  }"
+   ],
+   [
+    27,
+    "  return errors;"
+   ],
+   [
+    28,
+    "}"
+   ],
+   [
+    29,
+    ""
+   ],
+   [
+    30,
+    "export function UserFieldsValidator(field, value) {"
+   ]
+  ],
+  "before_line": 24,
+  "before_mapped": false,
   "after": [
    [
     20,
@@ -2207,6 +2668,8 @@
     "    def test_revoke_build_api_key(self):"
    ]
   ],
+  "before_line": 762,
+  "before_mapped": true,
   "after": [
    [
     755,
@@ -2296,6 +2759,8 @@
     "            },"
    ]
   ],
+  "before_line": 358,
+  "before_mapped": true,
   "after": [
    [
     355,
@@ -2385,6 +2850,8 @@
     "    var color;"
    ]
   ],
+  "before_line": 836,
+  "before_mapped": true,
   "after": [
    [
     832,
@@ -2474,6 +2941,8 @@
     "      });"
    ]
   ],
+  "before_line": 227,
+  "before_mapped": true,
   "after": [
    [
     222,
@@ -2563,6 +3032,8 @@
     "\t\t\t\t\ttoken: token,"
    ]
   ],
+  "before_line": 2384,
+  "before_mapped": true,
   "after": [
    [
     2411,
@@ -2652,6 +3123,8 @@
     "):"
    ]
   ],
+  "before_line": 738,
+  "before_mapped": true,
   "after": [
    [
     734,
@@ -2703,7 +3176,62 @@
   "old_path": "packages/hoppscotch-selfhost-web/src/platform/collections/desktop/index.ts",
   "old_line": null,
   "line": 511,
-  "before": [],
+  "before": [
+   [
+    486,
+    "      }"
+   ],
+   [
+    487,
+    ""
+   ],
+   [
+    488,
+    "      // updated collection is a root collection"
+   ],
+   [
+    489,
+    "      if (updatedCollectionLocalPath && !isFolder) {"
+   ],
+   [
+    490,
+    "        runDispatchWithOutSyncing(() => {"
+   ],
+   [
+    491,
+    "          collectionType == \"REST\""
+   ],
+   [
+    492,
+    "            ? editRESTCollection(parseInt(updatedCollectionLocalPath), {"
+   ],
+   [
+    493,
+    "                name: res.right.userCollectionUpdated.title,"
+   ],
+   [
+    494,
+    "              })"
+   ],
+   [
+    495,
+    "            : editGraphqlCollection(parseInt(updatedCollectionLocalPath), {"
+   ],
+   [
+    496,
+    "                name: res.right.userCollectionUpdated.title,"
+   ],
+   [
+    497,
+    "              })"
+   ],
+   [
+    498,
+    "        })"
+   ]
+  ],
+  "before_line": 492,
+  "before_mapped": false,
   "after": [
    [
     507,
@@ -2755,7 +3283,62 @@
   "old_path": "apps/web/playwright/fixtures/users.ts",
   "old_line": null,
   "line": 813,
-  "before": [],
+  "before": [
+   [
+    807,
+    "  password?: string | null;"
+   ],
+   [
+    808,
+    "  emailDomain?: string;"
+   ],
+   [
+    809,
+    "  profileUsername?: string;"
+   ],
+   [
+    810,
+    "};"
+   ],
+   [
+    811,
+    ""
+   ],
+   [
+    812,
+    "// creates the actual user in the db."
+   ],
+   [
+    813,
+    "const createUser = ("
+   ],
+   [
+    814,
+    "  workerInfo: WorkerInfo,"
+   ],
+   [
+    815,
+    "  opts?:"
+   ],
+   [
+    816,
+    "    | (CustomUserOpts & {"
+   ],
+   [
+    817,
+    "        organizationId?: number | null;"
+   ],
+   [
+    818,
+    "      })"
+   ],
+   [
+    819,
+    "    | null"
+   ]
+  ],
+  "before_line": 813,
+  "before_mapped": true,
   "after": [
    [
     809,
@@ -2845,6 +3428,8 @@
     "    await persistEmbeddedEnvelope(surface);"
    ]
   ],
+  "before_line": 1000,
+  "before_mapped": true,
   "after": [
    [
     1145,
@@ -2934,6 +3519,8 @@
     "\t\t\t\t\ttoken: token,"
    ]
   ],
+  "before_line": 2318,
+  "before_mapped": true,
   "after": [
    [
     2331,
@@ -3023,6 +3610,8 @@
     ""
    ]
   ],
+  "before_line": 377,
+  "before_mapped": true,
   "after": [
    [
     373,
@@ -3112,6 +3701,8 @@
     "\t\t\treturn {"
    ]
   ],
+  "before_line": 810,
+  "before_mapped": true,
   "after": [
    [
     805,
@@ -3163,7 +3754,62 @@
   "old_path": "arches/app/media/js/views/graph/permission-designer.js",
   "old_line": null,
   "line": 148,
-  "before": [],
+  "before": [
+   [
+    113,
+    "                            }"
+   ],
+   [
+    114,
+    "                        });"
+   ],
+   [
+    115,
+    "                    }"
+   ],
+   [
+    116,
+    "                });"
+   ],
+   [
+    117,
+    "            }"
+   ],
+   [
+    118,
+    "        };"
+   ],
+   [
+    119,
+    "    };"
+   ],
+   [
+    120,
+    ""
+   ],
+   [
+    121,
+    "    export default PermissionDesignerViewModel;"
+   ],
+   [
+    122,
+    "    /**"
+   ],
+   [
+    123,
+    "    * a GraphPageView representing the graph manager page"
+   ],
+   [
+    124,
+    "    */"
+   ],
+   [
+    125,
+    "    // var graphPageView = new GraphPageView({"
+   ]
+  ],
+  "before_line": 119,
+  "before_mapped": false,
   "after": [
    [
     144,
@@ -3215,7 +3861,14 @@
   "old_path": "netbox/utilities/ltree.py",
   "old_line": null,
   "line": 287,
-  "before": [],
+  "before": [
+   [
+    1,
+    ""
+   ]
+  ],
+  "before_line": 1,
+  "before_mapped": false,
   "after": [
    [
     283,
@@ -3305,6 +3958,8 @@
     "              headers: [],"
    ]
   ],
+  "before_line": 796,
+  "before_mapped": true,
   "after": [
    [
     795,
@@ -3394,6 +4049,8 @@
     "          }"
    ]
   ],
+  "before_line": 713,
+  "before_mapped": true,
   "after": [
    [
     745,
@@ -3483,6 +4140,8 @@
     "    if (challenge) challenge.updateTask(savedTask);"
    ]
   ],
+  "before_line": 1017,
+  "before_mapped": true,
   "after": [
    [
     1014,
@@ -3572,6 +4231,8 @@
     "          ),"
    ]
   ],
+  "before_line": 160,
+  "before_mapped": true,
   "after": [
    [
     162,
@@ -3661,6 +4322,8 @@
     "  const type = get(req, 'params.type');"
    ]
   ],
+  "before_line": 16,
+  "before_mapped": true,
   "after": [
    [
     11,
@@ -3750,6 +4413,8 @@
     "            self.retries = ogc_server_settings.get(\"MAX_RETRIES\", 1)"
    ]
   ],
+  "before_line": 1061,
+  "before_mapped": true,
   "after": [
    [
     1057,
@@ -3801,7 +4466,62 @@
   "old_path": "packages/hoppscotch-backend/src/team-collection/team-collection.service.ts",
   "old_line": null,
   "line": 131,
-  "before": [],
+  "before": [
+   [
+    130,
+    "      });"
+   ],
+   [
+    131,
+    ""
+   ],
+   [
+    132,
+    "      for (const coll of childrenCollection) {"
+   ],
+   [
+    133,
+    "        const result = await this.exportCollectionToJSONObject(teamID, coll.id);"
+   ],
+   [
+    134,
+    "        if (E.isLeft(result)) return E.left(result.left);"
+   ],
+   [
+    135,
+    ""
+   ],
+   [
+    136,
+    "        childrenCollectionObjects.push(result.right);"
+   ],
+   [
+    137,
+    "      }"
+   ],
+   [
+    138,
+    "    }"
+   ],
+   [
+    139,
+    ""
+   ],
+   [
+    140,
+    "    const requests = await this.prisma.teamRequest.findMany({"
+   ],
+   [
+    141,
+    "      where: {"
+   ],
+   [
+    142,
+    "        teamID,"
+   ]
+  ],
+  "before_line": 136,
+  "before_mapped": false,
   "after": [
    [
     127,
@@ -3891,6 +4611,8 @@
     "            await conn.execute("
    ]
   ],
+  "before_line": 52,
+  "before_mapped": true,
   "after": [
    [
     136,
@@ -3942,7 +4664,14 @@
   "old_path": "ckan/public/base/javascript/toast.js",
   "old_line": null,
   "line": 162,
-  "before": [],
+  "before": [
+   [
+    1,
+    ""
+   ]
+  ],
+  "before_line": 1,
+  "before_mapped": false,
   "after": [
    [
     158,
@@ -3994,7 +4723,62 @@
   "old_path": "ckan/public/base/javascript/modules/autocomplete.js",
   "old_line": null,
   "line": 77,
-  "before": [],
+  "before": [
+   [
+    65,
+    "      if (!this.el.is('select')) {"
+   ],
+   [
+    66,
+    "        if (this.options.tags) {"
+   ],
+   [
+    67,
+    "          settings.tags = this._onQuery;"
+   ],
+   [
+    68,
+    ""
+   ],
+   [
+    69,
+    "          // Disable creating new tags"
+   ],
+   [
+    70,
+    "          if (!this.options.createtags) {"
+   ],
+   [
+    71,
+    "            settings.createSearchChoice = function(params) {"
+   ],
+   [
+    72,
+    "              return undefined;"
+   ],
+   [
+    73,
+    "            }"
+   ],
+   [
+    74,
+    "          }"
+   ],
+   [
+    75,
+    "        } else {"
+   ],
+   [
+    76,
+    "          settings.query = this._onQuery;"
+   ],
+   [
+    77,
+    "          settings.createSearchChoice = this.formatTerm;"
+   ]
+  ],
+  "before_line": 71,
+  "before_mapped": false,
   "after": [
    [
     73,
@@ -4084,6 +4868,8 @@
     "        $(\"#update-name-modal\").modal(\"show\");"
    ]
   ],
+  "before_line": 13,
+  "before_mapped": true,
   "after": [
    [
     9,
@@ -4135,7 +4921,38 @@
   "old_path": "cms/djangoapps/contentstore/rest_api/v1/views/tests/test_course_index.py",
   "old_line": null,
   "line": 279,
-  "before": [],
+  "before": [
+   [
+    221,
+    "    def test_superuser_can_access_without_authz_role(self):"
+   ],
+   [
+    222,
+    "        \"\"\"Superuser should access without AuthZ role.\"\"\""
+   ],
+   [
+    223,
+    "        response = self.super_client.get(self.url)"
+   ],
+   [
+    224,
+    ""
+   ],
+   [
+    225,
+    "        assert response.status_code == status.HTTP_200_OK"
+   ],
+   [
+    226,
+    "        assert \"course_structure\" in response.data"
+   ],
+   [
+    227,
+    ""
+   ]
+  ],
+  "before_line": 227,
+  "before_mapped": false,
   "after": [
    [
     275,
@@ -4225,6 +5042,8 @@
     "      await Store.set(STORE_NAMESPACE, STORE_KEYS.SCHEMA_VERSION, targetVersion)"
    ]
   ],
+  "before_line": 112,
+  "before_mapped": true,
   "after": [
    [
     290,
@@ -4276,7 +5095,14 @@
   "old_path": "packages/hoppscotch-common/src/services/__tests__/ai-chat-ui.spec.ts",
   "old_line": null,
   "line": 325,
-  "before": [],
+  "before": [
+   [
+    1,
+    ""
+   ]
+  ],
+  "before_line": 1,
+  "before_mapped": false,
   "after": [
    [
     321,
@@ -4366,6 +5192,8 @@
     "                      },"
    ]
   ],
+  "before_line": 1267,
+  "before_mapped": true,
   "after": [
    [
     1597,
@@ -4417,7 +5245,62 @@
   "old_path": "ckan/public/base/javascript/modules/data-viewer.js",
   "old_line": null,
   "line": 27,
-  "before": [],
+  "before": [
+   [
+    21,
+    "      $('.data-viewer-error', parent).removeClass('js-hide');"
+   ],
+   [
+    22,
+    "       this.el.hide();"
+   ],
+   [
+    23,
+    "    },"
+   ],
+   [
+    24,
+    ""
+   ],
+   [
+    25,
+    "    _onLoad: function() {"
+   ],
+   [
+    26,
+    "      var self = this;"
+   ],
+   [
+    27,
+    "      var loc = $('body').data('site-root');"
+   ],
+   [
+    28,
+    "      // see if page is in part of the same domain"
+   ],
+   [
+    29,
+    "      if (this.el.attr('src').substring(0, loc.length) === loc) {"
+   ],
+   [
+    30,
+    "        this._recalibrate();"
+   ],
+   [
+    31,
+    "        setTimeout(function() {"
+   ],
+   [
+    32,
+    "          self._recalibrate();"
+   ],
+   [
+    33,
+    "        }, this.options.timeout);"
+   ]
+  ],
+  "before_line": 27,
+  "before_mapped": false,
   "after": [
    [
     23,
@@ -4469,7 +5352,62 @@
   "old_path": "server/src/services/person.service.ts",
   "old_line": null,
   "line": 162,
-  "before": [],
+  "before": [
+   [
+    156,
+    "      const assetFace = await this.personRepository.getRandomFace(personGroupId);"
+   ],
+   [
+    157,
+    ""
+   ],
+   [
+    158,
+    "      if (assetFace) {"
+   ],
+   [
+    159,
+    "        await this.personRepository.update({ ownerId, personGroupId, faceAssetId: assetFace.id });"
+   ],
+   [
+    160,
+    "        jobs.push({ name: JobName.PersonGenerateThumbnail, data: { ownerId, personGroupId } });"
+   ],
+   [
+    161,
+    "      }"
+   ],
+   [
+    162,
+    "    }"
+   ],
+   [
+    163,
+    ""
+   ],
+   [
+    164,
+    "    await this.jobRepository.queueAll(jobs);"
+   ],
+   [
+    165,
+    "  }"
+   ],
+   [
+    166,
+    ""
+   ],
+   [
+    167,
+    "  async getById(auth: AuthDto, personGroupId: string): Promise<PersonResponseDto> {"
+   ],
+   [
+    168,
+    "    await this.requireAccess({ auth, permission: Permission.PersonRead, ids: [personGroupId] });"
+   ]
+  ],
+  "before_line": 162,
+  "before_mapped": false,
   "after": [
    [
     158,
@@ -4559,6 +5497,8 @@
     "            ...downloadElement.querySelectorAll(`.${highlightedCodeCss['linenumber']}`)"
    ]
   ],
+  "before_line": 32,
+  "before_mapped": true,
   "after": [
    [
     37,
@@ -4648,6 +5588,8 @@
     ""
    ]
   ],
+  "before_line": 1395,
+  "before_mapped": true,
   "after": [
    [
     1724,
@@ -4737,6 +5679,8 @@
     "\t\t\t\tconst crosspostCid = (await categories.create({ name: utils.generateUUID().slice(0, 8) })).cid;"
    ]
   ],
+  "before_line": 660,
+  "before_mapped": true,
   "after": [
    [
     674,
@@ -4826,6 +5770,8 @@
     "                }"
    ]
   ],
+  "before_line": 58,
+  "before_mapped": true,
   "after": [
    [
     57,
@@ -4915,6 +5861,8 @@
     "                        type: appStoreMetadata.googlecalendar.type,"
    ]
   ],
+  "before_line": 1260,
+  "before_mapped": true,
   "after": [
    [
     1590,
@@ -4966,7 +5914,62 @@
   "old_path": "tests/api/test_admin_api.py",
   "old_line": null,
   "line": 151,
-  "before": [],
+  "before": [
+   [
+    144,
+    "    assert restart.json()[\"status\"] == \"Success\""
+   ],
+   [
+    145,
+    "    assert server_restart.is_set() is True"
+   ],
+   [
+    146,
+    "    server_restart.clear()"
+   ],
+   [
+    147,
+    ""
+   ],
+   [
+    148,
+    ""
+   ],
+   [
+    149,
+    "@pytest.mark.anyio"
+   ],
+   [
+    150,
+    "async def test_admin_delete_settings_requires_superuser("
+   ],
+   [
+    151,
+    "    client: AsyncClient, superuser_token: str"
+   ],
+   [
+    152,
+    "):"
+   ],
+   [
+    153,
+    "    server_restart.clear()"
+   ],
+   [
+    154,
+    "    response = await client.delete("
+   ],
+   [
+    155,
+    "        \"/admin/api/v1/settings\","
+   ],
+   [
+    156,
+    "        headers={\"Authorization\": f\"Bearer {superuser_token}\"},"
+   ]
+  ],
+  "before_line": 150,
+  "before_mapped": true,
   "after": [
    [
     147,
@@ -5056,6 +6059,8 @@
     "                    type: appStoreMetadata.googlecalendar.type,"
    ]
   ],
+  "before_line": 1370,
+  "before_mapped": true,
   "after": [
    [
     1700,
@@ -5107,7 +6112,62 @@
   "old_path": "tools/scripts/test/public-apps.test.ts",
   "old_line": null,
   "line": 67,
-  "before": [],
+  "before": [
+   [
+    61,
+    "  // If the repo ever violates it, one of those two is broken \u2014 or someone"
+   ],
+   [
+    62,
+    "  // hand-edited a version without running \"pnpm ship\"."
+   ],
+   [
+    63,
+    "  it('holds for every public app in the repo right now', async () => {"
+   ],
+   [
+    64,
+    "    const defaults = await readDefaults();"
+   ],
+   [
+    65,
+    ""
+   ],
+   [
+    66,
+    "    for (const app of PUBLIC_APPS) {"
+   ],
+   [
+    67,
+    "      const { version } = await readJson(join(ROOT_DIR, app.path, 'package.json'));"
+   ],
+   [
+    68,
+    ""
+   ],
+   [
+    69,
+    "      assert.strictEqual("
+   ],
+   [
+    70,
+    "        defaults[app.configKey].version,"
+   ],
+   [
+    71,
+    "        majorMinor(version),"
+   ],
+   [
+    72,
+    "        `${app.packageName}: package.json is ${version}, defaults.json says ${defaults[app.configKey].version}`,"
+   ],
+   [
+    73,
+    "      );"
+   ]
+  ],
+  "before_line": 67,
+  "before_mapped": false,
   "after": [
    [
     63,
@@ -5197,6 +6257,8 @@
     "\t\t\t});"
    ]
   ],
+  "before_line": 1999,
+  "before_mapped": true,
   "after": [
    [
     2026,
@@ -5248,7 +6310,62 @@
   "old_path": "kitsune/sumo/static/sumo/js/markup.js",
   "old_line": null,
   "line": 844,
-  "before": [],
+  "before": [
+   [
+    837,
+    "        \"</div>\" +"
+   ],
+   [
+    838,
+    "        \"</section>\""
+   ],
+   [
+    839,
+    "    );"
+   ],
+   [
+    840,
+    "    var kbox;"
+   ],
+   [
+    841,
+    ""
+   ],
+   [
+    842,
+    "    var cannedResponsesUrl = \"/kb/common-forum-responses\";"
+   ],
+   [
+    843,
+    "    var previewUrl = \"answer-preview-async\";"
+   ],
+   [
+    844,
+    ""
+   ],
+   [
+    845,
+    "    function updatePreview() {"
+   ],
+   [
+    846,
+    "      var response = html.querySelector(\"#response-content\").value;"
+   ],
+   [
+    847,
+    "      var tokenEl = document.querySelector(\"[name=csrfmiddlewaretoken]\");"
+   ],
+   [
+    848,
+    "      var token = tokenEl ? tokenEl.getAttribute(\"value\") : \"\";"
+   ],
+   [
+    849,
+    ""
+   ]
+  ],
+  "before_line": 843,
+  "before_mapped": false,
   "after": [
    [
     840,
@@ -5300,7 +6417,62 @@
   "old_path": "readthedocs/rtd_tests/tests/test_api.py",
   "old_line": null,
   "line": 331,
-  "before": [],
+  "before": [
+   [
+    311,
+    "            {\"one\": \"two\"},"
+   ],
+   [
+    312,
+    "        )"
+   ],
+   [
+    313,
+    "        self.assertEqual("
+   ],
+   [
+    314,
+    "            Build.objects.get(pk=build_one.pk).readthedocs_yaml_config.pk,"
+   ],
+   [
+    315,
+    "            Build.objects.get(pk=build_two.pk).readthedocs_yaml_config.pk,"
+   ],
+   [
+    316,
+    "        )"
+   ],
+   [
+    317,
+    ""
+   ],
+   [
+    318,
+    "    def test_response_building(self):"
+   ],
+   [
+    319,
+    "        \"\"\"The ``view docs`` attr should return a link to the dashboard.\"\"\""
+   ],
+   [
+    320,
+    "        client = APIClient()"
+   ],
+   [
+    321,
+    "        client.login(username=\"super\", password=\"test\")"
+   ],
+   [
+    322,
+    "        project = get("
+   ],
+   [
+    323,
+    "            Project,"
+   ]
+  ],
+  "before_line": 317,
+  "before_mapped": false,
   "after": [
    [
     327,
@@ -5390,6 +6562,8 @@
     "      input.addEventListener(\"focus\", function () {"
    ]
   ],
+  "before_line": 421,
+  "before_mapped": true,
   "after": [
    [
     564,
@@ -5441,7 +6615,62 @@
   "old_path": "openlibrary/plugins/openlibrary/js/graphs/plot.js",
   "old_line": null,
   "line": 20,
-  "before": [],
+  "before": [
+   [
+    15,
+    " * A special graph loaded on the following URLs:"
+   ],
+   [
+    16,
+    " * - http://localhost:8080/subjects/fantasy#sort=date_published&ebooks=true"
+   ],
+   [
+    17,
+    " * - http://localhost:8080/publishers/Barnes_&_Noble"
+   ],
+   [
+    18,
+    " */"
+   ],
+   [
+    19,
+    "export function loadEditionsGraph() {"
+   ],
+   [
+    20,
+    "    var data, options, placeholder,"
+   ],
+   [
+    21,
+    "        plot, dateFrom, dateTo, previousPoint;"
+   ],
+   [
+    22,
+    "    data = [{data: JSON.parse(document.getElementById('graph-json-chartPubHistory').textContent)}];"
+   ],
+   [
+    23,
+    "    options = {"
+   ],
+   [
+    24,
+    "        series: {"
+   ],
+   [
+    25,
+    "            bars: {"
+   ],
+   [
+    26,
+    "                show: true,"
+   ],
+   [
+    27,
+    "                fill: 0.6,"
+   ]
+  ],
+  "before_line": 21,
+  "before_mapped": true,
   "after": [
    [
     16,
@@ -5493,7 +6722,62 @@
   "old_path": "packages/hoppscotch-common/src/lib/sync/collections/index.ts",
   "old_line": null,
   "line": 384,
-  "before": [],
+  "before": [
+   [
+    266,
+    "      res.right.exportUserCollectionsToJSON.exportedCollection"
+   ],
+   [
+    267,
+    "    const exportedCollections = ("
+   ],
+   [
+    268,
+    "      JSON.parse(collectionsJSONString) as Array<"
+   ],
+   [
+    269,
+    "        ExportedUserCollectionGQL | ExportedUserCollectionREST"
+   ],
+   [
+    270,
+    "      >"
+   ],
+   [
+    271,
+    "    ).map((collection) => ({ v: 1, ...collection }))"
+   ],
+   [
+    272,
+    "    runDispatchWithOutSyncing(() => {"
+   ],
+   [
+    273,
+    "      collectionType == \"REST\""
+   ],
+   [
+    274,
+    "        ? setRESTCollections("
+   ],
+   [
+    275,
+    "            exportedCollections.map("
+   ],
+   [
+    276,
+    "              (collection) =>"
+   ],
+   [
+    277,
+    "                exportedCollectionToHoppCollection("
+   ],
+   [
+    278,
+    "                  collection,"
+   ]
+  ],
+  "before_line": 272,
+  "before_mapped": false,
   "after": [
    [
     380,
@@ -5545,7 +6829,14 @@
   "old_path": "server/notification-providers/indigo.js",
   "old_line": null,
   "line": 52,
-  "before": [],
+  "before": [
+   [
+    1,
+    ""
+   ]
+  ],
+  "before_line": 1,
+  "before_mapped": false,
   "after": [
    [
     48,
@@ -5635,6 +6926,8 @@
     "            await conn.execute("
    ]
   ],
+  "before_line": 48,
+  "before_mapped": true,
   "after": [
    [
     132,
@@ -5686,7 +6979,62 @@
   "old_path": "hc/integrations/telegram/transport.py",
   "old_line": null,
   "line": 30,
-  "before": [],
+  "before": [
+   [
+    24,
+    ""
+   ],
+   [
+    25,
+    "    class ErrorModel(BaseModel):"
+   ],
+   [
+    26,
+    "        description: str"
+   ],
+   [
+    27,
+    "        parameters: Telegram.MigrationParameters | None = None"
+   ],
+   [
+    28,
+    ""
+   ],
+   [
+    29,
+    "    @classmethod"
+   ],
+   [
+    30,
+    "    def raise_for_response(cls, response: curl.Response) -> NoReturn:"
+   ],
+   [
+    31,
+    "        message = f\"Received status code {response.status_code}\""
+   ],
+   [
+    32,
+    "        try:"
+   ],
+   [
+    33,
+    "            m = Telegram.ErrorModel.model_validate_json(response.content)"
+   ],
+   [
+    34,
+    "        except ValidationError:"
+   ],
+   [
+    35,
+    "            raise TransportError(message)"
+   ],
+   [
+    36,
+    ""
+   ]
+  ],
+  "before_line": 30,
+  "before_mapped": true,
   "after": [
    [
     26,
@@ -5738,7 +7086,42 @@
   "old_path": "hc/integrations/po/static/js/add_pushover.js",
   "old_line": null,
   "line": 7,
-  "before": [],
+  "before": [
+   [
+    1,
+    "$(function() {"
+   ],
+   [
+    2,
+    "    function makeOption(item, escape) {"
+   ],
+   [
+    3,
+    "        var parts = item.text.split(\":\");"
+   ],
+   [
+    4,
+    "        return `<div class=\"option\">${parts[0]}. <span class=\"help\">${parts[1]}</span></div>`;"
+   ],
+   [
+    5,
+    "    }"
+   ],
+   [
+    6,
+    ""
+   ],
+   [
+    7,
+    "    $(\"select\").selectize({render: {option: makeOption, item: makeOption}});"
+   ],
+   [
+    8,
+    "});"
+   ]
+  ],
+  "before_line": 7,
+  "before_mapped": false,
   "after": [
    [
     3,
@@ -5790,7 +7173,14 @@
   "old_path": "lnbits/static/i18n/fo.js",
   "old_line": null,
   "line": 300,
-  "before": [],
+  "before": [
+   [
+    1,
+    ""
+   ]
+  ],
+  "before_line": 1,
+  "before_mapped": false,
   "after": [
    [
     296,
@@ -5880,6 +7270,8 @@
     ""
    ]
   ],
+  "before_line": 56,
+  "before_mapped": true,
   "after": [
    [
     140,
@@ -5969,6 +7361,8 @@
     "                  }),"
    ]
   ],
+  "before_line": 2622,
+  "before_mapped": true,
   "after": [
    [
     3304,
@@ -6020,7 +7414,62 @@
   "old_path": "web/pgadmin/misc/cloud/static/js/cloud_components.jsx",
   "old_line": null,
   "line": 58,
-  "before": [],
+  "before": [
+   [
+    51,
+    ""
+   ],
+   [
+    52,
+    ""
+   ],
+   [
+    53,
+    "export function FinalSummary(props) {"
+   ],
+   [
+    54,
+    "  let summary = [],"
+   ],
+   [
+    55,
+    "    summaryHeader = ['Cloud Details', 'Version and Instance Details', 'Storage Details', 'Database Details'];"
+   ],
+   [
+    56,
+    ""
+   ],
+   [
+    57,
+    "  if(props.cloudProvider == 'azure') {"
+   ],
+   [
+    58,
+    "    summaryHeader.push('Network Connectivity','Availability');"
+   ],
+   [
+    59,
+    "    summary = getAzureSummary(props.cloudProvider, props.instanceData, props.databaseData);"
+   ],
+   [
+    60,
+    "  }else if(props.cloudProvider == 'google') {"
+   ],
+   [
+    61,
+    "    summaryHeader.push('Network Connectivity','Availability');"
+   ],
+   [
+    62,
+    "    summary = getGoogleSummary(props.cloudProvider, props.instanceData, props.databaseData);"
+   ],
+   [
+    63,
+    "  }else {"
+   ]
+  ],
+  "before_line": 57,
+  "before_mapped": false,
   "after": [
    [
     54,
@@ -6110,6 +7559,8 @@
     "        .then(function (responseHtml) {"
    ]
   ],
+  "before_line": 965,
+  "before_mapped": true,
   "after": [
    [
     965,
@@ -6161,7 +7612,14 @@
   "old_path": "openlibrary/bookworm/cli.py",
   "old_line": null,
   "line": 406,
-  "before": [],
+  "before": [
+   [
+    1,
+    ""
+   ]
+  ],
+  "before_line": 1,
+  "before_mapped": false,
   "after": [
    [
     402,
@@ -6251,6 +7709,8 @@
     "  const quantity = req.quantity ? Number(req.quantity) : 1;"
    ]
   ],
+  "before_line": 79,
+  "before_mapped": true,
   "after": [
    [
     75,
@@ -6340,6 +7800,8 @@
     "                  },"
    ]
   ],
+  "before_line": 2494,
+  "before_mapped": true,
   "after": [
    [
     3176,
@@ -6391,7 +7853,14 @@
   "old_path": "packages/hoppscotch-common/src/services/ai-chat.service.ts",
   "old_line": null,
   "line": 4893,
-  "before": [],
+  "before": [
+   [
+    1,
+    ""
+   ]
+  ],
+  "before_line": 1,
+  "before_mapped": false,
   "after": [
    [
     4889,
@@ -6481,6 +7950,8 @@
     "      }"
    ]
   ],
+  "before_line": 285,
+  "before_mapped": true,
   "after": [
    [
     335,
@@ -6570,6 +8041,8 @@
     "    await this.noteService.deleteNote(noteId);"
    ]
   ],
+  "before_line": 134,
+  "before_mapped": true,
   "after": [
    [
     130,
@@ -6659,6 +8132,8 @@
     "                } else {"
    ]
   ],
+  "before_line": 775,
+  "before_mapped": true,
   "after": [
    [
     773,
@@ -6748,6 +8223,8 @@
     "  booking: {"
    ]
   ],
+  "before_line": 21,
+  "before_mapped": true,
   "after": [
    [
     15,
@@ -6837,6 +8314,8 @@
     "        original_values_list = ComponentQuerySet.values_list"
    ]
   ],
+  "before_line": 1621,
+  "before_mapped": true,
   "after": [
    [
     1635,
@@ -6888,7 +8367,62 @@
   "old_path": "scripts/seed.ts",
   "old_line": null,
   "line": 1008,
-  "before": [],
+  "before": [
+   [
+    1244,
+    "      email: \"teampro4@example.com\","
+   ],
+   [
+    1245,
+    "      password: \"teampro4\","
+   ],
+   [
+    1246,
+    "      username: \"teampro4\","
+   ],
+   [
+    1247,
+    "      name: \"Team Pro Example 4\","
+   ],
+   [
+    1248,
+    "    },"
+   ],
+   [
+    1249,
+    "  });"
+   ],
+   [
+    1250,
+    ""
+   ],
+   [
+    1251,
+    "  if (process.env.E2E_TEST_CALCOM_QA_EMAIL && process.env.E2E_TEST_CALCOM_QA_PASSWORD) {"
+   ],
+   [
+    1252,
+    "    await createUserAndEventType({"
+   ],
+   [
+    1253,
+    "      user: {"
+   ],
+   [
+    1254,
+    "        email: process.env.E2E_TEST_CALCOM_QA_EMAIL || \"qa@example.com\","
+   ],
+   [
+    1255,
+    "        password: process.env.E2E_TEST_CALCOM_QA_PASSWORD || \"qa\","
+   ],
+   [
+    1256,
+    "        username: \"qa\","
+   ]
+  ],
+  "before_line": 1250,
+  "before_mapped": false,
   "after": [
    [
     1004,
@@ -6940,7 +8474,62 @@
   "old_path": "frontend/tests/components/auth/utils/validator.test.jsx",
   "old_line": null,
   "line": 45,
-  "before": [],
+  "before": [
+   [
+    39,
+    "      password: \"Must be 12 characters or more\","
+   ],
+   [
+    40,
+    "    });"
+   ],
+   [
+    41,
+    "  });"
+   ],
+   [
+    42,
+    "  test(\"Invalid password\", () => {"
+   ],
+   [
+    43,
+    "    const numericPassword = \"123456123456\";"
+   ],
+   [
+    44,
+    "    expect(PasswordValidator(numericPassword)).toEqual({"
+   ],
+   [
+    45,
+    "      password:"
+   ],
+   [
+    46,
+    "        \"The password is entirely numeric or contains special characters\","
+   ],
+   [
+    47,
+    "    });"
+   ],
+   [
+    48,
+    "    const password = \"intelowlpassword$\";"
+   ],
+   [
+    49,
+    "    expect(PasswordValidator(password)).toEqual({"
+   ],
+   [
+    50,
+    "      password:"
+   ],
+   [
+    51,
+    "        \"The password is entirely numeric or contains special characters\","
+   ]
+  ],
+  "before_line": 45,
+  "before_mapped": false,
   "after": [
    [
     41,
@@ -6992,7 +8581,62 @@
   "old_path": "lnbits/core/services/extensions.py",
   "old_line": null,
   "line": 268,
-  "before": [],
+  "before": [
+   [
+    70,
+    "    if settings.lnbits_max_extensions == 0 or installed_ext:"
+   ],
+   [
+    71,
+    "        return"
+   ],
+   [
+    72,
+    ""
+   ],
+   [
+    73,
+    "    extensions_count = await get_installed_extensions_count()"
+   ],
+   [
+    74,
+    "    if extensions_count >= settings.lnbits_max_extensions:"
+   ],
+   [
+    75,
+    "        raise ValueError(\"Max amount of extensions have been installed\")"
+   ],
+   [
+    76,
+    ""
+   ],
+   [
+    77,
+    ""
+   ],
+   [
+    78,
+    "async def uninstall_extension(ext_id: str):"
+   ],
+   [
+    79,
+    "    await stop_extension_background_work(ext_id)"
+   ],
+   [
+    80,
+    ""
+   ],
+   [
+    81,
+    "    settings.deactivate_extension_paths(ext_id)"
+   ],
+   [
+    82,
+    ""
+   ]
+  ],
+  "before_line": 76,
+  "before_mapped": false,
   "after": [
    [
     264,
@@ -7044,7 +8688,62 @@
   "old_path": "arches/app/media/js/views/graph/permission-manager/permission-settings-form.js",
   "old_line": null,
   "line": 30,
-  "before": [],
+  "before": [
+   [
+    16,
+    "    /**"
+   ],
+   [
+    17,
+    "    * Initializes the view with optional parameters"
+   ],
+   [
+    18,
+    "    * @memberof PermissionSettingsForm.prototype"
+   ],
+   [
+    19,
+    "    * @param {boolean} options.selection - the selected item, either a {@link CardModel} or a {@link NodeModel}"
+   ],
+   [
+    20,
+    "    */"
+   ],
+   [
+    21,
+    "    initialize: function(options) {"
+   ],
+   [
+    22,
+    "        this.selectedIdentities = options.selectedIdentities;"
+   ],
+   [
+    23,
+    "        this.identityList = options.identityList;"
+   ],
+   [
+    24,
+    "        this.selectedCards = options.selectedCards;"
+   ],
+   [
+    25,
+    "        this.noAccessPerm = undefined;"
+   ],
+   [
+    26,
+    "        this.whiteListPerms = [];"
+   ],
+   [
+    27,
+    "        this.groupedNodeList = options.groupedNodeList;"
+   ],
+   [
+    28,
+    ""
+   ]
+  ],
+  "before_line": 22,
+  "before_mapped": false,
   "after": [
    [
     26,
@@ -7096,7 +8795,62 @@
   "old_path": "apps/api/v2/src/ee/bookings/2024-08-13/controllers/e2e/update-booking-location.e2e-spec.ts",
   "old_line": null,
   "line": 529,
-  "before": [],
+  "before": [
+   [
+    319,
+    "        }"
+   ],
+   [
+    320,
+    "        const updatedBooking = updatedBookingResponseBody.data as BookingOutput_2024_08_13;"
+   ],
+   [
+    321,
+    "        expect(updatedBooking).toHaveProperty(\"id\");"
+   ],
+   [
+    322,
+    "        expect(updatedBooking.location).toEqual(attendeeDefinedLocation);"
+   ],
+   [
+    323,
+    "      });"
+   ],
+   [
+    324,
+    ""
+   ],
+   [
+    325,
+    "      afterAll(async () => {"
+   ],
+   [
+    326,
+    "        if (responseDataIsBooking(booking)) {"
+   ],
+   [
+    327,
+    "          await bookingsRepositoryFixture.deleteById(bookingId);"
+   ],
+   [
+    328,
+    "        } else {"
+   ],
+   [
+    329,
+    "          throw new Error(\"Unexpected response data type\");"
+   ],
+   [
+    330,
+    "        }"
+   ],
+   [
+    331,
+    "      });"
+   ]
+  ],
+  "before_line": 325,
+  "before_mapped": false,
   "after": [
    [
     525,
@@ -7186,6 +8940,8 @@
     "                  {"
    ]
   ],
+  "before_line": 2486,
+  "before_mapped": true,
   "after": [
    [
     3168,
@@ -7237,7 +8993,62 @@
   "old_path": "arches/app/media/js/views/graph/permission-designer.js",
   "old_line": null,
   "line": 157,
-  "before": [],
+  "before": [
+   [
+    113,
+    "                            }"
+   ],
+   [
+    114,
+    "                        });"
+   ],
+   [
+    115,
+    "                    }"
+   ],
+   [
+    116,
+    "                });"
+   ],
+   [
+    117,
+    "            }"
+   ],
+   [
+    118,
+    "        };"
+   ],
+   [
+    119,
+    "    };"
+   ],
+   [
+    120,
+    ""
+   ],
+   [
+    121,
+    "    export default PermissionDesignerViewModel;"
+   ],
+   [
+    122,
+    "    /**"
+   ],
+   [
+    123,
+    "    * a GraphPageView representing the graph manager page"
+   ],
+   [
+    124,
+    "    */"
+   ],
+   [
+    125,
+    "    // var graphPageView = new GraphPageView({"
+   ]
+  ],
+  "before_line": 119,
+  "before_mapped": false,
   "after": [
    [
     153,
@@ -7289,7 +9100,62 @@
   "old_path": "arches/app/media/js/views/graph-designer.js",
   "old_line": null,
   "line": 793,
-  "before": [],
+  "before": [
+   [
+    786,
+    "                        viewModel.cardTree.expandToRoot(viewModel.cardTree.selection());"
+   ],
+   [
+    787,
+    "                    }"
+   ],
+   [
+    788,
+    "                }"
+   ],
+   [
+    789,
+    "            }"
+   ],
+   [
+    790,
+    "        };"
+   ],
+   [
+    791,
+    ""
+   ],
+   [
+    792,
+    "        var updatePermissionCardSelection = function() {"
+   ],
+   [
+    793,
+    "            var matchingCard = correspondingCard(viewModel.cardTree.selection(), viewModel.permissionTree);"
+   ],
+   [
+    794,
+    "            if (matchingCard) {"
+   ],
+   [
+    795,
+    "                viewModel.permissionTree.expandToRoot(matchingCard);"
+   ],
+   [
+    796,
+    "                viewModel.permissionTree.selection.removeAll();"
+   ],
+   [
+    797,
+    "                matchingCard.selectChildCards();"
+   ],
+   [
+    798,
+    "            }"
+   ]
+  ],
+  "before_line": 792,
+  "before_mapped": false,
   "after": [
    [
     789,
@@ -7379,6 +9245,8 @@
     "    :param regform_items: The registration form items to be used as columns"
    ]
   ],
+  "before_line": 596,
+  "before_mapped": true,
   "after": [
    [
     592,

@@ -40,6 +40,8 @@ import codeguard.rules  # noqa: F401  (registers the built-in rules)
 from codeguard.engine.registry import REGISTRY
 
 from .corpus import load_corpus
+from .linemap import map_lines
+from .schemes import split_lines
 
 HERE = Path(__file__).parent
 
@@ -93,6 +95,25 @@ def snippet(repo: Path, commit: str, path: str, line: int, context: int = 4) -> 
         f"{'>' if n == line else ' '}{n:5d}  {text}"
         for n, text in snippet_lines(repo, commit, path, line, context)
     )
+
+
+def corresponding_old_line(
+    old_lines: list[str], new_lines: list[str], line: int
+) -> tuple[int, bool]:
+    """The old line at the place of new line *line*, and whether *line* itself maps to it.
+
+    Uses the ground truth's line map: if *line* maps back to an old line (unchanged or
+    edited), that line; otherwise the line after the nearest old line that maps to a new
+    line above *line* (the point where the new code was inserted).
+    """
+    back = {new: old for old, (new, _) in map_lines(old_lines, new_lines).items()}
+    if line in back:
+        return back[line], True
+    above = [n for n in back if n < line]
+    if not above:
+        return 1, False
+    anchor = max(above)
+    return min(back[anchor] + 1, max(len(old_lines), 1)), False
 
 
 def diff_hunks(repo: Path, old: str, new: str, path: str, old_path: str, line: int) -> str:
@@ -215,6 +236,14 @@ def write_sample(
             hunks = diff_hunks(repo, old, new, path, old_path, rec["line"])
             md += ["Diff near the line:", "", "```diff", hunks, "```", ""]
         old_line = rec.get("old_line")
+        if old_line:
+            before_line, before_mapped = old_line, True
+        else:
+            # An introduced finding: show the old code at the same place, so a rater can
+            # see whether the issue was already there.
+            old_text = split_lines(_git(repo, "show", f"{old}:{old_path}"))
+            new_text = split_lines(_git(repo, "show", f"{new}:{path}"))
+            before_line, before_mapped = corresponding_old_line(old_text, new_text, rec["line"])
         items.append(
             {
                 "item": item_of[i],
@@ -227,7 +256,12 @@ def write_sample(
                 "old_path": old_path,
                 "old_line": old_line,
                 "line": rec["line"],
-                "before": snippet_lines(repo, old, old_path, old_line) if old_line else [],
+                "before": snippet_lines(
+                    repo, old, old_path, before_line, context=4 if old_line else 6
+                ),
+                "before_line": before_line,
+                # True when the flagged line itself was already there before the commit.
+                "before_mapped": before_mapped,
                 "after": snippet_lines(repo, new, path, rec["line"]),
                 "diff": "\n".join(
                     row.rstrip()

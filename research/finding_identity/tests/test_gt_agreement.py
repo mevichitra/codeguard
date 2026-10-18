@@ -51,3 +51,16 @@ def test_precision_rows_and_report() -> None:
     text = report(key, {"Human rater": human, "Agent rater": {"F001": "same", "F002": "new"}})
     assert "| a | 1 | 1 | 0 | 50.0% |" in text
     assert "1 agree (50.0%)" in text and "Items to adjudicate: F002." in text
+
+
+def test_corresponding_old_line_follows_the_line_map() -> None:
+    from research.finding_identity.gt_sample import corresponding_old_line
+
+    old = ["a", "b", "c", "d"]
+    new = ["a", "b", "x = eval(y)", "c", "d"]
+    # The flagged line was inserted after "b": its place before the commit is old line 3.
+    assert corresponding_old_line(old, new, 3) == (3, False)
+    # An unchanged line maps back to itself.
+    assert corresponding_old_line(old, new, 4) == (3, True)
+    # A line added at the very top has no line above it.
+    assert corresponding_old_line(old, ["new", *old], 1) == (1, False)
