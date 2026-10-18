@@ -191,6 +191,21 @@ def semgrep_env(home: Path) -> dict[str, str]:
 SEMGREP_SCAN_ARGS = ("scan", "--metrics=off", "--disable-version-check", "--json", "--quiet")
 
 
+def _first_offset(value: Any) -> int | None:
+    """The start offset of the first location in a ``dataflow_trace`` source."""
+    if isinstance(value, dict):
+        start = value.get("start")
+        if isinstance(start, dict) and isinstance(start.get("offset"), int):
+            return int(start["offset"])
+        value = list(value.values())
+    if isinstance(value, list):
+        for item in value:
+            found = _first_offset(item)
+            if found is not None:
+                return found
+    return None
+
+
 def semgrep_matches(results: list[dict[str, Any]], formulas: dict[str, str]) -> list[SemgrepMatch]:
     """What the ``match_based_id`` port needs from Semgrep's JSON results."""
     return [
@@ -199,6 +214,12 @@ def semgrep_matches(results: list[dict[str, Any]], formulas: dict[str, str]) -> 
             r["path"],
             formulas.get(r["check_id"], ""),
             {k: v["abstract_content"] for k, v in r["extra"].get("metavars", {}).items()},
+            start=r.get("start", {}).get("offset"),
+            end=r.get("end", {}).get("offset"),
+            message=r["extra"].get("message", ""),
+            taint_source=_first_offset(
+                (r["extra"].get("dataflow_trace") or {}).get("taint_source")
+            ),
         )
         for r in results
     ]

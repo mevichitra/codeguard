@@ -213,6 +213,13 @@ class SemgrepMatch:
     formula: str
     #: ``{"$X": abstract_content}`` in the order Semgrep reports the bindings.
     metavars: Mapping[str, str]
+    #: Start and end offsets of the match, its message, and the start offset of its
+    #: taint source (taint rules only). They recover the order in which Semgrep numbered
+    #: the matches; see :func:`semgrep_match_based_ids`.
+    start: int | None = None
+    end: int | None = None
+    message: str = ""
+    taint_source: int | None = None
 
 
 def _semgrep_key(m: SemgrepMatch) -> str:
@@ -225,15 +232,52 @@ def _semgrep_key(m: SemgrepMatch) -> str:
     return f"({formula!r}, {path}, {m.rule_id!r})"
 
 
+def _semgrep_numbering_order(matches: Sequence[SemgrepMatch]) -> list[int]:
+    """Indices of *matches* (report order) in the order Semgrep gave them ordinals.
+
+    ``RuleMatches.add`` numbers matches in the order the engine returns them, and the
+    report is then sorted by path, start, end, rule and message
+    (``RuleMatch.get_ordering_key``). Matches that tie on everything but the message come
+    out sorted by message, which can differ from the engine's order: two taint results
+    at one sink, from sources whose text differs only in layout, share a key but quote
+    the source differently in the message. For such a group of taint results the engine
+    returns them in source order, so they are numbered by the source's offset; every
+    other match keeps its report position.
+    """
+    order = list(range(len(matches)))
+    i = 0
+    while i < len(order):
+        m = matches[i]
+        j = i + 1
+        while j < len(matches) and (
+            matches[j].path,
+            matches[j].start,
+            matches[j].end,
+            matches[j].rule_id,
+        ) == (m.path, m.start, m.end, m.rule_id):
+            j += 1
+        group = order[i:j]
+        sources = [matches[k].taint_source for k in group]
+        if (
+            len(group) > 1
+            and m.start is not None
+            and len({matches[k].message for k in group}) > 1
+            and all(s is not None for s in sources)
+        ):
+            order[i:j] = sorted(group, key=lambda k: matches[k].taint_source or 0)
+        i = j
+    return order
+
+
 def semgrep_match_based_ids(matches: Sequence[SemgrepMatch]) -> list[str]:
     """``match_based_id`` of each match, for the matches of one scan in report order."""
     counts: dict[str, int] = {}
-    out = []
-    for m in matches:
-        key = _semgrep_key(m)
+    out = [""] * len(matches)
+    for k in _semgrep_numbering_order(matches):
+        key = _semgrep_key(matches[k])
         index = counts.get(key, 0)
         counts[key] = index + 1
-        out.append(f"{hashlib.blake2b(key.encode()).hexdigest()}_{index}")
+        out[k] = f"{hashlib.blake2b(key.encode()).hexdigest()}_{index}"
     return out
 
 

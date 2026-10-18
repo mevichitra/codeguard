@@ -1,0 +1,94 @@
+{
+ "_comment": "Semgrep 1.180.0 JSON results, trimmed, for two taint results at one sink whose sources differ only in layout (rule detect-non-literal-regexp, opengrep-rules f1d2b562, rule ID without its directory prefix). Semgrep numbers them in source order but reports them sorted by message.",
+ "formula": "$ARG function ... (...,$ARG,...) {...}\n RegExp(\"...\", ...) RegExp($ARG, ...) new RegExp($ARG, ...) RegExp(/.../, ...) new RegExp(\"...\", ...) new RegExp(/.../, ...)",
+ "results": [
+  {
+   "check_id": "_semgrep_rules.javascript.lang.security.audit.detect-non-literal-regexp",
+   "path": "apps/web/playwright/booking-pages.e2e.ts",
+   "start": {
+    "line": 12,
+    "col": 34,
+    "offset": 256
+   },
+   "end": {
+    "line": 12,
+    "col": 65,
+    "offset": 287
+   },
+   "extra": {
+    "message": "RegExp() called with a `{\n    page,\n    users,\n  }` function argument, this might allow an attacker to cause a Regular Expression Denial-of-Service (ReDoS) within your application as RegExP blocks the main thread. For this reason, it is recommended to use hardcoded regexes instead. If your regex is run on user-controlled input, consider performing input validation or use a regex checking/sanitization library such as https://www.npmjs.com/package/recheck to verify that the regex does not appear vulnerable to ReDoS.",
+    "fingerprint": "20ceceb8898ffb851d7a318cef970ff0fdfeb19fa2ebb8e11112b8e3523872a27268047b640088d2a8d42e5f285bba5e18240fc87d918749941bd693761d2664_1",
+    "metavars": {
+     "$ARG": {
+      "abstract_content": "{page page users users}"
+     }
+    },
+    "dataflow_trace": {
+     "taint_source": [
+      "CliLoc",
+      [
+       {
+        "path": "apps/web/playwright/booking-pages.e2e.ts",
+        "start": {
+         "line": 7,
+         "col": 22,
+         "offset": 159
+        },
+        "end": {
+         "line": 10,
+         "col": 4,
+         "offset": 185
+        }
+       },
+       "{\n    page,\n    users,\n  }"
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "check_id": "_semgrep_rules.javascript.lang.security.audit.detect-non-literal-regexp",
+   "path": "apps/web/playwright/booking-pages.e2e.ts",
+   "start": {
+    "line": 12,
+    "col": 34,
+    "offset": 256
+   },
+   "end": {
+    "line": 12,
+    "col": 65,
+    "offset": 287
+   },
+   "extra": {
+    "message": "RegExp() called with a `{ page, users }` function argument, this might allow an attacker to cause a Regular Expression Denial-of-Service (ReDoS) within your application as RegExP blocks the main thread. For this reason, it is recommended to use hardcoded regexes instead. If your regex is run on user-controlled input, consider performing input validation or use a regex checking/sanitization library such as https://www.npmjs.com/package/recheck to verify that the regex does not appear vulnerable to ReDoS.",
+    "fingerprint": "20ceceb8898ffb851d7a318cef970ff0fdfeb19fa2ebb8e11112b8e3523872a27268047b640088d2a8d42e5f285bba5e18240fc87d918749941bd693761d2664_0",
+    "metavars": {
+     "$ARG": {
+      "abstract_content": "{page page users users}"
+     }
+    },
+    "dataflow_trace": {
+     "taint_source": [
+      "CliLoc",
+      [
+       {
+        "path": "apps/web/playwright/booking-pages.e2e.ts",
+        "start": {
+         "line": 2,
+         "col": 22,
+         "offset": 43
+        },
+        "end": {
+         "line": 2,
+         "col": 37,
+         "offset": 58
+        }
+       },
+       "{ page, users }"
+      ]
+     ]
+    }
+   }
+  }
+ ]
+}

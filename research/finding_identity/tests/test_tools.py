@@ -20,6 +20,7 @@ from research.finding_identity.analyzers import (
     SEMGREP_SCAN_ARGS,
     semgrep_env,
     semgrep_formulas,
+    semgrep_matches,
 )
 from research.finding_identity.fidelity import sonar_cases
 from research.finding_identity.linemap import map_lines
@@ -123,6 +124,26 @@ def test_semgrep_ids_count_matches_of_equal_keys() -> None:
     ids = semgrep_match_based_ids([m, other, m])
     assert [i[-2:] for i in ids] == ["_0", "_0", "_1"]
     assert ids[0][:-2] == ids[2][:-2] != ids[1][:-2]
+
+
+def test_semgrep_ids_of_taint_results_follow_source_order() -> None:
+    # Two taint results at one sink share a key, but their messages quote the sources
+    # differently, so the report lists the later source first. Semgrep numbered them in
+    # source order (a calcom test file in the corpus run).
+    fixture = json.loads((FIXTURES / "semgrep_taint_ordinal.json").read_text())
+    results = fixture["results"]
+    formulas = {r["check_id"]: fixture["formula"] for r in results}
+    ids = semgrep_match_based_ids(semgrep_matches(results, formulas))
+    assert ids == [r["extra"]["fingerprint"] for r in results]
+    assert [i[-2:] for i in ids] == ["_1", "_0"]
+
+
+def test_semgrep_ties_with_equal_messages_keep_report_order() -> None:
+    a = SemgrepMatch("r", "a.js", "f($X)", {"$X": "x"}, 5, 9, "same", taint_source=40)
+    b = SemgrepMatch("r", "a.js", "f($X)", {"$X": "x"}, 5, 9, "same", taint_source=10)
+    assert [i[-2:] for i in semgrep_match_based_ids([a, b])] == ["_0", "_1"]
+    c = SemgrepMatch("r", "a.js", "f($X)", {"$X": "x"}, 5, 9, "other", taint_source=10)
+    assert [i[-2:] for i in semgrep_match_based_ids([a, c])] == ["_1", "_0"]
 
 
 SEMGREP_SAMPLE = """import os
