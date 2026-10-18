@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 """Scoring the manual ground-truth check."""
 
 import json
@@ -64,3 +66,27 @@ def test_corresponding_old_line_follows_the_line_map() -> None:
     assert corresponding_old_line(old, new, 4) == (3, True)
     # A line added at the very top has no line above it.
     assert corresponding_old_line(old, ["new", *old], 1) == (1, False)
+
+
+def test_corrected_hidden_scales_by_the_confirmed_share(tmp_path: Path) -> None:
+    from research.finding_identity.gt_agreement import corrected_hidden
+
+    run = tmp_path / "repo"
+    run.mkdir()
+    base = {"line_text": "new_ok", "github": "new_ok", "codeguard": "new_ok"}
+    records = [
+        {"truth": "new", "outcomes": {**base, "sonar": "false_known"}},
+        {"truth": "new", "outcomes": {**base, "sonar": "false_known"}},
+        {"truth": "new", "outcomes": {**base, "sonar": "new_ok"}},
+        {"truth": "new", "outcomes": {**base, "sonar": "new_ok"}},
+        {"truth": "known", "outcomes": {**base, "sonar": "known_ok"}},
+    ]
+    (run / "findings.jsonl").write_text("".join(json.dumps(r) + "\n" for r in records))
+    key = [
+        {"item": "A", "stratum": "new_but_matched", "disagreeing_schemes": "sonar"},
+        {"item": "B", "stratum": "new_but_matched", "disagreeing_schemes": "sonar"},
+    ]
+    lines = corrected_hidden(key, {"A": "new", "B": "existed"}, tmp_path)
+    # Hidden 2 of 4 introduced (50%); half the sampled matches are truly new: 25%.
+    row = next(x for x in lines if x.startswith("| `sonar`"))
+    assert row.startswith("| `sonar` | 50.00% (2) | 2 | 1 | 25.00% |")
