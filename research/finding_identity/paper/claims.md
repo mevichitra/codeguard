@@ -47,7 +47,7 @@ commit pairs per repository, replayed on 2026-10-17.
 | C8 | Edited lines are where every scheme fails | false-new on the 142 edited-line findings: `line_text` 100, `github` 87.3, `codeguard` 74.6, `sonar` 63.4, `bandit` 23.9 (Bandit ignores location and code) | `pooled.csv`, `false_new_edited` |
 | C9 | **Set membership hides new findings** | Bandit's baseline on Bandit findings without B101: 29.2 (20.1–40.9) hidden, 320 of 1,097; with B101: 51.2 (42.5–65.2), 6,670/13,024; on CodeGuard findings: 20.0 (14.1–28.6), 394/1,974 | `table_rq1.tex`, `numbers.md` |
 | C9b | It is not a test-fixture effect | without B101, outside test code: 36.3% of 273 introduced findings in 22 repositories hidden (in test code: 26.8% of 824). Other schemes outside test code: `github` 1.8, `codeguard` 2.9, `sonar` 5.9. No interval: a sensitivity check (see note C) | note C |
-| C10 | Every other scheme hides far fewer | on Bandit findings without B101: `line` 1.9, `codeguard` 2.5, `github` 3.3, `sonar` 4.5, `line_text` 6.0; on CodeGuard findings 0.8–1.9 | `table_rq1.tex` |
+| C10 | Every other scheme hides far fewer | on Bandit findings without B101: `line` 1.9, `codeguard` 2.5, `github` 3.3, `sonar` 4.5, `line_text` 6.0; on CodeGuard findings 0.8–1.9. **Upper bounds**: see G4 | `table_rq1.tex` |
 | C11 | Schemes that survive more edits collide more | collision rate, CodeGuard findings: `github` 2.1 (1.1–3.5), `line_text` 17.4 (14.0–21.3), `codeguard` 18.6 (12.9–24.8), `sonar` 20.3 (16.5–24.4), `bandit` 54.2 (44.4–62.5) | `table_rq1.tex` |
 | C12 | The pooled rate hides a skewed spread; one repository dominates `codeguard`'s rate | Ghost: `codeguard` 19.9% of 687 persisting findings (renames from `.js` to `.ts`), `sonar` 1.0, `sonar_branch` 1.7. Per-repository median of `codeguard`: 0.48 | `per_repo.csv`, `numbers.md` |
 | C13 | Findings within a repository are correlated, so per-finding intervals are too narrow | `line_text` false-new 1.89: Wilson 1.73–2.08 against cluster bootstrap 0.80–3.51 | `pooled.csv` |
@@ -55,6 +55,34 @@ commit pairs per repository, replayed on 2026-10-17.
 Caution when pairing C11 with hidden rates: `codeguard`'s hidden rate (1.9, 0.9–3.5) and
 `github`'s (0.8, 0.2–1.9) have overlapping intervals, so collisions cost "tends to hide
 more", not "hides more".
+
+## Ground-truth check
+
+A manual check on 100 sampled findings; the procedure, including a flaw in its first
+round, is in `ground_truth_check/README.md`, the scores in `ground_truth_check/agreement.md`.
+
+| # | Claim | Value | Source |
+|---|---|---|---|
+| G1 | The line-diff ground truth is reliable for persisting findings | holds for 59 of 60 sampled pairs: 98.3% (Wilson 91.1–99.7); human and LLM rater agree on 59 of 60 | `agreement.md` |
+| G2 | It is weaker for introduced findings | holds for 30 of 40: 75.0% (59.8–85.8) | `agreement.md`, *Adjudicated* |
+| G3 | Its errors sit where a scheme matched an "introduced" finding | `new_but_matched`: holds for 10 of 20, 50.0% (29.9–70.1); `agree_new`: 20 of 20. The errors are findings that persisted while the line diff lost them: the flagged line was edited past the similarity threshold (an initializer, a reworded message, a declaration joined onto one line) or moved out of a removed block | `agreement.md`, `adjudicated.json` |
+| G4 | So the hidden rates of the content schemes are upper bounds, SonarQube's most | corrected hidden rate on CodeGuard findings: `sonar` 1.47 → 0.24 (range 0.07–0.66), `github` 0.81 → 0.41, `line_text` 1.17 → 0.87, `codeguard` 1.87 → 1.31. SonarQube's line-hash and code-move passes follow lines the line diff loses: 10 of the 12 sampled findings it "hid" were persisting | `agreement.md`, *Hidden rates after correcting* |
+| G5 | Bandit's hidden rate barely moves | of its 394 hidden CodeGuard findings, 339 are in `agree_new`, where the ground truth held 20 of 20; at most the other 55 could be ground-truth errors (20.0% would fall to no less than about 17%) | `agreement.md`; stratum counts from `results/corpus-v3` |
+| G6 | Threshold rules make "same finding" a question about the analyzer, not the line | three sampled complexity and nesting findings sit on an unchanged `def` line yet are new: the commit pushed the function over the limit elsewhere (verified by re-running the rule on both versions) | `adjudicated.json` (F036, F065, F076) |
+
+How to describe the check: the human rater labelled the 60 pairs and confirmed each of
+the 14 harness errors the LLM rater flagged; the 27 introduced findings the LLM rater
+confirmed as new had no human check. Report the LLM rater as an LLM. Cohen's kappa is
+not informative here (the human rater confirmed every pair, so chance agreement is
+total); report raw agreement instead.
+
+Scope: the check sampled CodeGuard findings only. Bandit's own findings (C9's 29.2%,
+C10's Bandit-findings column) were not checked, so say that their hidden rates rest on
+the same line diff without a manual check.
+
+Caution on G4: the corrected rates scale each scheme's hidden count by the share of its
+sampled matches that are truly new, from 6 to 12 sampled findings per scheme. Quote them
+as estimates with their ranges, and keep the uncorrected rates in Table II.
 
 ## RQ2: controlled changes
 
@@ -94,8 +122,6 @@ D. **R4** counts scored `rename_function` cases by rule from
 `results/transform/*/cases.jsonl` (`target_outcomes.line_text == "false_new"`).
 
 E. **Still to do before submission.**
-- Manual check of the ground truth on a stratified sample (for Threats): a sample file
-  for labelling can be generated from `findings.jsonl`.
 - Verify every related-work reference in `outline.md` before citing it.
 - Decide whether `sonar` or `sonar_branch` is "SonarQube" in the abstract. Branch mode
   is what compares a long-lived baseline on the main branch; pull-request mode is what
