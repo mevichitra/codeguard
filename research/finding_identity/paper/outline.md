@@ -195,9 +195,10 @@ Availability: harness, ports, corpus, results and scripts in the repository
 
 ## Regenerating
 
-Everything in this directory comes from four runs over the pinned corpus and two
+Everything in this directory comes from five runs over the pinned corpus and two
 generators. From the repository root, with `pip install -e .` and
-`pip install -r research/finding_identity/requirements.txt` (about 40 minutes on 4 cores):
+`pip install -r research/finding_identity/requirements.txt` (about 40 minutes on 4 cores,
+plus about 1.5 to 2 hours for the Semgrep run):
 
 ```bash
 P=research/finding_identity
@@ -207,6 +208,13 @@ python -m research.finding_identity batch $P/corpus.csv --commits 200 --jobs 4 -
     --out $P/results/corpus-v3
 python -m research.finding_identity batch $P/corpus.csv --commits 200 --jobs 4 --details \
     --analyzer bandit --out $P/results/corpus-bandit
+
+# RQ1, third analyzer: Semgrep with third-party rules (all 35 repositories), the
+# opengrep-rules fork of semgrep-rules at a pinned commit (README, "Semgrep's rules")
+git clone https://github.com/opengrep/opengrep-rules $P/.repos/opengrep-rules
+git -C $P/.repos/opengrep-rules checkout f1d2b562b414783763fd02a6ed2736eaed622efa
+python -m research.finding_identity batch $P/corpus.csv --commits 200 --jobs 4 --details \
+    --analyzer semgrep --semgrep-rules $P/.repos/opengrep-rules --out $P/results/corpus-semgrep
 
 # RQ2: the transformation experiment on each Python repository at its pinned commit
 python - <<'PY' | xargs -P 4 -L 1 sh -c \
@@ -218,9 +226,11 @@ for r in csv.DictReader(open("research/finding_identity/corpus.csv")):
         print(f"research/finding_identity/.repos/{r['label']} {r['sha']} {r['label']}")
 PY
 
-# Table II, the gate table, numbers.md, rq1.csv, rq2.csv, Fig. 1
+# Table II, the gate table, the Semgrep table (table_rq1_semgrep.tex), numbers.md,
+# rq1.csv, rq2.csv, Fig. 1
 python -m research.finding_identity.paper_kit --codeguard $P/results/corpus-v3 \
     --bandit $P/results/corpus-bandit --bandit-exclude B101 \
+    --semgrep $P/results/corpus-semgrep \
     --transform $P/results/transform --corpus $P/corpus.csv --out $P/paper
 
 # tables.md, pooled.csv, per_repo.*, repos.csv, the per-repository box plot

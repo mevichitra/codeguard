@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import sys
 import time
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from datetime import datetime, timezone
 from itertools import pairwise
 from pathlib import Path
@@ -46,6 +46,15 @@ def _add(totals: dict[str, Any], other: dict[str, Any]) -> None:
             totals["schemes"][s][k] += v
     for k in ("files", "renamed_files", "skipped_files"):
         totals[k] += other[k]
+
+
+def _versions(repo: GitRepo, history: Sequence[str]) -> Iterator[tuple[str, str, bytes]]:
+    """``(blob, path, data)`` of every file version :func:`_replay_change` will scan."""
+    for old, new in pairwise(history):
+        for ch in repo.changes(old, new):
+            for path, sha in ((ch.old_path, ch.old_sha), (ch.new_path, ch.new_sha)):
+                if path and sha and is_candidate(path):
+                    yield sha, path, repo.blob(sha)
 
 
 def _replay_change(
@@ -174,6 +183,7 @@ def replay(
     totals = _empty_totals(schemes)
     category_totals: dict[str, dict[str, Any]] = {}
     started = time.monotonic()
+    scanner.prefetch(_versions(repo, history))
     with (
         (out_dir / "pairs.jsonl").open("w", encoding="utf-8") as pairs_out,
         (out_dir / "findings.jsonl").open("w", encoding="utf-8") as findings_out,

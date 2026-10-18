@@ -40,6 +40,8 @@ class BatchOptions:
     delete_clones: bool = False
     #: What produces the findings: ``codeguard``, ``bandit`` or ``semgrep``.
     analyzer: str = "codeguard"
+    #: Semgrep's rules: a file or a rules repository (default: ``semgrep_rules.yml``).
+    semgrep_rules: Path | None = None
 
 
 def summary_path(opts: BatchOptions, label: str) -> Path:
@@ -113,6 +115,8 @@ def run_one(entry: CorpusEntry, opts: BatchOptions) -> None:
         cmd.append("--details")
     if opts.analyzer != "codeguard":
         cmd += ["--analyzer", opts.analyzer]
+    if opts.semgrep_rules is not None:
+        cmd += ["--semgrep-rules", str(opts.semgrep_rules.resolve())]
     with log_path.open("w", encoding="utf-8") as log:
         log.write(" ".join(cmd) + "\n")
         log.flush()

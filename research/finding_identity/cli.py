@@ -47,7 +47,8 @@ def main(argv: list[str] | None = None) -> None:
     rp.add_argument(
         "--semgrep-rules",
         type=Path,
-        help="local Semgrep rules for --analyzer semgrep (default: semgrep_rules.yml)",
+        help="for --analyzer semgrep: a rules file or a rules repository checkout "
+        "(default: semgrep_rules.yml)",
     )
 
     sp = sub.add_parser("summarize", help="print rate tables for one or more result dirs")

@@ -85,6 +85,20 @@ class Scanner:
             self._count_categories(result.observations)
         return result
 
+    def prefetch(self, versions: Iterable[tuple[str, str, bytes]]) -> None:
+        """Let an analyzer that scans in batches (Semgrep) scan ``(cache key, path, data)``
+        versions ahead of :meth:`scan`; a no-op for the others."""
+        prefetch = getattr(self.analyzer, "prefetch", None)
+        if prefetch is None:
+            return  # *versions* is never read, so a generator is never run
+        texts = []
+        for cache_key, path, data in versions:
+            if (cache_key, path) in self._cache or len(data) > MAX_BYTES:
+                continue
+            if language_for_path(path) is not None and self.analyzer.supports(path):
+                texts.append((path, data.decode("utf-8", errors="replace")))
+        prefetch(texts)
+
     def describe(self) -> dict[str, Any]:
         """The analyzer's name, version and configuration."""
         return self.analyzer.describe()

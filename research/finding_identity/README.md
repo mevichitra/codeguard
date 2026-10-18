@@ -69,13 +69,48 @@ schemes it supports (all of the above, plus `semgrep` for Semgrep).
 |---|---|---|
 | `codeguard` (default) | Python, JavaScript, TypeScript | CodeGuard's rules in the `--categories` |
 | `bandit` | Python | Bandit 1.9.4 with its default plugins, in process (the code path of the command line) |
-| `semgrep` | Python, JavaScript, TypeScript | Semgrep 1.180.0 with the local rules in `semgrep_rules.yml` (or `--semgrep-rules`), one file at a time, offline |
+| `semgrep` | Python, JavaScript, TypeScript | Semgrep 1.180.0, offline, with the rules in `semgrep_rules.yml` or `--semgrep-rules` (a rules file or a rules repository, below) |
 
 Bandit and Semgrep are research-only dependencies:
 
 ```bash
 pip install -r research/finding_identity/requirements.txt
 ```
+
+### Semgrep's rules
+
+`semgrep_rules.yml` was written for this study. For findings that do not come from rules
+the study chose, `--semgrep-rules` also takes a checkout of a rules repository in the
+layout of [semgrep/semgrep-rules](https://github.com/semgrep/semgrep-rules), one directory
+per language. Python files are scanned with `python/`, JavaScript and TypeScript files
+with `javascript/` and `typescript/`; the other directories (`generic/`, ...) are left
+out. The rules are copied into the scan directory, so Semgrep's rule IDs (and so
+`match_based_id`) do not depend on where the checkout lives; the harness records the IDs
+without the copy's prefix (`python.lang.security.audit.eval-detected`). `analyzer.json`
+records the checkout's commit, a SHA-256 over the rule files, and the number of rules.
+
+The paper uses [opengrep/opengrep-rules](https://github.com/opengrep/opengrep-rules) at
+`f1d2b562b414783763fd02a6ed2736eaed622efa` (2025-01-26): the semgrep-rules repository as it
+was under LGPL-2.1 with the Commons Clause, before Semgrep, Inc. moved the rules to the
+Semgrep Rules License (December 2024), which limits use to internal purposes and does not
+allow redistribution. The fork's licence allows research use and redistribution, but not
+selling the rules.
+
+```bash
+git clone https://github.com/opengrep/opengrep-rules research/finding_identity/.repos/opengrep-rules
+git -C research/finding_identity/.repos/opengrep-rules checkout f1d2b562b414783763fd02a6ed2736eaed622efa
+```
+
+Loading a rules repository takes Semgrep 10 to 30 seconds, so a replay does not scan one
+file version per call. Before the first commit pair it collects every file version the
+replay will scan and hands them to `SemgrepAnalyzer.prefetch`, which scans them in
+layers: a layer holds one kind of file (Python, or JavaScript and TypeScript) and at most
+one version of each path, so each file is scanned at its own path with the rules it would
+get alone. A repository needs as many calls as its most-changed file has versions (5 to
+34 in the corpus) for each kind of file. A test checks that the layered results equal
+one-file-at-a-time results; `analyzer.json` records the number of calls
+(`semgrep_calls`), the versions prefetched, any layer that failed (its files are then
+scanned one at a time) and the errors Semgrep reported, by type (`scan_errors`).
 
 Semgrep redacts `match_based_id` and metavariable bindings unless an app token is set.
 The harness passes a placeholder token and points every proxy variable at a closed local
