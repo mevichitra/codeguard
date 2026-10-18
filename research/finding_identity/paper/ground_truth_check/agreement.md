@@ -77,16 +77,36 @@ Sources of the adjudicated verdicts:
 - 1: rule re-run: the test function reaches cyclomatic complexity 18 (limit 15) only after the commit; CodeGuard did not report it before
 - 1: rule re-run: raise_for_response() reaches nesting depth 6 (limit 5) only after the commit; CodeGuard did not report it before
 
+## Ground truth of the replays against the adjudicated verdicts
+
+From `research/finding_identity/results/corpus-v4`: 100 of 100 sampled findings found. *Holds*: the
+replay's ground truth agrees with the final verdict (Wilson 95% interval).
+
+| kind | holds | fails | undecided | holds | 95% CI |
+|---|---:|---:|---:|---:|---|
+| introduced | 32 | 8 | 0 | 80.0% | [65.2, 89.5] |
+| pair | 59 | 1 | 0 | 98.3% | [91.1, 99.7] |
+| all | 91 | 9 | 0 | 91.0% | [83.8, 95.2] |
+
+| stratum | holds | fails | undecided | holds | 95% CI |
+|---|---:|---:|---:|---:|---|
+| agree_known | 20 | 0 | 0 | 100.0% | [83.9, 100.0] |
+| agree_new | 20 | 0 | 0 | 100.0% | [83.9, 100.0] |
+| edited | 19 | 1 | 0 | 95.0% | [76.4, 99.1] |
+| known_but_new | 20 | 0 | 0 | 100.0% | [83.9, 100.0] |
+| new_but_matched | 12 | 8 | 0 | 60.0% | [38.7, 78.1] |
+| all | 91 | 9 | 0 | 91.0% | [83.8, 95.2] |
+
 ## Hidden rates after correcting the ground truth
 
-From `research/finding_identity/results/corpus-v3`: 1,974 introduced findings. *Matched, sampled*: the
+From `research/finding_identity/results/corpus-v4`: 1,966 introduced findings. *Matched, sampled*: the
 scheme's hidden findings among the sampled `new_but_matched` items; *truly new*:
 those the adjudication confirms as new. The corrected rate scales the hidden
 count by that share (range: its Wilson 95% interval).
 
 | scheme | hidden | matched, sampled | truly new | corrected hidden | range |
 |---|---:|---:|---:|---:|---|
-| `line_text` | 1.17% (23) | 8 | 6 | 0.87% | [0.48, 1.08] |
-| `github` | 0.81% (16) | 6 | 3 | 0.41% | [0.15, 0.66] |
-| `codeguard` | 1.87% (37) | 10 | 7 | 1.31% | [0.74, 1.67] |
-| `sonar` | 1.47% (29) | 12 | 2 | 0.24% | [0.07, 0.66] |
+| `line_text` | 1.02% (20) | 6 | 6 | 1.02% | [0.62, 1.02] |
+| `github` | 0.51% (10) | 2 | 2 | 0.51% | [0.17, 0.51] |
+| `codeguard` | 1.53% (30) | 6 | 6 | 1.53% | [0.93, 1.53] |
+| `sonar` | 1.12% (22) | 8 | 1 | 0.14% | [0.03, 0.53] |
