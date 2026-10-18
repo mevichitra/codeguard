@@ -1,0 +1,162 @@
+{
+ "F001": {
+  "reason": "The flagged await-in-loop is in a newly added test; the older test's loop is a separate, still-present occurrence.",
+  "verdict": "new"
+ },
+ "F007": {
+  "reason": "The loose comparison is in a newly added nested-row fetch callback that did not exist before.",
+  "verdict": "new"
+ },
+ "F008": {
+  "reason": "The file is newly added, so the await-in-loop retry code is new.",
+  "verdict": "new"
+ },
+ "F014": {
+  "reason": "'var sign' is a newly added declaration; the old block only declared 'var diff'.",
+  "verdict": "new"
+ },
+ "F015": {
+  "reason": "The MOCK_PASS meetingPassword is in a test block added where the old file had only a comment.",
+  "verdict": "new"
+ },
+ "F020": {
+  "reason": "'var loc' was already a var declaration; only its initializer changed.",
+  "verdict": "existed"
+ },
+ "F024": {
+  "reason": "The credentials line is in a newly added _get method; the existing _post copy remains separately.",
+  "verdict": "new"
+ },
+ "F027": {
+  "reason": "The f-string DROP TRIGGER execute is in a newly added test class.",
+  "verdict": "new"
+ },
+ "F028": {
+  "reason": "The same errors.password string assignment existed before, only reworded and joined onto one line.",
+  "verdict": "existed"
+ },
+ "F035": {
+  "reason": "The collectionType == \"REST\" ternary for root collections existed before and was only restructured.",
+  "verdict": "existed"
+ },
+ "F036": {
+  "reason": "The createUser signature is unchanged, there is no diff near it and line numbers are identical, so nothing shows the complexity changed.",
+  "verdict": "existed"
+ },
+ "F041": {
+  "reason": "'var card' is in the rewritten updatePermissions done-callback, which is new logic built around byNodegroup.",
+  "verdict": "new"
+ },
+ "F042": {
+  "reason": "The file is newly added, so the f-string DROP TRIGGER statements appear for the first time.",
+  "verdict": "new"
+ },
+ "F049": {
+  "reason": "The same await inside the for loop existed before, just inside the removed withChildren block (re-indented).",
+  "verdict": "existed"
+ },
+ "F051": {
+  "reason": "The file is newly added, so the innerHTML template assignment is new.",
+  "verdict": "new"
+ },
+ "F052": {
+  "reason": "'var Tokenizer' is part of the newly added select2 v4 data-adapter code.",
+  "verdict": "new"
+ },
+ "F054": {
+  "reason": "The password tuple from create_non_staff_user is in a newly added test class.",
+  "verdict": "new"
+ },
+ "F056": {
+  "reason": "The file is newly added, so the await nextTick() in the loop is new.",
+  "verdict": "new"
+ },
+ "F058": {
+  "reason": "'var loc' was already a var declaration; only its initializer changed.",
+  "verdict": "existed"
+ },
+ "F059": {
+  "reason": "The await personRepository.update call was already inside the same loop, only moved out of an if block.",
+  "verdict": "existed"
+ },
+ "F065": {
+  "reason": "The added lines are straight-line awaits with no branches, so the complexity condition must already have held.",
+  "verdict": "existed"
+ },
+ "F067": {
+  "reason": "The await readJson inside the for loop existed before; it was only reformatted with a type parameter.",
+  "verdict": "existed"
+ },
+ "F069": {
+  "reason": "'var siteLanguage' is a newly added declaration.",
+  "verdict": "new"
+ },
+ "F070": {
+  "reason": "The create_key call is in a newly added test method.",
+  "verdict": "new"
+ },
+ "F072": {
+  "reason": "The same var declaration list existed before, only merged onto one line.",
+  "verdict": "existed"
+ },
+ "F073": {
+  "reason": "The localCollections ternary with == is a new comparison; the old one in runDispatchWithOutSyncing is still present.",
+  "verdict": "new"
+ },
+ "F074": {
+  "reason": "The file is newly added, so the await axios.post in the loop is new.",
+  "verdict": "new"
+ },
+ "F076": {
+  "reason": "raise_for_response is unchanged with no diff nearby, so its nesting depth predates the commit.",
+  "verdict": "existed"
+ },
+ "F077": {
+  "reason": "'var config' is new; the old line 7 called selectize directly with no var declaration.",
+  "verdict": "new"
+ },
+ "F078": {
+  "reason": "The file is a newly added translation file.",
+  "verdict": "new"
+ },
+ "F081": {
+  "reason": "The 'starfleet' == comparison is a newly added branch; the azure comparison it displaced still exists below.",
+  "verdict": "new"
+ },
+ "F083": {
+  "reason": "The file is newly added, so preview_command and its complexity are new.",
+  "verdict": "new"
+ },
+ "F086": {
+  "reason": "The file is newly added, so the await inside the loop is new.",
+  "verdict": "new"
+ },
+ "F092": {
+  "reason": "The admin seed user with the hardcoded password looks relocated: about 247 lines were removed above it and the block reads as existing seed code, although the old copy is not shown.",
+  "verdict": "existed"
+ },
+ "F093": {
+  "reason": "The same password-message assertion existed before, only reworded.",
+  "verdict": "existed"
+ },
+ "F094": {
+  "reason": "start_wasm_invocation, with its long parameter list, is a newly added function.",
+  "verdict": "new"
+ },
+ "F095": {
+  "reason": "'var self = this;' is a newly added line.",
+  "verdict": "new"
+ },
+ "F096": {
+  "reason": "The mock access/refresh tokens are in a newly added office365 test.",
+  "verdict": "new"
+ },
+ "F098": {
+  "reason": "'var perms' is in the newly rewritten updatePermissions callback.",
+  "verdict": "new"
+ },
+ "F099": {
+  "reason": "'var lastSyncedCardSelection' is a newly added declaration.",
+  "verdict": "new"
+ }
+}
