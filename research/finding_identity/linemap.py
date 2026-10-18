@@ -17,9 +17,9 @@ Three kinds of mapping, decided in this order:
     detection (``git diff --color-moved=blocks``: "blocks of moved text of at least 20
     alphanumeric characters are detected greedily"), with two differences: lines are
     compared without leading and trailing whitespace, so a block that changes indentation
-    still counts as moved, and a block is mapped only when its text occurs exactly once
-    among the unmapped old lines and once among the unmapped new lines, so the pairing
-    is never a guess. Blocks are taken greedily, the one with the most alphanumeric
+    still counts as moved, and a block is mapped only when its text occurs exactly once in
+    the old version and once in the new one, so the pairing is never a guess between
+    copies of repeated code. Blocks are taken greedily, the one with the most alphanumeric
     characters first.
 
 Edited lines inside a moved block: an edit splits the block in two. When two relocated
@@ -171,14 +171,19 @@ def _moves(
     a = [ln.strip() for ln in old]
     b = [ln.strip() for ln in new]
 
+    # Where each non-blank text starts: among the unmapped new lines (block candidates),
+    # and anywhere in either version (the uniqueness test).
     starts_new: dict[str, list[int]] = defaultdict(list)
-    starts_old: dict[str, list[int]] = defaultdict(list)
+    anywhere_old: dict[str, list[int]] = defaultdict(list)
+    anywhere_new: dict[str, list[int]] = defaultdict(list)
     for j, text in enumerate(b):
-        if free_new[j] and text:
-            starts_new[text].append(j)
+        if text:
+            anywhere_new[text].append(j)
+            if free_new[j]:
+                starts_new[text].append(j)
     for i, text in enumerate(a):
-        if free_old[i] and text:
-            starts_old[text].append(i)
+        if text:
+            anywhere_old[text].append(i)
 
     # Maximal runs of equal, unmapped lines on a diagonal (i + k, j + k).
     runs: list[tuple[int, int, int, int]] = []  # (-alnum, i, j, length)
@@ -204,13 +209,11 @@ def _moves(
                 runs.append((-alnum, i, j, k))
     runs.sort()
 
-    def occurrences(
-        seq: Sequence[str], free: Sequence[bool], starts: list[int], block: Sequence[str]
-    ) -> int:
+    def occurrences(seq: Sequence[str], starts: list[int], block: Sequence[str]) -> int:
         n = 0
         for p in starts:
             if p + len(block) <= len(seq) and all(
-                free[p + t] and seq[p + t] == block[t] for t in range(len(block))
+                seq[p + t] == block[t] for t in range(len(block))
             ):
                 n += 1
         return n
@@ -221,9 +224,11 @@ def _moves(
         if not all(free_old[i + t] and free_new[j + t] for t in range(k)):
             continue  # overlaps a block already taken
         block = a[i : i + k]
-        if occurrences(a, free_old, starts_old[block[0]], block) != 1:
+        # Unique in the whole file on both sides: a block repeated elsewhere, even in lines
+        # the diff already mapped, could be any of its copies.
+        if occurrences(a, anywhere_old[block[0]], block) != 1:
             continue
-        if occurrences(b, free_new, starts_new[block[0]], block) != 1:
+        if occurrences(b, anywhere_new[block[0]], block) != 1:
             continue
         for t in range(k):
             free_old[i + t] = free_new[j + t] = False

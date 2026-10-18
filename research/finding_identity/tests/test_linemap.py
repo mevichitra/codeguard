@@ -80,6 +80,16 @@ def test_block_that_is_not_unique_is_not_mapped() -> None:
     assert 2 not in mapping
 
 
+def test_block_repeated_elsewhere_in_the_file_is_not_mapped() -> None:
+    # Three copies of the same block; the diff keeps two, and the third moves. Among the
+    # unmapped lines it looks unique, but in the file it could be any copy.
+    block = ["    # placeholder credentials for the mock", "    password = 'MOCK_PASSWORD'"]
+    old = ["def a():", *block, "def b():", *block, "def c():", *block, *FUNC_B]
+    new = ["def a():", *block, "def b():", *block, *FUNC_B, "def c2():", *block]
+    mapping = map_lines(old, new)
+    assert all(kind != "relocated" for _, kind in mapping.values())
+
+
 def test_short_moved_line_is_not_mapped() -> None:
     old = ["a = 1", "b = 2", "c = 3", "x = f()"]
     new = ["x = f()", "a = 1", "b = 2", "c = 3"]

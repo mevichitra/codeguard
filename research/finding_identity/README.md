@@ -98,7 +98,8 @@ For each changed file, old lines are mapped to new lines (`linemap.py`) in three
    `git diff --color-moved=blocks` (a moved block has at least 20 alphanumeric
    characters), except that lines are compared without leading and trailing whitespace
    (a re-indented block still counts as moved) and that a block is mapped only when its
-   text occurs exactly once among the unmapped old and once among the unmapped new lines.
+   text occurs exactly once in the old version and once in the new one (copies of
+   repeated code are never paired by guess).
    An edit inside a moved block splits it in two; the lines between two such halves (at
    most 10 on either side) are aligned as in step 2 and count as `edited`.
 
