@@ -1,7 +1,8 @@
 # Paper outline: finding identity across code changes
 
 Material for a 6-page IEEE conference paper (two columns, 10 pt). This file plans the
-paper; the prose is written by the author. Every number the paper states is listed in
+paper; the draft is [paper.tex](paper.tex), which pulls in `table_rq1.tex`, `fig_rq2.pdf`,
+`threats.tex`, `related_work.tex` and `references.bib`. Every number the paper states is listed in
 [claims.md](claims.md) with the file it comes from, and the tables and figures are
 generated into this directory (see [Regenerating](#regenerating)).
 
@@ -228,6 +229,12 @@ python -m research.finding_identity stats $P/results/corpus-v3 --corpus $P/corpu
 
 # The ground-truth sample for the manual check (paper/ground_truth_check/)
 python -m research.finding_identity.gt_sample $P/results/corpus-v3
+```
+
+Build the paper (TeX Live with IEEEtran; the build files stay out of the tree):
+
+```bash
+cd research/finding_identity/paper && latexmk -pdf -outdir=/tmp/paper-build paper.tex
 ```
 
 The bootstrap seed (20261014), the transformation seed (0) and the sample seed
