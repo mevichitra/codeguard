@@ -35,7 +35,8 @@ commit pairs per repository. The earlier replays without move detection
 | S8 | Persisting CodeGuard findings in renamed files | 287 (1.2%), in 8 repositories | `numbers.md` |
 | S9 | Replay time, CodeGuard batch | 1,281 s wall clock on 4 cores for 35 repositories (other jobs were running, so an upper bound) | batch log of `corpus-v4` |
 | S10 | SonarQube tracker port check | 20,000 generated cases, 0 mismatches against the unmodified Java tracker | PR #56; `fidelity/sonar_cases.py` |
-| S11 | Semgrep port check | all 716 `match_based_id` values emitted during the Flask and DefectDojo replays reproduced | PR #56 |
+| S11 | Semgrep port check | 87,916 of the 87,924 `match_based_id` values Semgrep emitted over the 35-repository run reproduced; the 8 others are on lines 183 and 184 of one calcom file (`apps/web/playwright/booking-pages.e2e.ts`, rule `detect-non-literal-regexp`), root cause not yet found. Earlier: all 716 in the Flask and DefectDojo replays, all 7,051 in the four-repository pilot | `results/corpus-semgrep/*/analyzer.json` (`port_checked`, `port_mismatches`), `_logs/calcom.log`; PR #56 |
+| S15 | Semgrep run | Semgrep 1.180.0 with 587 rules from the opengrep-rules fork of semgrep-rules at `f1d2b562` (LGPL-2.1 with the Commons Clause), on all 35 repositories, 7,000 pairs: 57,166 persisting and 4,328 introduced findings, 298 persisting in renamed files in 11 repositories; 0 failed batches; 91 file versions timed out and 106 had parse problems (skipped, as for the other analyzers) | `numbers.md` (Semgrep section), `analyzer.json` |
 | S12 | Move detection changes few findings | of v3's 1,974 introduced CodeGuard findings, 8 become persisting (1,966 left); of Bandit's 1,097 without B101, 28 (1,069 left). Persisting findings mapped as relocated: 7 (CodeGuard), 52 (Bandit, all rules) | `numbers.md` of v3 and v4; `known_relocated` in `results/corpus-v4/*/summary.json` and `results/corpus-bandit-v2/*/summary.json` |
 | S13 | The large-block fallback never touched a finding | v1's position-by-position pairing of blocks over 4,000 cells: 0 of 25,211 CodeGuard and 0 of 187,877 Bandit records (counted with an instrumented v1 replay, not committed). v2 aligns fully up to 40,000 cells and in a band beyond; 0 findings in banded blocks | `known_banded`, `introduced_banded` in the v4 and bandit-v2 summaries |
 | S14 | Collision keys of the matcher schemes | `sonar`, `sonar_branch`: rule, path and line hash (the key of SonarQube's last pass); `bandit`: the `Issue.__eq__` tuple (issue text, severity, CWE, confidence, file, test name and test ID) | `schemes.py`, `trackers.py` |
@@ -61,6 +62,19 @@ commit pairs per repository. The earlier replays without move detection
 | C11b | Collisions cost hidden findings | `codeguard` hides 1.02 points more than `github` on CodeGuard findings (0.57 to 1.66), though it hides 1.31 fewer on Bandit's (−2.77 to −0.10) | `numbers.md`, paired differences |
 | C12 | The pooled rate hides a skewed spread; one repository dominates `codeguard`'s rate | Ghost: `codeguard` 19.9% of 687 persisting findings (renames from `.js` to `.ts`), `sonar` 1.0, `sonar_branch` 1.7. Per-repository median of `codeguard`: 0.48 | `per_repo.csv`, `numbers.md` |
 | C13 | Findings within a repository are correlated, so per-finding intervals are too narrow | `line_text` false-new 1.91: Wilson 1.75–2.10 against cluster bootstrap 0.81–3.54 | `pooled.csv` |
+
+## Semgrep's findings (third analyzer)
+
+Findings from third-party rules, not written for this study. Rates are in the one-column
+table `table_rq1_semgrep.tex`. The manual check did not sample these findings.
+
+| # | Claim | Value | Source |
+|---|---|---|---|
+| M1 | The false-new order of the content schemes holds on Semgrep's findings | `sonar` 0.5 (0.3–0.7), `codeguard` 1.4 (0.8–2.1), `line_text` 1.8 (1.1–2.7), `github` 3.2 (2.2–4.3); `line` 56.3 (52.5–59.9). Paired: `sonar` − `codeguard` −0.88 (−1.47 to −0.45), `codeguard` − `line_text` −0.45 (−0.86 to −0.02), `github` − `codeguard` 1.81 (1.18 to 2.45) | `table_rq1_semgrep.tex`, `numbers.md` |
+| M2 | Bandit's baseline hides Semgrep's new findings too | hidden 22.4 (16.0–31.3), 971 of 4,328; gate miss 26.1 (19.5–33.0), 184 of 704 pairs; every non-Semgrep content scheme's gate misses at most 1.0 | `numbers.md` |
+| M3 | **Semgrep's own ID hides new findings** | `semgrep` hidden 12.1 (7.4–18.6), 524 of 4,328, against 0.6–2.2 for the other content schemes; gate miss 5.1 (3.5–6.9), 36 of 704; false-new 1.4 (0.9–2.1) | `numbers.md` |
+| M4 | Mechanism (from the code, not measured per finding) | `match_based_id` hashes the rule's patterns with their bindings, the path and the rule, then numbers equal keys in file order, so a new equal match placed before an old one takes its ID: the `duplicate_above` case of RQ2 | `schemes.py` (`semgrep_match_based_ids`); Semgrep `rule_match.py` |
+| M5 | Semgrep's collision rate is not defined | the ordinal makes every ID in a file unique; shown as "--" | `table_rq1_semgrep.tex` |
 
 ## The gate
 

@@ -40,10 +40,10 @@ Baselines, suppressions, alert de-duplication and CI gates that fail only on new
 findings all depend on a
 static analysis tool recognizing a finding it reported on the previous commit. We
 measure how well the methods that shipped tools use for this work. We ported
-SonarQube's issue tracker, Bandit's baseline comparison and the line hash that GitHub's
-CodeQL Action uploads as a fingerprint, checked each port against the original, and
+SonarQube's issue tracker, Bandit's baseline comparison, Semgrep's match ID and the line
+hash that GitHub's CodeQL Action uploads as a fingerprint, checked each port against the original, and
 replayed 200 consecutive commit pairs from each of 35 open-source web
-applications, scoring every method against a line-diff ground truth that also detects
+applications, with findings from three analyzers, scoring every method against a line-diff ground truth that also detects
 moved code. Line numbers report
 52.6\% of persisting findings as new; the other methods report 0.4--4.4\%. Much of what
 remains comes from renamed files. They hold 1.2\% of persisting findings, and every
@@ -51,7 +51,8 @@ method whose identity includes the path reports all of them as new; SonarQube lo
 2.8\% of them in pull-request analyses and 20.2\% in branch analyses. Bandit's baseline
 matches by set membership: it hides 27.3\% of Bandit's own new findings, and a CI gate
 built on it stays silent on 34.1\% of the commit pairs that introduce one, where every
-other method misses none. Ten controlled code transformations show that each method has
+other method misses none. Semgrep's own ID, which numbers equal matches in file order,
+hides 12.1\% of Semgrep's new findings. Ten controlled code transformations show that each method has
 a change it cannot follow.
 \end{abstract}
 
@@ -79,13 +80,11 @@ To answer them we replay commit histories and score each method against an indep
 ground truth, a line diff that also detects moved code, which a manual check of 100
 findings supports (Section~\ref{sec:threats}). This paper contributes:
 \begin{itemize}
-% PENDING: Semgrep results are being added as a third analyzer; reword this bullet
-% (and the next) once they are in, or drop Semgrep from it if they are not.
 \item ports of the identity methods of SonarQube, Bandit and Semgrep, and of the
   fingerprint the CodeQL Action computes for GitHub code scanning, each checked against
   the original code;
 \item RQ1 on 7,000 commit pairs from 35 open-source web applications, with findings from
-  two analyzers, and RQ2 on ten controlled transformations;
+  three analyzers, and RQ2 on ten controlled transformations;
 \item two results that tool builders can act on: putting the file path into a
   finding's identity causes most of the false-new reports of \texttt{codeguard} and
   \texttt{line\_text}, and matching by set membership hides new findings, so that a
@@ -279,7 +278,10 @@ Bandit's own findings, Bandit 1.9.4 analysed the 25 Python repositories (5,000 p
 We leave out Bandit's B101, which flags every \texttt{assert}: it is 91.0\% of
 Bandit's persisting findings, 98\% of them in test code, and its constant message would
 dominate the hidden rate. Without it Bandit has 15,746 persisting and 1,069 introduced
-findings.
+findings. A third set comes from rules that nobody involved in this study wrote: Semgrep
+1.180.0 ran the 587 Python, JavaScript and TypeScript rules of the opengrep-rules fork of
+semgrep-rules (commit \texttt{f1d2b56}, LGPL-2.1 with the Commons Clause) on all 35
+repositories, for 57,166 persisting and 4,328 introduced findings.
 
 \textit{Ports and their checks.} We measure ports of each tool's method, so each port
 was checked against the original. The SonarQube port follows SonarQube 26.10.0.133078; on
@@ -287,9 +289,9 @@ was checked against the original. The SonarQube port follows SonarQube 26.10.0.1
 same tag, every time. The Bandit port flags exactly the issues a live
 \texttt{bandit -b} run reports, including a hidden duplicate. The GitHub port reproduces
 the hashes that the CodeQL Action's own \texttt{fingerprints.ts} computes on reference inputs with
-duplicate, blank, CRLF and CR-only lines. A Semgrep port reproduced all 716
-\texttt{match\_based\_id} values Semgrep emitted during two replays; we measured it on
-those two repositories only and leave it out here.
+duplicate, blank, CRLF and CR-only lines. Over the Semgrep run, the port
+reproduced 87,916 of the 87,924 \texttt{match\_based\_id} values Semgrep emitted; the
+other 8 sit on two lines of one calcom test file.
 
 \textit{Statistics.} Every rate is pooled over repositories: with $x_r$ and $y_r$ the
 numerator and denominator of \eqref{eq:rates} in repository $r$,
@@ -379,6 +381,19 @@ for \texttt{line\_text}, 18.6\% for \texttt{codeguard}, 20.3\% for \texttt{sonar
 54.2\% for \texttt{bandit}. Every collision is a place where pairing order decides the
 outcome. On CodeGuard's findings this costs \texttt{codeguard} 1.02 points of hidden
 rate against \texttt{github} (paired interval 0.57--1.66); on Bandit's it hides fewer.
+
+\input{table_rq1_semgrep.tex}
+
+\textit{Semgrep's findings.} Table~\ref{tab:rq1-semgrep} repeats the measurement on
+findings from third-party rules. The content schemes keep their order (\texttt{sonar}
+0.5\%, \texttt{codeguard} 1.4\%, \texttt{line\_text} 1.8\%, \texttt{github} 3.2\%
+false new; each paired difference excludes 0), and Bandit's baseline hides 22.4\% of the
+new findings. Semgrep's own ID hides 12.1\% (7.4--18.6), several times more than any
+other content scheme, and a gate built on it misses 5.1\% of the 704 commit pairs that
+introduce a Semgrep finding. The ID numbers equal matches in file order, so a new match
+placed before an equal old one inherits the old one's ID: the \texttt{duplicate\_above}
+case of Section~\ref{sec:rq2}, here on real histories. We did not check these findings by
+hand.
 
 \section{RQ2: Controlled Changes}\label{sec:rq2}
 
