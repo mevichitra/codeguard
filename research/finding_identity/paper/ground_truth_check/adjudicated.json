@@ -1,0 +1,402 @@
+{
+ "F001": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F002": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F003": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F004": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F005": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F006": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F007": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F008": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F009": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F010": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F011": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F012": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F013": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F014": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F015": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F016": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F017": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F018": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F019": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F020": {
+  "source": "human confirmed the agent rater",
+  "verdict": "existed"
+ },
+ "F021": {
+  "source": "human confirmed the agent rater",
+  "verdict": "different"
+ },
+ "F022": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F023": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F024": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F025": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F026": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F027": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F028": {
+  "source": "human confirmed the agent rater",
+  "verdict": "existed"
+ },
+ "F029": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F030": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F031": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F032": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F033": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F034": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F035": {
+  "source": "human confirmed the agent rater",
+  "verdict": "existed"
+ },
+ "F036": {
+  "source": "rule re-run: createUser() reaches cyclomatic complexity 16 (limit 15) only after the commit; CodeGuard did not report it before",
+  "verdict": "new"
+ },
+ "F037": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F038": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F039": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F040": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F041": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F042": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F043": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F044": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F045": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F046": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F047": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F048": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F049": {
+  "source": "human confirmed the agent rater",
+  "verdict": "existed"
+ },
+ "F050": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F051": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F052": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F053": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F054": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F055": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F056": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F057": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F058": {
+  "source": "human confirmed the agent rater",
+  "verdict": "existed"
+ },
+ "F059": {
+  "source": "human confirmed the agent rater",
+  "verdict": "existed"
+ },
+ "F060": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F061": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F062": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F063": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F064": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F065": {
+  "source": "rule re-run: the test function reaches cyclomatic complexity 18 (limit 15) only after the commit; CodeGuard did not report it before",
+  "verdict": "new"
+ },
+ "F066": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F067": {
+  "source": "human confirmed the agent rater",
+  "verdict": "existed"
+ },
+ "F068": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F069": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F070": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F071": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F072": {
+  "source": "human confirmed the agent rater",
+  "verdict": "existed"
+ },
+ "F073": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F074": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F075": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F076": {
+  "source": "rule re-run: raise_for_response() reaches nesting depth 6 (limit 5) only after the commit; CodeGuard did not report it before",
+  "verdict": "new"
+ },
+ "F077": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F078": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F079": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F080": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F081": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F082": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F083": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F084": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F085": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F086": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F087": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F088": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F089": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F090": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F091": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F092": {
+  "source": "human confirmed the agent rater",
+  "verdict": "existed"
+ },
+ "F093": {
+  "source": "human confirmed the agent rater",
+  "verdict": "existed"
+ },
+ "F094": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F095": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F096": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F097": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ },
+ "F098": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F099": {
+  "source": "agent rater only (round 2)",
+  "verdict": "new"
+ },
+ "F100": {
+  "source": "human and agent rater agree",
+  "verdict": "same"
+ }
+}

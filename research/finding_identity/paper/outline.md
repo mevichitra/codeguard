@@ -154,8 +154,10 @@ only" gate built on set membership can hide new vulnerabilities.
 ## VII. Threats to validity
 
 - Ground truth is a line diff: a finding whose line is rewritten beyond the similarity
-  threshold counts as removed plus introduced. Mitigation: a manual check of a stratified
-  sample (to do, see claims.md).
+  threshold counts as removed plus introduced. A manual check of 100 stratified findings
+  (claims G1–G6) shows it holds for 98% of persisting findings but 75% of introduced
+  ones, with the errors where a scheme matched an "introduced" finding; the hidden rates
+  are therefore upper bounds (SonarQube's corrects from 1.5% to about 0.2%).
 - Findings come mostly from one analyzer; Bandit's own findings replicate the key
   results for Python.
 - Ports, not the tools: each checked against the original (Section III), but SonarQube's

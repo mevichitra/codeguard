@@ -16,7 +16,13 @@ the ground truth is most and least likely to be wrong:
 It writes ``sample.md``, one entry per finding with the code before and after the commit
 and a link to the commit, and ``sample.csv`` with an empty ``verdict`` column to fill in:
 ``same`` (the old and new finding are the same issue), ``different``, or ``unclear``.
-The sample is seeded, so rerunning it gives the same findings.
+
+For independent raters it also writes ``items.json``: the same findings, shuffled under
+neutral ids (``sample.csv``'s ``item`` column is the key), without the harness's answer,
+the stratum or the schemes' outcomes. A persisting finding becomes a ``pair`` item ("is
+the code flagged at the old line the same issue as at the new line?"), an introduced one
+an ``introduced`` item ("did this issue already exist before the commit?").
+The sample is seeded, so rerunning it gives the same findings and the same order.
 """
 
 from __future__ import annotations
@@ -30,7 +36,12 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+import codeguard.rules  # noqa: F401  (registers the built-in rules)
+from codeguard.engine.registry import REGISTRY
+
 from .corpus import load_corpus
+from .linemap import map_lines
+from .schemes import split_lines
 
 HERE = Path(__file__).parent
 
@@ -69,13 +80,40 @@ def _git(repo: Path, *args: str) -> str:
     return done.stdout.decode("utf-8", "replace") if done.returncode == 0 else ""
 
 
-def snippet(repo: Path, commit: str, path: str, line: int, context: int = 4) -> str:
-    """Lines around *line* of *path* at *commit*, numbered, the line itself marked."""
+def snippet_lines(
+    repo: Path, commit: str, path: str, line: int, context: int = 4
+) -> list[tuple[int, str]]:
+    """``(line number, text)`` for the lines around *line* of *path* at *commit*."""
     lines = _git(repo, "show", f"{commit}:{path}").split("\n")
     lo, hi = max(1, line - context), min(len(lines), line + context)
+    return [(n, lines[n - 1].rstrip()) for n in range(lo, hi + 1)]
+
+
+def snippet(repo: Path, commit: str, path: str, line: int, context: int = 4) -> str:
+    """Lines around *line* of *path* at *commit*, numbered, the line itself marked."""
     return "\n".join(
-        f"{'>' if n == line else ' '}{n:5d}  {lines[n - 1]}" for n in range(lo, hi + 1)
+        f"{'>' if n == line else ' '}{n:5d}  {text}"
+        for n, text in snippet_lines(repo, commit, path, line, context)
     )
+
+
+def corresponding_old_line(
+    old_lines: list[str], new_lines: list[str], line: int
+) -> tuple[int, bool]:
+    """The old line at the place of new line *line*, and whether *line* itself maps to it.
+
+    Uses the ground truth's line map: if *line* maps back to an old line (unchanged or
+    edited), that line; otherwise the line after the nearest old line that maps to a new
+    line above *line* (the point where the new code was inserted).
+    """
+    back = {new: old for old, (new, _) in map_lines(old_lines, new_lines).items()}
+    if line in back:
+        return back[line], True
+    above = [n for n in back if n < line]
+    if not above:
+        return 1, False
+    anchor = max(above)
+    return min(back[anchor] + 1, max(len(old_lines), 1)), False
 
 
 def diff_hunks(repo: Path, old: str, new: str, path: str, old_path: str, line: int) -> str:
@@ -164,6 +202,12 @@ def write_sample(
         "",
     ]
     rows = []
+    items = []
+    titles = {r.id: r.title for r in REGISTRY.all()}
+    # Neutral item ids in a seeded order unrelated to the strata.
+    order = list(range(1, len(chosen) + 1))
+    random.Random(len(chosen)).shuffle(order)  # noqa: S311  (blinding order, not security)
+    item_of = {i: f"F{position:03d}" for position, i in enumerate(order, start=1)}
     for i, (stratum, label, rec, old) in enumerate(chosen, start=1):
         repo = repos / label
         new = rec["commit"]
@@ -191,9 +235,44 @@ def write_sample(
         if rec["truth"] == "new" or rec.get("truth_kind") == "edited":
             hunks = diff_hunks(repo, old, new, path, old_path, rec["line"])
             md += ["Diff near the line:", "", "```diff", hunks, "```", ""]
+        old_line = rec.get("old_line")
+        if old_line:
+            before_line, before_mapped = old_line, True
+        else:
+            # An introduced finding: show the old code at the same place, so a rater can
+            # see whether the issue was already there.
+            old_text = split_lines(_git(repo, "show", f"{old}:{old_path}"))
+            new_text = split_lines(_git(repo, "show", f"{new}:{path}"))
+            before_line, before_mapped = corresponding_old_line(old_text, new_text, rec["line"])
+        items.append(
+            {
+                "item": item_of[i],
+                "kind": "pair" if rec["truth"] == "known" else "introduced",
+                "repository": label,
+                "commit_url": url,
+                "rule": rec["rule"],
+                "rule_title": titles.get(rec["rule"], ""),
+                "path": path,
+                "old_path": old_path,
+                "old_line": old_line,
+                "line": rec["line"],
+                "before": snippet_lines(
+                    repo, old, old_path, before_line, context=4 if old_line else 6
+                ),
+                "before_line": before_line,
+                # True when the flagged line itself was already there before the commit.
+                "before_mapped": before_mapped,
+                "after": snippet_lines(repo, new, path, rec["line"]),
+                "diff": "\n".join(
+                    row.rstrip()
+                    for row in diff_hunks(repo, old, new, path, old_path, rec["line"]).split("\n")
+                ),
+            }
+        )
         rows.append(
             {
                 "id": i,
+                "item": item_of[i],
                 "stratum": stratum,
                 "repository": label,
                 "commit": new,
@@ -210,6 +289,8 @@ def write_sample(
     # Quoted source can end lines in spaces; the repository's hooks strip them.
     text = "\n".join(row.rstrip() for row in "\n".join(md).split("\n"))
     (out / "sample.md").write_text(text.rstrip("\n") + "\n", encoding="utf-8")
+    items.sort(key=lambda it: str(it["item"]))
+    (out / "items.json").write_text(json.dumps(items, indent=1) + "\n", encoding="utf-8")
     with (out / "sample.csv").open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0]))
         w.writeheader()
