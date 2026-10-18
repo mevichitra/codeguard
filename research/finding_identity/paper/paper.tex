@@ -15,15 +15,23 @@
 % Every number in this file comes from claims.md (and the files it names). Change a
 % number there first, then here.
 
+% Anonymous build for double-blind review: define \anonymous before loading the file,
+% e.g. latexmk -pdf -jobname=paper-anon -usepretex='\def\anonymous{}' paper.tex
+\newif\ifanon
+\ifdefined\anonymous\anontrue\fi
+
 \begin{document}
 
 \title{Same Finding, New Commit? Measuring How Static Analysis Tools Track Findings
 Across Code Changes}
 
-% TODO(author): add the affiliation line before submission, or remove it for a
-% double-blind venue together with the name, the email and the repository link.
+\ifanon
+\author{\IEEEauthorblockN{Anonymous Author(s)}}
+\else
+% TODO(author): add the affiliation line before submission.
 \author{\IEEEauthorblockN{Vichitra Attri}
 \IEEEauthorblockA{mevichitra@gmail.com}}
+\fi
 
 \maketitle
 
@@ -31,9 +39,10 @@ Across Code Changes}
 Baselines, suppressions, alert de-duplication and CI gates that fail only on new
 findings all depend on a
 static analysis tool recognizing a finding it reported on the previous commit. We
-measure how well the methods that shipped tools use for this work. We ported the
-trackers of SonarQube, Bandit and GitHub code scanning, checked each port against the
-original, and replayed 200 consecutive commit pairs from each of 35 open-source web
+measure how well the methods that shipped tools use for this work. We ported
+SonarQube's issue tracker, Bandit's baseline comparison and the line hash that GitHub's
+CodeQL Action uploads as a fingerprint, checked each port against the original, and
+replayed 200 consecutive commit pairs from each of 35 open-source web
 applications, scoring every method against a line-diff ground truth. Line numbers report
 52.6\% of persisting findings as new; the other methods report 0.4--4.4\%. Much of what
 remains comes from renamed files. They hold 1.2\% of persisting findings, and every
@@ -53,8 +62,9 @@ developers are asked again about code they did not touch. A new finding taken fo
 old one is \emph{hidden}. For a security gate that is the expensive error, since the
 vulnerability passes the check that was meant to stop it.
 
-Tools answer the question in very different ways. GitHub code scanning hashes the
-characters that start at the flagged line. SonarQube runs a six-pass matcher over line
+Tools answer the question in very different ways. The CodeQL Action, which uploads
+results to GitHub code scanning, fingerprints a result by hashing the characters that
+start at the flagged line. SonarQube runs a six-pass matcher over line
 hashes, messages and moved blocks of code. Bandit treats a result as known when an
 equal issue, compared without any location, is in the baseline. These choices are
 documented mostly in source code, and we know of no study that measures them against one
@@ -70,8 +80,11 @@ To answer them we replay commit histories and score each method against an indep
 ground truth, a line diff, which a manual check of 100 findings supports for persisting
 findings (Section~\ref{sec:threats}). This paper contributes:
 \begin{itemize}
-\item ports of the identity methods of SonarQube, Bandit, Semgrep and GitHub code
-  scanning, each checked against the original tool;
+% PENDING: Semgrep results are being added as a third analyzer; reword this bullet
+% (and the next) once they are in, or drop Semgrep from it if they are not.
+\item ports of the identity methods of SonarQube, Bandit and Semgrep, and of the
+  fingerprint the CodeQL Action computes for GitHub code scanning, each checked against
+  the original code;
 \item RQ1 on 7,000 commit pairs from 35 open-source web applications, with findings from
   two analyzers, and RQ2 on ten controlled transformations;
 \item two results that tool builders can act on: putting the file path into a
@@ -88,7 +101,12 @@ as a given finding in the old version. Findings are compared only within one rul
 schemes build a key and pair findings with equal keys, one to one, in line order; the
 other three run a matching algorithm (Table~\ref{tab:schemes}). \texttt{line} is the
 naive baseline and \texttt{line\_text} a simple content key. \texttt{codeguard} is the
-fingerprint of CodeGuard, the open-source analyzer the author maintains.
+fingerprint of CodeGuard, \ifanon the authors' own open-source analyzer\else the
+open-source analyzer the author maintains\fi. \texttt{github} is the
+\texttt{primaryLocationLineHash} that the CodeQL Action computes from the source and
+uploads in SARIF's \texttt{partialFingerprints}. We pair findings by that key alone; how
+GitHub's service then matches uploaded results to its open alerts is not part of the
+port, so \texttt{github} measures the fingerprint, not GitHub's alert tracking.
 
 SonarQube's tracker tries six passes in turn: rule, line, line hash and message; rule,
 line and line hash; code moves, found by unique 11-line block hashes and then by the
@@ -121,7 +139,7 @@ Scheme & Identity built from & Pairing & Path \\
 \midrule
 \texttt{line} & line number & key & yes \\
 \texttt{line\_text} & exact text of the flagged line & key & yes \\
-\texttt{github} & GitHub's \texttt{primaryLocationLineHash}: a rolling hash over the
+\texttt{github} & the CodeQL Action's \texttt{primaryLocationLineHash}: a rolling hash over the
   100 non-blank characters from the start of the line, plus an occurrence index & key &
   yes \\
 \texttt{codeguard} & enclosing function or class, plus the statement with literals
@@ -205,8 +223,8 @@ not read (vendored, generated and minified code).
     \State $T \gets \textsc{GroundTruth}(O, N, \mu)$
     \ForAll{$\sigma \in \Sigma$}
       \State $P \gets \textsc{Pair}_\sigma(O, N)$
-      \State \textbf{if} $p \ne p'$ and $\sigma$ rejects it by \eqref{eq:move}:
-        $P \gets \emptyset$
+      \State \textbf{if} $\sigma = \texttt{sonar\_branch}$, $p \ne p'$ and
+        \eqref{eq:move} rejects the rename: $P \gets \emptyset$
       \ForAll{$n \in N$}
         \State count the outcome of $n$ for $\sigma$ from $T(n)$ and $P(n)$
       \EndFor
@@ -241,7 +259,7 @@ was checked against the original. The SonarQube port follows SonarQube 26.10.0.1
 20,000 generated cases it agrees with the unmodified Java tracker, compiled from the
 same tag, every time. The Bandit port flags exactly the issues a live
 \texttt{bandit -b} run reports, including a hidden duplicate. The GitHub port reproduces
-the hashes that GitHub's own \texttt{fingerprints.ts} computes on reference inputs with
+the hashes that the CodeQL Action's own \texttt{fingerprints.ts} computes on reference inputs with
 duplicate, blank, CRLF and CR-only lines. A Semgrep port reproduced all 716
 \texttt{match\_based\_id} values Semgrep emitted during two replays; we measured it on
 those two repositories only and leave it out here.
@@ -297,9 +315,11 @@ persisting findings as new, because files were renamed from \texttt{.js} to
 \texttt{codeguard} is 0.48\%.
 
 \textit{Edited lines.} Only 142 persisting findings (0.6\%) sit on a line the commit
-edited, and there every content scheme fails often: \texttt{line\_text} on all of them,
-\texttt{github} on 87.3\%, \texttt{codeguard} on 74.6\% and \texttt{sonar} on 63.4\%.
-Bandit fails on 23.9\%, because it ignores both location and code.
+edited, and there every content scheme reports many of them as new:
+\texttt{line\_text} all of them, \texttt{github} 87.3\%, \texttt{codeguard} 74.6\% and
+\texttt{sonar} 63.4\%. These rates count false-new reports only, not mispairings.
+Bandit reports 23.9\% as new, because it ignores both
+location and code.
 
 \textit{Set membership hides new findings.} Bandit's baseline hides 29.2\% of Bandit's
 own introduced findings (320 of 1,097; interval 20.1--40.9) and 20.0\% of CodeGuard's.
@@ -390,9 +410,14 @@ apart, are the next thing to measure.
 
 \textit{Data availability.} The replay tool, the ports and their checks, the corpus with
 its pinned commits, the results, the ground-truth sample with both raters' labels, and
-the scripts that produce every table and figure are at
-\url{https://github.com/mevichitra/codeguard} under \texttt{research/finding\_identity/},
-licensed Apache-2.0.
+the scripts that produce every table and figure are
+\ifanon
+available to reviewers through the venue's anonymous artifact channel, licensed
+Apache-2.0.
+\else
+at \url{https://github.com/mevichitra/codeguard} under
+\texttt{research/finding\_identity/}, licensed Apache-2.0.
+\fi
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}

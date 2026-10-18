@@ -237,5 +237,8 @@ Build the paper (TeX Live with IEEEtran; the build files stay out of the tree):
 cd research/finding_identity/paper && latexmk -pdf -outdir=/tmp/paper-build paper.tex
 ```
 
+For double-blind review, build the anonymous version (no name, email or repository link):
+`latexmk -pdf -jobname=paper-anon -usepretex='\def\anonymous{}' -outdir=/tmp/paper-build paper.tex`.
+
 The bootstrap seed (20261014), the transformation seed (0) and the sample seed
 (20261017) are the defaults, so the commands reproduce the committed files.
