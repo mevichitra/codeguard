@@ -30,12 +30,11 @@ from typing import Any
 
 import codeguard
 
-from .matching import OUTCOMES, Observation, collisions, evaluate
+from .matching import GT_KEYS, OUTCOMES, Observation, collisions, evaluate
 from .scan import Scanner, is_candidate
 from .schemes import split_lines
 from .transforms import Edit, NotApplicable, Source, Transform
 
-GT_KEYS = ("old", "new", "known", "known_equal", "known_edited", "introduced", "removed")
 #: Target findings tried per file and transformation before giving up ("n/a").
 MAX_TRIES = 50
 _SKIP_DIRS = {".git", ".hg", ".tox", ".venv", "venv", "node_modules", "__pycache__"}

@@ -22,9 +22,14 @@ from collections import defaultdict
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
+from .linemap import KINDS
 from .trackers import MATCHERS, RENAME_CHECKS
 
 OUTCOMES = ("known_ok", "mispaired", "false_new", "false_known", "new_ok")
+#: Ground-truth counts of one file pair; ``known_<kind>`` per line-map kind.
+GT_KEYS = ("old", "new", "known", *(f"known_{k}" for k in KINDS), "introduced", "removed")
+#: Per scheme: the outcomes, and the false-new reports per line-map kind.
+SCHEME_KEYS = (*OUTCOMES, *(f"false_new_{k}" for k in KINDS))
 
 
 @dataclass(frozen=True)
@@ -56,7 +61,7 @@ def ground_truth(
     new: Sequence[Observation],
     line_map: dict[int, tuple[int, str]],
 ) -> dict[int, tuple[int, str]]:
-    """``{new index: (old index, "equal" | "edited")}`` for findings that persisted."""
+    """``{new index: (old index, kind)}`` for findings that persisted (kinds: linemap)."""
     by_rule_line: dict[tuple[str, int], list[int]] = defaultdict(list)
     for j, n in enumerate(new):
         by_rule_line[(n.rule, n.line)].append(j)
@@ -129,8 +134,7 @@ def score(
         "old": len(old),
         "new": len(new),
         "known": len(gt_pairs),
-        "known_equal": sum(1 for _, kind in gt_pairs.values() if kind == "equal"),
-        "known_edited": sum(1 for _, kind in gt_pairs.values() if kind == "edited"),
+        **{f"known_{k}": sum(1 for _, kind in gt_pairs.values() if kind == k) for k in KINDS},
         "introduced": len(new) - len(gt_pairs),
         "removed": len(old) - len(gt_pairs),
     }
@@ -139,7 +143,7 @@ def score(
     for scheme in schemes:
         predicted = scheme_pairs(old, new, scheme, renamed=renamed)
         counts = dict.fromkeys(OUTCOMES, 0)
-        counts["false_new_equal"] = counts["false_new_edited"] = 0
+        counts.update({f"false_new_{k}": 0 for k in KINDS})
         per_new: list[str] = []
         for j in range(len(new)):
             truth = gt_pairs.get(j)

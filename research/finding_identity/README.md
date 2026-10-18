@@ -85,11 +85,26 @@ records the count (`port_checked`, `port_mismatches`).
 
 ## Ground truth
 
-For each changed file, old lines are mapped to new lines with a line diff
-(`linemap.py`). Unchanged lines map exactly ("moved"). Inside a replaced block, lines are
-paired when their similarity is at least 0.6 ("edited"). An old and a new finding are the
-same finding when they have the same rule and the old line maps to the new line. Each new
-finding is then truly **known** (it existed before) or truly **new**.
+For each changed file, old lines are mapped to new lines (`linemap.py`) in three steps:
+
+1. **Unchanged** lines, as a line diff (`difflib`) keeps them, map exactly (`equal`).
+2. Inside a replaced block, lines are paired when their similarity (difflib's `ratio`) is
+   at least 0.6, by an order-preserving alignment that maximizes total similarity
+   (`edited`). Blocks up to 40,000 old x new lines get the full alignment; larger ones are
+   aligned inside a band around the block's diagonal, and the replay counts the findings
+   in such blocks (`known_banded`, `introduced_banded`).
+3. **Moved code** (`relocated`): a block of consecutive lines the diff left unmapped that
+   reappears, line for line, as a block of consecutive unmapped new lines. Modelled on
+   `git diff --color-moved=blocks` (a moved block has at least 20 alphanumeric
+   characters), except that lines are compared without leading and trailing whitespace
+   (a re-indented block still counts as moved) and that a block is mapped only when its
+   text occurs exactly once among the unmapped old and once among the unmapped new lines.
+   An edit inside a moved block splits it in two; the lines between two such halves (at
+   most 10 on either side) are aligned as in step 2 and count as `edited`.
+
+An old and a new finding are the same finding when they have the same rule and the old
+line maps to the new line. Each new finding is then truly **known** (it existed before)
+or truly **new**. Moves between files are not detected.
 
 ## Outcomes and metrics
 
@@ -105,7 +120,8 @@ For each new finding, a scheme either matches it to an old finding or not:
 
 The summary reports, per scheme:
 
-- **false-new rate** = `false_new / known`, also split by moved and edited findings
+- **false-new rate** = `false_new / known`, also split by the kind of the finding's
+  line mapping: unchanged, edited and relocated
 - **hidden rate** = `false_known / introduced`
 - **mispair rate** = `mispaired / known`
 - **collision rate** = findings sharing a key with another finding in the same file version,
@@ -470,7 +486,7 @@ python -m research.finding_identity stats research/finding_identity/results \
 ```
 
 For each scope (`all` findings and `security` findings by default; `--scopes` takes any
-rule categories), each scheme and each metric (`false_new`, `false_new_moved`,
+rule categories), each scheme and each metric (`false_new`, `false_new_unchanged`,
 `false_new_edited`, `hidden`, `mispair`, `collision`, defined as above), `stats` reports:
 
 - **pooled (micro) rate**: total numerator over total denominator across repositories,
@@ -527,8 +543,10 @@ Bandit schemes.
 
 ## Known limitations
 
-- The ground truth is a line diff. A finding whose anchor line is rewritten beyond the
-  similarity threshold counts as removed plus introduced; check a sample by hand.
+- The ground truth is a line diff with move detection. A finding whose anchor line is
+  rewritten beyond the similarity threshold counts as removed plus introduced, and so does
+  one whose line moved to another file, moved in a block that is not unique, or moved in
+  a block with fewer than 20 alphanumeric characters; check a sample by hand.
 - CodeGuard's fingerprint takes the statement from `str.splitlines()`, which also splits on
   form feeds and other rare separators, so in files containing them the `codeguard` key can
   hash a neighbouring line. The harness measures the tool as it is.

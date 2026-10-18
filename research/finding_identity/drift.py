@@ -10,7 +10,8 @@ that moved). Each anchor finding's line is followed through every intermediate
 first-parent commit with :func:`linemap.map_lines` on that step's diff, following
 renames (``git diff -M``) step by step. A finding persists to c_k when its chain is
 unbroken and a finding with the same rule sits at the mapped line in c_k. It counts as
-"edited" when any step edited its line, otherwise as "equal" (only moved).
+"edited" when any step edited its line, otherwise as "equal" (only moved; a step that
+relocates the line with a moved block counts as moving it).
 
 Only files are compared whose lineage changed in the first k steps, plus files added
 since c0: every scheme trivially keeps the findings of untouched files. Only c0 and the

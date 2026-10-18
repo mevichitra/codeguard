@@ -20,12 +20,14 @@ import codeguard
 
 from .categories import split_by_category
 from .gitrepo import Change, GitRepo
-from .linemap import map_lines
-from .matching import OUTCOMES, Observation, evaluate
+from .linemap import line_map as compute_line_map
+from .matching import GT_KEYS as MATCH_GT_KEYS
+from .matching import SCHEME_KEYS, Observation, evaluate, ground_truth, score
 from .scan import Scanner, is_candidate
 
-GT_KEYS = ("old", "new", "known", "known_equal", "known_edited", "introduced", "removed")
-SCHEME_KEYS = (*OUTCOMES, "false_new_equal", "false_new_edited")
+#: The ground-truth counts, plus the findings whose new line lies in a replaced block too
+#: large for the full alignment (aligned in a band, see :mod:`linemap`).
+GT_KEYS = (*MATCH_GT_KEYS, "known_banded", "introduced_banded")
 
 
 def _empty_totals(schemes: Sequence[str]) -> dict[str, Any]:
@@ -75,13 +77,19 @@ def _replay_change(
     new_obs = new_res.observations if new_res else []
     if not old_obs and not new_obs:
         return
-    line_map = map_lines(old_res.lines, new_res.lines) if old_res and new_res else {}
+    lm = compute_line_map(old_res.lines, new_res.lines) if old_res and new_res else None
+    line_map = lm.pairs if lm else {}
     renamed = ch.status == "R"
-    result = evaluate(
-        old_obs, new_obs, line_map, schemes, keep_records=records is not None, renamed=renamed
+    gt_pairs = ground_truth(old_obs, new_obs, line_map)
+    result = score(
+        old_obs, new_obs, gt_pairs, schemes, keep_records=records is not None, renamed=renamed
     )
     for k, v in result.gt.items():
         totals["gt"][k] += v
+    if lm and lm.banded_new:
+        for j, n in enumerate(new_obs):
+            if n.line in lm.banded_new:
+                totals["gt"]["known_banded" if j in gt_pairs else "introduced_banded"] += 1
     for s, counts in result.by_scheme.items():
         for k, v in counts.items():
             totals["schemes"][s][k] += v

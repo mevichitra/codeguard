@@ -18,8 +18,9 @@ Repositories whose denominator is zero have no rate: they count towards the pool
 Metrics (numerator / denominator):
 
 - ``false_new``         false_new / known            persisting findings reported as new
-- ``false_new_moved``   false_new_equal / known_equal   ...whose line was unchanged
-- ``false_new_edited``  false_new_edited / known_edited ...whose line was edited
+- ``false_new_unchanged``  false_new_equal / known_equal  ...whose line was unchanged
+- ``false_new_edited``     false_new_edited / known_edited ...whose line was edited
+- ``false_new_relocated``  false_new_relocated / known_relocated ...in a moved block
 - ``hidden``            false_known / introduced     new findings the scheme hides
 - ``mispair``           mispaired / known            persisting findings tied to the wrong one
 - ``collision``         colliding / observations     findings sharing a key in a file version
@@ -41,8 +42,9 @@ Z95 = 1.959963984540054
 
 METRICS: dict[str, tuple[str, str]] = {
     "false_new": ("false_new", "known"),
-    "false_new_moved": ("false_new_equal", "known_equal"),
+    "false_new_unchanged": ("false_new_equal", "known_equal"),
     "false_new_edited": ("false_new_edited", "known_edited"),
+    "false_new_relocated": ("false_new_relocated", "known_relocated"),
     "hidden": ("false_known", "introduced"),
     "mispair": ("mispaired", "known"),
     "collision": ("collisions", "observations"),
@@ -175,7 +177,8 @@ def counts(block: dict[str, Any], scheme: str, metric: str) -> tuple[int, int]:
         coll = block["collisions"]
         return int(coll["by_scheme"][scheme]), int(coll["observations"])
     totals = block["totals"]
-    return int(totals["schemes"][scheme][num_key]), int(totals["gt"][den_key])
+    # Summaries written before a count existed (e.g. the relocated kind) count it as 0.
+    return int(totals["schemes"][scheme].get(num_key, 0)), int(totals["gt"].get(den_key, 0))
 
 
 # ---------------------------------------------------------------------------
@@ -351,11 +354,19 @@ def markdown_tables(tables: Tables) -> str:
                 f"| {_pct(f['median'])} [{_pct(f['q1'])}, {_pct(f['q3'])}] |"
             )
         out.append("")
-        others = ("false_new_moved", "false_new_edited", "hidden", "mispair", "collision")
-        out.append(
-            "| scheme | false-new, moved | false-new, edited | hidden | mispair | collision |"
+        others = (
+            "false_new_unchanged",
+            "false_new_edited",
+            "false_new_relocated",
+            "hidden",
+            "mispair",
+            "collision",
         )
-        out.append("|---|---|---|---|---|---|")
+        out.append(
+            "| scheme | false-new, unchanged | false-new, edited | false-new, relocated "
+            "| hidden | mispair | collision |"
+        )
+        out.append("|---|---|---|---|---|---|---|")
         for scheme in schemes:
             cells = [
                 f"{_pct(x['pooled'])} {_ci(x['boot_lo'], x['boot_hi'])}"
