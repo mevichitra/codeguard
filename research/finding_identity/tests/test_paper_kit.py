@@ -6,9 +6,12 @@ from pathlib import Path
 from research.finding_identity.paper_kit import Run, _rename_split, estimate, latex_table
 
 
-def _run(tmp_path: Path, records: list[dict[str, object]]) -> Run:
+def _run(tmp_path: Path, records: list[dict[str, object]], commits: int = 1) -> Run:
+    """A replay of *commits* pairs; records without a ``commit`` belong to the first."""
     path = tmp_path / "findings.jsonl"
-    path.write_text("".join(json.dumps(r) + "\n" for r in records))
+    path.write_text("".join(json.dumps({"commit": "c0", **r}) + "\n" for r in records))
+    pairs = "".join(json.dumps({"old": f"p{i}", "new": f"c{i}"}) + "\n" for i in range(commits))
+    (tmp_path / "pairs.jsonl").write_text(pairs)
     return Run("x", {}, path)
 
 

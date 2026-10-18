@@ -16,42 +16,120 @@ Source: `research/finding_identity/results/corpus-v3`. 35 repositories, 7,000 co
 | `line` | hidden | 1.22 | [0.63, 2.16] | 0.00 | 24/1,974 |
 | `line` | mispair | 2.82 | [1.57, 3.93] | 1.57 | 655/23,237 |
 | `line` | collision | 2.09 | [1.08, 3.51] | 0.32 | 758/36,232 |
+| `line` | gate_miss | 0.59 | [0.00, 1.35] | 0.00 | 3/508 |
+| `line` | gate_false_alarm | 19.93 | [16.56, 23.45] | 19.46 | 1,294/6,492 |
+| `line` | gate_wrong_reason | 0.98 | [0.22, 1.93] | 0.00 | 5/508 |
+| `line` | hidden_masked | 1.06 | [0.53, 1.89] | 0.00 | 21/1,974 |
+| `line` | hidden_silent | 0.15 | [0.00, 0.41] | 0.00 | 3/1,974 |
 | `line_text` | false_new | 1.89 | [0.80, 3.51] | 0.57 | 440/23,237 |
 | `line_text` | false_new_same_path | 0.67 | [0.48, 0.91] | 0.56 | 153/22,950 |
 | `line_text` | false_new_renamed | 100.00 | [100.00, 100.00] | 100.00 | 287/287 |
 | `line_text` | hidden | 1.17 | [0.52, 2.21] | 0.00 | 23/1,974 |
 | `line_text` | mispair | 0.19 | [0.05, 0.39] | 0.00 | 44/23,237 |
 | `line_text` | collision | 17.44 | [13.99, 21.28] | 14.78 | 6,318/36,232 |
+| `line_text` | gate_miss | 0.20 | [0.00, 0.65] | 0.00 | 1/508 |
+| `line_text` | gate_false_alarm | 0.94 | [0.63, 1.29] | 0.55 | 61/6,492 |
+| `line_text` | gate_wrong_reason | 0.79 | [0.00, 1.95] | 0.00 | 4/508 |
+| `line_text` | hidden_masked | 1.11 | [0.52, 2.05] | 0.00 | 22/1,974 |
+| `line_text` | hidden_silent | 0.05 | [0.00, 0.18] | 0.00 | 1/1,974 |
 | `github` | false_new | 3.14 | [1.96, 4.86] | 1.85 | 730/23,237 |
 | `github` | false_new_same_path | 1.93 | [1.62, 2.32] | 1.79 | 443/22,950 |
 | `github` | false_new_renamed | 100.00 | [100.00, 100.00] | 100.00 | 287/287 |
 | `github` | hidden | 0.81 | [0.22, 1.87] | 0.00 | 16/1,974 |
 | `github` | mispair | 0.09 | [0.00, 0.22] | 0.00 | 21/23,237 |
 | `github` | collision | 2.09 | [1.08, 3.51] | 0.32 | 758/36,232 |
+| `github` | gate_miss | 0.20 | [0.00, 0.65] | 0.00 | 1/508 |
+| `github` | gate_false_alarm | 2.08 | [1.50, 2.73] | 1.74 | 135/6,492 |
+| `github` | gate_wrong_reason | 0.98 | [0.21, 2.02] | 0.00 | 5/508 |
+| `github` | hidden_masked | 0.66 | [0.22, 1.37] | 0.00 | 13/1,974 |
+| `github` | hidden_silent | 0.15 | [0.00, 0.53] | 0.00 | 3/1,974 |
 | `codeguard` | false_new | 1.79 | [0.72, 3.39] | 0.48 | 417/23,237 |
 | `codeguard` | false_new_same_path | 0.57 | [0.39, 0.80] | 0.36 | 130/22,950 |
 | `codeguard` | false_new_renamed | 100.00 | [100.00, 100.00] | 100.00 | 287/287 |
 | `codeguard` | hidden | 1.87 | [0.92, 3.50] | 0.00 | 37/1,974 |
 | `codeguard` | mispair | 0.34 | [0.10, 0.68] | 0.00 | 78/23,237 |
 | `codeguard` | collision | 18.56 | [12.91, 24.85] | 11.92 | 6,723/36,232 |
+| `codeguard` | gate_miss | 0.79 | [0.00, 1.86] | 0.00 | 4/508 |
+| `codeguard` | gate_false_alarm | 0.72 | [0.44, 1.06] | 0.53 | 47/6,492 |
+| `codeguard` | gate_wrong_reason | 0.98 | [0.00, 2.47] | 0.00 | 5/508 |
+| `codeguard` | hidden_masked | 1.57 | [0.83, 2.73] | 0.00 | 31/1,974 |
+| `codeguard` | hidden_silent | 0.30 | [0.00, 0.82] | 0.00 | 6/1,974 |
 | `sonar` | false_new | 0.39 | [0.26, 0.57] | 0.22 | 91/23,237 |
 | `sonar` | false_new_same_path | 0.36 | [0.24, 0.53] | 0.21 | 83/22,950 |
 | `sonar` | false_new_renamed | 2.79 | [1.65, 8.33] | 2.06 | 8/287 |
 | `sonar` | hidden | 1.47 | [0.84, 2.37] | 0.00 | 29/1,974 |
 | `sonar` | mispair | 0.17 | [0.06, 0.33] | 0.00 | 39/23,237 |
 | `sonar` | collision | 20.28 | [16.49, 24.37] | 16.84 | 7,349/36,232 |
+| `sonar` | gate_miss | 1.57 | [0.45, 3.04] | 0.00 | 8/508 |
+| `sonar` | gate_false_alarm | 0.45 | [0.29, 0.62] | 0.50 | 29/6,492 |
+| `sonar` | gate_wrong_reason | 0.39 | [0.00, 1.04] | 0.00 | 2/508 |
+| `sonar` | hidden_masked | 0.86 | [0.41, 1.49] | 0.00 | 17/1,974 |
+| `sonar` | hidden_silent | 0.61 | [0.17, 1.32] | 0.00 | 12/1,974 |
 | `sonar_branch` | false_new | 0.61 | [0.33, 1.02] | 0.25 | 141/23,237 |
 | `sonar_branch` | false_new_same_path | 0.36 | [0.24, 0.53] | 0.21 | 83/22,950 |
 | `sonar_branch` | false_new_renamed | 20.21 | [4.28, 62.27] | 28.03 | 58/287 |
 | `sonar_branch` | hidden | 1.42 | [0.82, 2.32] | 0.00 | 28/1,974 |
 | `sonar_branch` | mispair | 0.17 | [0.06, 0.33] | 0.00 | 39/23,237 |
 | `sonar_branch` | collision | 20.28 | [16.49, 24.37] | 16.84 | 7,349/36,232 |
+| `sonar_branch` | gate_miss | 1.57 | [0.45, 3.04] | 0.00 | 8/508 |
+| `sonar_branch` | gate_false_alarm | 0.46 | [0.29, 0.65] | 0.50 | 30/6,492 |
+| `sonar_branch` | gate_wrong_reason | 0.39 | [0.00, 1.04] | 0.00 | 2/508 |
+| `sonar_branch` | hidden_masked | 0.81 | [0.39, 1.44] | 0.00 | 16/1,974 |
+| `sonar_branch` | hidden_silent | 0.61 | [0.17, 1.32] | 0.00 | 12/1,974 |
 | `bandit` | false_new | 4.39 | [3.06, 6.34] | 3.92 | 1,019/23,237 |
 | `bandit` | false_new_same_path | 3.19 | [2.54, 4.05] | 3.40 | 732/22,950 |
 | `bandit` | false_new_renamed | 100.00 | [100.00, 100.00] | 100.00 | 287/287 |
 | `bandit` | hidden | 19.96 | [14.09, 28.62] | 17.33 | 394/1,974 |
 | `bandit` | mispair | 3.68 | [2.05, 5.61] | 1.06 | 856/23,237 |
 | `bandit` | collision | 54.16 | [44.38, 62.53] | 45.22 | 19,625/36,232 |
+| `bandit` | gate_miss | 14.37 | [10.33, 18.83] | 10.71 | 73/508 |
+| `bandit` | gate_false_alarm | 5.11 | [4.11, 6.16] | 5.26 | 332/6,492 |
+| `bandit` | gate_wrong_reason | 1.38 | [0.56, 2.37] | 0.00 | 7/508 |
+| `bandit` | hidden_masked | 9.27 | [6.32, 12.48] | 2.94 | 183/1,974 |
+| `bandit` | hidden_silent | 10.69 | [5.83, 18.87] | 3.85 | 211/1,974 |
+
+Paired differences between schemes on the same findings (percentage points, a - b), with 95% intervals from the same resamples. *Excludes 0*: the interval lies wholly on one side of zero.
+
+| metric | a | b | a - b | 95% CI | excludes 0 |
+|---|---|---|---:|---|---|
+| false_new | `sonar` | `codeguard` | -1.40 | [-2.92, -0.37] | yes |
+| false_new | `codeguard` | `line_text` | -0.10 | [-0.16, -0.04] | yes |
+| false_new | `github` | `codeguard` | 1.35 | [1.14, 1.59] | yes |
+| false_new | `sonar` | `sonar_branch` | -0.22 | [-0.61, -0.01] | yes |
+| false_new | `sonar` | `github` | -2.75 | [-4.41, -1.62] | yes |
+| false_new_same_path | `codeguard` | `sonar` | 0.20 | [0.11, 0.31] | yes |
+| false_new_same_path | `github` | `codeguard` | 1.36 | [1.14, 1.63] | yes |
+| false_new_same_path | `codeguard` | `line_text` | -0.10 | [-0.17, -0.04] | yes |
+| hidden | `bandit` | `line` | 18.74 | [13.20, 26.87] | yes |
+| hidden | `bandit` | `line_text` | 18.79 | [13.10, 27.08] | yes |
+| hidden | `bandit` | `github` | 19.15 | [13.45, 27.58] | yes |
+| hidden | `bandit` | `codeguard` | 18.09 | [12.56, 26.36] | yes |
+| hidden | `bandit` | `sonar` | 18.49 | [12.89, 26.65] | yes |
+| hidden | `codeguard` | `github` | 1.06 | [0.63, 1.68] | yes |
+| gate_miss | `bandit` | `line` | 13.78 | [9.59, 18.32] | yes |
+| gate_miss | `bandit` | `line_text` | 14.17 | [10.10, 18.68] | yes |
+| gate_miss | `bandit` | `github` | 14.17 | [10.10, 18.68] | yes |
+| gate_miss | `bandit` | `codeguard` | 13.58 | [9.50, 18.04] | yes |
+| gate_miss | `bandit` | `sonar` | 12.80 | [8.83, 17.15] | yes |
+| gate_miss | `sonar` | `codeguard` | 0.79 | [0.18, 1.66] | yes |
+| gate_false_alarm | `github` | `codeguard` | 1.36 | [0.96, 1.80] | yes |
+| gate_false_alarm | `codeguard` | `sonar` | 0.28 | [0.07, 0.54] | yes |
+
+Bootstrap resamples (of 10,000) left out because they hold no repository with a non-zero denominator:
+
+| metric | dropped |
+|---|---:|
+| false_new | 0 |
+| false_new_same_path | 0 |
+| false_new_renamed | 0 |
+| hidden | 0 |
+| mispair | 0 |
+| collision | 0 |
+| gate_miss | 0 |
+| gate_false_alarm | 0 |
+| gate_wrong_reason | 0 |
+| hidden_masked | 0 |
+| hidden_silent | 0 |
 
 Rules with the most persisting findings (share of all; findings in test code):
 
@@ -62,6 +140,142 @@ Rules with the most persisting findings (share of all; findings in test code):
 | `CG-SEC-105` | 3,146 (13.5%) | 347 (17.6%) | 45% |
 | `CG-PERF-101` | 2,461 (10.6%) | 484 (24.5%) | 41% |
 | `CG-QUAL-101` | 1,879 (8.1%) | 55 (2.8%) | 1% |
+
+## CodeGuard (security rules) findings
+
+Source: `research/finding_identity/results/corpus-v3`, only rules starting with CG-SEC. 35 repositories, 7,000 commit pairs, 5,794 persisting and 648 introduced findings; 73 persisting findings in renamed files, in 4 repositories.
+
+| scheme | metric | rate | 95% CI | median | n |
+|---|---|---:|---|---:|---:|
+| `line` | false_new | 50.71 | [43.08, 62.85] | 53.27 | 2,938/5,794 |
+| `line` | false_new_same_path | 50.08 | [42.80, 61.87] | 53.27 | 2,865/5,721 |
+| `line` | false_new_renamed | 100.00 | [100.00, 100.00] | 100.00 | 73/73 |
+| `line` | hidden | 0.62 | [0.00, 1.65] | 0.00 | 4/648 |
+| `line` | mispair | 3.40 | [0.95, 5.38] | 0.00 | 197/5,794 |
+| `line` | collision | n/a | n/a | n/a | 0/0 |
+| `line` | gate_miss | 0.00 | [0.00, 0.00] | 0.00 | 0/165 |
+| `line` | gate_false_alarm | 7.32 | [5.67, 9.12] | 6.45 | 500/6,835 |
+| `line` | gate_wrong_reason | 1.21 | [0.00, 3.18] | 0.00 | 2/165 |
+| `line` | hidden_masked | 0.62 | [0.00, 1.65] | 0.00 | 4/648 |
+| `line` | hidden_silent | 0.00 | [0.00, 0.00] | 0.00 | 0/648 |
+| `line_text` | false_new | 1.86 | [0.46, 4.24] | 0.18 | 108/5,794 |
+| `line_text` | false_new_same_path | 0.61 | [0.35, 1.03] | 0.18 | 35/5,721 |
+| `line_text` | false_new_renamed | 100.00 | [100.00, 100.00] | 100.00 | 73/73 |
+| `line_text` | hidden | 2.01 | [0.31, 4.91] | 0.00 | 13/648 |
+| `line_text` | mispair | 0.67 | [0.11, 1.54] | 0.00 | 39/5,794 |
+| `line_text` | collision | n/a | n/a | n/a | 0/0 |
+| `line_text` | gate_miss | 0.61 | [0.00, 1.85] | 0.00 | 1/165 |
+| `line_text` | gate_false_alarm | 0.42 | [0.19, 0.72] | 0.00 | 29/6,835 |
+| `line_text` | gate_wrong_reason | 2.42 | [0.00, 6.16] | 0.00 | 4/165 |
+| `line_text` | hidden_masked | 1.85 | [0.31, 4.51] | 0.00 | 12/648 |
+| `line_text` | hidden_silent | 0.15 | [0.00, 0.48] | 0.00 | 1/648 |
+| `github` | false_new | 3.02 | [1.46, 5.63] | 1.39 | 175/5,794 |
+| `github` | false_new_same_path | 1.78 | [1.27, 2.56] | 1.39 | 102/5,721 |
+| `github` | false_new_renamed | 100.00 | [100.00, 100.00] | 100.00 | 73/73 |
+| `github` | hidden | 1.70 | [0.14, 4.47] | 0.00 | 11/648 |
+| `github` | mispair | 0.36 | [0.00, 0.95] | 0.00 | 21/5,794 |
+| `github` | collision | n/a | n/a | n/a | 0/0 |
+| `github` | gate_miss | 0.61 | [0.00, 1.85] | 0.00 | 1/165 |
+| `github` | gate_false_alarm | 0.78 | [0.44, 1.18] | 0.51 | 53/6,835 |
+| `github` | gate_wrong_reason | 2.42 | [0.55, 5.15] | 0.00 | 4/165 |
+| `github` | hidden_masked | 1.23 | [0.14, 3.11] | 0.00 | 8/648 |
+| `github` | hidden_silent | 0.46 | [0.00, 1.44] | 0.00 | 3/648 |
+| `codeguard` | false_new | 1.90 | [0.44, 4.30] | 0.00 | 110/5,794 |
+| `codeguard` | false_new_same_path | 0.65 | [0.28, 1.21] | 0.00 | 37/5,721 |
+| `codeguard` | false_new_renamed | 100.00 | [100.00, 100.00] | 100.00 | 73/73 |
+| `codeguard` | hidden | 3.40 | [0.48, 8.07] | 0.00 | 22/648 |
+| `codeguard` | mispair | 1.09 | [0.14, 2.62] | 0.00 | 63/5,794 |
+| `codeguard` | collision | n/a | n/a | n/a | 0/0 |
+| `codeguard` | gate_miss | 1.21 | [0.00, 3.70] | 0.00 | 2/165 |
+| `codeguard` | gate_false_alarm | 0.37 | [0.15, 0.63] | 0.00 | 25/6,835 |
+| `codeguard` | gate_wrong_reason | 3.03 | [0.00, 7.84] | 0.00 | 5/165 |
+| `codeguard` | hidden_masked | 2.78 | [0.48, 6.37] | 0.00 | 18/648 |
+| `codeguard` | hidden_silent | 0.62 | [0.00, 1.91] | 0.00 | 4/648 |
+| `sonar` | false_new | 0.26 | [0.13, 0.47] | 0.00 | 15/5,794 |
+| `sonar` | false_new_same_path | 0.24 | [0.13, 0.44] | 0.00 | 14/5,721 |
+| `sonar` | false_new_renamed | 1.37 | [0.00, 2.86] | 0.00 | 1/73 |
+| `sonar` | hidden | 1.23 | [0.16, 2.99] | 0.00 | 8/648 |
+| `sonar` | mispair | 0.35 | [0.10, 0.72] | 0.00 | 20/5,794 |
+| `sonar` | collision | n/a | n/a | n/a | 0/0 |
+| `sonar` | gate_miss | 1.82 | [0.00, 4.42] | 0.00 | 3/165 |
+| `sonar` | gate_false_alarm | 0.15 | [0.06, 0.24] | 0.00 | 10/6,835 |
+| `sonar` | gate_wrong_reason | 0.61 | [0.00, 2.13] | 0.00 | 1/165 |
+| `sonar` | hidden_masked | 0.31 | [0.00, 1.08] | 0.00 | 2/648 |
+| `sonar` | hidden_silent | 0.93 | [0.00, 2.46] | 0.00 | 6/648 |
+| `sonar_branch` | false_new | 0.28 | [0.14, 0.52] | 0.00 | 16/5,794 |
+| `sonar_branch` | false_new_same_path | 0.24 | [0.13, 0.44] | 0.00 | 14/5,721 |
+| `sonar_branch` | false_new_renamed | 2.74 | [0.00, 5.71] | 0.00 | 2/73 |
+| `sonar_branch` | hidden | 1.23 | [0.16, 2.99] | 0.00 | 8/648 |
+| `sonar_branch` | mispair | 0.35 | [0.10, 0.72] | 0.00 | 20/5,794 |
+| `sonar_branch` | collision | n/a | n/a | n/a | 0/0 |
+| `sonar_branch` | gate_miss | 1.82 | [0.00, 4.42] | 0.00 | 3/165 |
+| `sonar_branch` | gate_false_alarm | 0.16 | [0.07, 0.27] | 0.00 | 11/6,835 |
+| `sonar_branch` | gate_wrong_reason | 0.61 | [0.00, 2.13] | 0.00 | 1/165 |
+| `sonar_branch` | hidden_masked | 0.31 | [0.00, 1.08] | 0.00 | 2/648 |
+| `sonar_branch` | hidden_silent | 0.93 | [0.00, 2.46] | 0.00 | 6/648 |
+| `bandit` | false_new | 2.81 | [1.24, 5.73] | 2.05 | 163/5,794 |
+| `bandit` | false_new_same_path | 1.57 | [0.68, 3.64] | 0.00 | 90/5,721 |
+| `bandit` | false_new_renamed | 100.00 | [100.00, 100.00] | 100.00 | 73/73 |
+| `bandit` | hidden | 19.75 | [13.17, 29.28] | 15.79 | 128/648 |
+| `bandit` | mispair | 2.30 | [0.83, 4.50] | 0.00 | 133/5,794 |
+| `bandit` | collision | n/a | n/a | n/a | 0/0 |
+| `bandit` | gate_miss | 27.27 | [17.96, 37.32] | 20.00 | 45/165 |
+| `bandit` | gate_false_alarm | 1.02 | [0.62, 1.48] | 0.50 | 70/6,835 |
+| `bandit` | gate_wrong_reason | 0.61 | [0.00, 1.85] | 0.00 | 1/165 |
+| `bandit` | hidden_masked | 7.56 | [1.32, 13.23] | 0.00 | 49/648 |
+| `bandit` | hidden_silent | 12.19 | [6.56, 22.40] | 7.32 | 79/648 |
+
+Paired differences between schemes on the same findings (percentage points, a - b), with 95% intervals from the same resamples. *Excludes 0*: the interval lies wholly on one side of zero.
+
+| metric | a | b | a - b | 95% CI | excludes 0 |
+|---|---|---|---:|---|---|
+| false_new | `sonar` | `codeguard` | -1.64 | [-3.88, -0.27] | yes |
+| false_new | `codeguard` | `line_text` | 0.03 | [-0.21, 0.28] | no |
+| false_new | `github` | `codeguard` | 1.12 | [0.66, 1.65] | yes |
+| false_new | `sonar` | `sonar_branch` | -0.02 | [-0.07, 0.00] | no |
+| false_new | `sonar` | `github` | -2.76 | [-5.22, -1.27] | yes |
+| false_new_same_path | `codeguard` | `sonar` | 0.40 | [0.12, 0.81] | yes |
+| false_new_same_path | `github` | `codeguard` | 1.14 | [0.66, 1.68] | yes |
+| false_new_same_path | `codeguard` | `line_text` | 0.03 | [-0.22, 0.29] | no |
+| hidden | `bandit` | `line` | 19.14 | [12.65, 28.40] | yes |
+| hidden | `bandit` | `line_text` | 17.75 | [12.11, 25.53] | yes |
+| hidden | `bandit` | `github` | 18.06 | [12.44, 26.24] | yes |
+| hidden | `bandit` | `codeguard` | 16.36 | [11.43, 23.46] | yes |
+| hidden | `bandit` | `sonar` | 18.52 | [12.55, 26.94] | yes |
+| hidden | `codeguard` | `github` | 1.70 | [0.23, 3.86] | yes |
+| gate_miss | `bandit` | `line` | 27.27 | [17.96, 37.32] | yes |
+| gate_miss | `bandit` | `line_text` | 26.67 | [17.36, 36.82] | yes |
+| gate_miss | `bandit` | `github` | 26.67 | [17.36, 36.82] | yes |
+| gate_miss | `bandit` | `codeguard` | 26.06 | [16.67, 36.42] | yes |
+| gate_miss | `bandit` | `sonar` | 25.45 | [16.22, 35.62] | yes |
+| gate_miss | `sonar` | `codeguard` | 0.61 | [0.00, 2.05] | no |
+| gate_false_alarm | `github` | `codeguard` | 0.41 | [0.25, 0.59] | yes |
+| gate_false_alarm | `codeguard` | `sonar` | 0.22 | [0.04, 0.44] | yes |
+
+Bootstrap resamples (of 10,000) left out because they hold no repository with a non-zero denominator:
+
+| metric | dropped |
+|---|---:|
+| false_new | 0 |
+| false_new_same_path | 0 |
+| false_new_renamed | 135 |
+| hidden | 0 |
+| mispair | 0 |
+| gate_miss | 0 |
+| gate_false_alarm | 0 |
+| gate_wrong_reason | 0 |
+| hidden_masked | 0 |
+| hidden_silent | 0 |
+
+Rules with the most persisting findings (share of all; findings in test code):
+
+| rule | persisting | introduced | in test code |
+|---|---:|---:|---:|
+| `CG-SEC-105` | 3,146 (54.3%) | 347 (53.5%) | 45% |
+| `CG-SEC-002` | 1,345 (23.2%) | 87 (13.4%) | 68% |
+| `CG-SEC-103` | 314 (5.4%) | 35 (5.4%) | 29% |
+| `CG-SEC-001` | 284 (4.9%) | 94 (14.5%) | 22% |
+| `CG-SEC-102` | 232 (4.0%) | 50 (7.7%) | 5% |
 
 ## Bandit findings
 
@@ -75,42 +289,119 @@ Source: `research/finding_identity/results/corpus-bandit`, without rules B101. 2
 | `line` | hidden | 1.91 | [0.40, 4.01] | 0.00 | 21/1,097 |
 | `line` | mispair | 1.93 | [1.27, 2.88] | 1.23 | 304/15,718 |
 | `line` | collision | n/a | n/a | n/a | 0/0 |
+| `line` | gate_miss | 0.00 | [0.00, 0.00] | 0.00 | 0/271 |
+| `line` | gate_false_alarm | 14.59 | [11.70, 17.51] | 12.63 | 690/4,729 |
+| `line` | gate_wrong_reason | 1.11 | [0.00, 2.37] | 0.00 | 3/271 |
+| `line` | hidden_masked | 1.91 | [0.40, 4.01] | 0.00 | 21/1,097 |
+| `line` | hidden_silent | 0.00 | [0.00, 0.00] | 0.00 | 0/1,097 |
 | `line_text` | false_new | 0.78 | [0.52, 1.08] | 0.59 | 122/15,718 |
 | `line_text` | false_new_same_path | 0.75 | [0.49, 1.06] | 0.55 | 118/15,714 |
 | `line_text` | false_new_renamed | 100.00 | [100.00, 100.00] | 100.00 | 4/4 |
 | `line_text` | hidden | 6.02 | [2.57, 10.00] | 1.17 | 66/1,097 |
 | `line_text` | mispair | 1.30 | [0.29, 2.10] | 0.00 | 204/15,718 |
 | `line_text` | collision | n/a | n/a | n/a | 0/0 |
+| `line_text` | gate_miss | 0.74 | [0.00, 1.65] | 0.00 | 2/271 |
+| `line_text` | gate_false_alarm | 0.30 | [0.15, 0.45] | 0.00 | 14/4,729 |
+| `line_text` | gate_wrong_reason | 6.27 | [1.79, 10.90] | 0.00 | 17/271 |
+| `line_text` | hidden_masked | 5.47 | [2.46, 9.25] | 1.17 | 60/1,097 |
+| `line_text` | hidden_silent | 0.55 | [0.00, 1.25] | 0.00 | 6/1,097 |
 | `github` | false_new | 1.93 | [1.10, 3.05] | 1.27 | 304/15,718 |
 | `github` | false_new_same_path | 1.91 | [1.07, 3.03] | 1.14 | 300/15,714 |
 | `github` | false_new_renamed | 100.00 | [100.00, 100.00] | 100.00 | 4/4 |
 | `github` | hidden | 3.28 | [1.24, 5.87] | 0.00 | 36/1,097 |
 | `github` | mispair | 0.32 | [0.05, 0.66] | 0.00 | 51/15,718 |
 | `github` | collision | n/a | n/a | n/a | 0/0 |
+| `github` | gate_miss | 1.11 | [0.00, 2.48] | 0.00 | 3/271 |
+| `github` | gate_false_alarm | 1.46 | [0.96, 2.03] | 1.08 | 69/4,729 |
+| `github` | gate_wrong_reason | 2.21 | [0.00, 4.42] | 0.00 | 6/271 |
+| `github` | hidden_masked | 2.55 | [0.85, 4.96] | 0.00 | 28/1,097 |
+| `github` | hidden_silent | 0.73 | [0.00, 1.72] | 0.00 | 8/1,097 |
 | `codeguard` | false_new | 0.42 | [0.23, 0.72] | 0.20 | 66/15,718 |
 | `codeguard` | false_new_same_path | 0.39 | [0.21, 0.69] | 0.17 | 62/15,714 |
 | `codeguard` | false_new_renamed | 100.00 | [100.00, 100.00] | 100.00 | 4/4 |
 | `codeguard` | hidden | 2.46 | [1.14, 4.15] | 0.00 | 27/1,097 |
 | `codeguard` | mispair | 0.03 | [0.00, 0.06] | 0.00 | 4/15,718 |
 | `codeguard` | collision | n/a | n/a | n/a | 0/0 |
+| `codeguard` | gate_miss | 1.85 | [0.48, 3.54] | 0.00 | 5/271 |
+| `codeguard` | gate_false_alarm | 0.25 | [0.13, 0.40] | 0.00 | 12/4,729 |
+| `codeguard` | gate_wrong_reason | 0.00 | [0.00, 0.00] | 0.00 | 0/271 |
+| `codeguard` | hidden_masked | 1.46 | [0.49, 2.83] | 0.00 | 16/1,097 |
+| `codeguard` | hidden_silent | 1.00 | [0.22, 2.03] | 0.00 | 11/1,097 |
 | `sonar` | false_new | 0.27 | [0.11, 0.52] | 0.02 | 43/15,718 |
 | `sonar` | false_new_same_path | 0.27 | [0.11, 0.52] | 0.02 | 43/15,714 |
 | `sonar` | false_new_renamed | 0.00 | [0.00, 0.00] | 0.00 | 0/4 |
 | `sonar` | hidden | 4.47 | [1.56, 8.38] | 0.00 | 49/1,097 |
 | `sonar` | mispair | 0.61 | [0.30, 0.95] | 0.00 | 96/15,718 |
 | `sonar` | collision | n/a | n/a | n/a | 0/0 |
+| `sonar` | gate_miss | 2.58 | [0.90, 4.50] | 0.00 | 7/271 |
+| `sonar` | gate_false_alarm | 0.17 | [0.06, 0.31] | 0.00 | 8/4,729 |
+| `sonar` | gate_wrong_reason | 0.00 | [0.00, 0.00] | 0.00 | 0/271 |
+| `sonar` | hidden_masked | 3.19 | [0.49, 7.09] | 0.00 | 35/1,097 |
+| `sonar` | hidden_silent | 1.28 | [0.40, 2.41] | 0.00 | 14/1,097 |
 | `sonar_branch` | false_new | 0.27 | [0.11, 0.52] | 0.02 | 43/15,718 |
 | `sonar_branch` | false_new_same_path | 0.27 | [0.11, 0.52] | 0.02 | 43/15,714 |
 | `sonar_branch` | false_new_renamed | 0.00 | [0.00, 0.00] | 0.00 | 0/4 |
 | `sonar_branch` | hidden | 4.47 | [1.56, 8.38] | 0.00 | 49/1,097 |
 | `sonar_branch` | mispair | 0.61 | [0.30, 0.95] | 0.00 | 96/15,718 |
 | `sonar_branch` | collision | n/a | n/a | n/a | 0/0 |
+| `sonar_branch` | gate_miss | 2.58 | [0.90, 4.50] | 0.00 | 7/271 |
+| `sonar_branch` | gate_false_alarm | 0.17 | [0.06, 0.31] | 0.00 | 8/4,729 |
+| `sonar_branch` | gate_wrong_reason | 0.00 | [0.00, 0.00] | 0.00 | 0/271 |
+| `sonar_branch` | hidden_masked | 3.19 | [0.49, 7.09] | 0.00 | 35/1,097 |
+| `sonar_branch` | hidden_silent | 1.28 | [0.40, 2.41] | 0.00 | 14/1,097 |
 | `bandit` | false_new | 0.06 | [0.01, 0.13] | 0.00 | 9/15,718 |
 | `bandit` | false_new_same_path | 0.03 | [0.00, 0.07] | 0.00 | 5/15,714 |
 | `bandit` | false_new_renamed | 100.00 | [100.00, 100.00] | 100.00 | 4/4 |
 | `bandit` | hidden | 29.17 | [20.11, 40.89] | 34.67 | 320/1,097 |
 | `bandit` | mispair | 3.61 | [1.53, 5.62] | 0.88 | 567/15,718 |
 | `bandit` | collision | n/a | n/a | n/a | 0/0 |
+| `bandit` | gate_miss | 35.79 | [26.07, 46.32] | 40.00 | 97/271 |
+| `bandit` | gate_false_alarm | 0.02 | [0.00, 0.06] | 0.00 | 1/4,729 |
+| `bandit` | gate_wrong_reason | 0.00 | [0.00, 0.00] | 0.00 | 0/271 |
+| `bandit` | hidden_masked | 8.11 | [4.24, 11.80] | 2.13 | 89/1,097 |
+| `bandit` | hidden_silent | 21.06 | [13.63, 32.29] | 24.75 | 231/1,097 |
+
+Paired differences between schemes on the same findings (percentage points, a - b), with 95% intervals from the same resamples. *Excludes 0*: the interval lies wholly on one side of zero.
+
+| metric | a | b | a - b | 95% CI | excludes 0 |
+|---|---|---|---:|---|---|
+| false_new | `sonar` | `codeguard` | -0.15 | [-0.28, -0.05] | yes |
+| false_new | `codeguard` | `line_text` | -0.36 | [-0.51, -0.13] | yes |
+| false_new | `github` | `codeguard` | 1.51 | [0.82, 2.44] | yes |
+| false_new | `sonar` | `sonar_branch` | 0.00 | [0.00, 0.00] | no |
+| false_new | `sonar` | `github` | -1.66 | [-2.58, -0.97] | yes |
+| false_new_same_path | `codeguard` | `sonar` | 0.12 | [0.03, 0.25] | yes |
+| false_new_same_path | `github` | `codeguard` | 1.51 | [0.82, 2.44] | yes |
+| false_new_same_path | `codeguard` | `line_text` | -0.36 | [-0.51, -0.13] | yes |
+| hidden | `bandit` | `line` | 27.26 | [18.98, 38.65] | yes |
+| hidden | `bandit` | `line_text` | 23.15 | [15.58, 33.10] | yes |
+| hidden | `bandit` | `github` | 25.89 | [17.78, 36.55] | yes |
+| hidden | `bandit` | `codeguard` | 26.71 | [18.13, 38.23] | yes |
+| hidden | `bandit` | `sonar` | 24.70 | [17.23, 35.18] | yes |
+| hidden | `codeguard` | `github` | -0.82 | [-3.24, 1.41] | no |
+| gate_miss | `bandit` | `line` | 35.79 | [26.07, 46.32] | yes |
+| gate_miss | `bandit` | `line_text` | 35.06 | [25.42, 45.69] | yes |
+| gate_miss | `bandit` | `github` | 34.69 | [25.00, 45.08] | yes |
+| gate_miss | `bandit` | `codeguard` | 33.95 | [24.38, 44.34] | yes |
+| gate_miss | `bandit` | `sonar` | 33.21 | [23.98, 43.51] | yes |
+| gate_miss | `sonar` | `codeguard` | 0.74 | [0.00, 2.26] | no |
+| gate_false_alarm | `github` | `codeguard` | 1.21 | [0.76, 1.71] | yes |
+| gate_false_alarm | `codeguard` | `sonar` | 0.08 | [-0.04, 0.21] | no |
+
+Bootstrap resamples (of 10,000) left out because they hold no repository with a non-zero denominator:
+
+| metric | dropped |
+|---|---:|
+| false_new | 0 |
+| false_new_same_path | 0 |
+| false_new_renamed | 3,625 |
+| hidden | 0 |
+| mispair | 0 |
+| gate_miss | 0 |
+| gate_false_alarm | 0 |
+| gate_wrong_reason | 0 |
+| hidden_masked | 0 |
+| hidden_silent | 0 |
 
 Rules with the most persisting findings (share of all; findings in test code):
 
@@ -134,42 +425,120 @@ Source: `research/finding_identity/results/corpus-bandit`. 25 repositories, 5,00
 | `line` | hidden | 3.49 | [2.54, 5.31] | 2.45 | 454/13,024 |
 | `line` | mispair | 11.44 | [8.36, 13.64] | 5.48 | 20,008/174,853 |
 | `line` | collision | 0.05 | [0.03, 0.09] | 0.02 | 117/252,744 |
+| `line` | gate_miss | 0.14 | [0.00, 0.47] | 0.00 | 1/740 |
+| `line` | gate_false_alarm | 14.55 | [11.30, 17.81] | 14.07 | 620/4,260 |
+| `line` | gate_wrong_reason | 1.49 | [0.57, 2.57] | 0.00 | 11/740 |
+| `line` | hidden_masked | 3.48 | [2.54, 5.29] | 2.45 | 453/13,024 |
+| `line` | hidden_silent | 0.01 | [0.00, 0.03] | 0.00 | 1/13,024 |
 | `line_text` | false_new | 0.73 | [0.46, 1.13] | 0.72 | 1,270/174,853 |
 | `line_text` | false_new_same_path | 0.69 | [0.44, 1.09] | 0.56 | 1,200/174,783 |
 | `line_text` | false_new_renamed | 100.00 | [100.00, 100.00] | 100.00 | 70/70 |
 | `line_text` | hidden | 3.89 | [2.55, 6.48] | 4.37 | 506/13,024 |
 | `line_text` | mispair | 1.55 | [0.88, 2.42] | 0.45 | 2,709/174,853 |
 | `line_text` | collision | 59.33 | [49.12, 64.12] | 46.72 | 149,946/252,744 |
+| `line_text` | gate_miss | 0.00 | [0.00, 0.00] | 0.00 | 0/740 |
+| `line_text` | gate_false_alarm | 0.99 | [0.62, 1.42] | 0.62 | 42/4,260 |
+| `line_text` | gate_wrong_reason | 3.51 | [1.76, 6.08] | 0.62 | 26/740 |
+| `line_text` | hidden_masked | 3.89 | [2.55, 6.48] | 4.37 | 506/13,024 |
+| `line_text` | hidden_silent | 0.00 | [0.00, 0.00] | 0.00 | 0/13,024 |
 | `github` | false_new | 1.81 | [0.99, 3.07] | 1.35 | 3,165/174,853 |
 | `github` | false_new_same_path | 1.77 | [0.97, 3.03] | 1.29 | 3,095/174,783 |
 | `github` | false_new_renamed | 100.00 | [100.00, 100.00] | 100.00 | 70/70 |
 | `github` | hidden | 0.83 | [0.58, 1.34] | 0.49 | 108/13,024 |
 | `github` | mispair | 0.16 | [0.05, 0.33] | 0.01 | 272/174,853 |
 | `github` | collision | 0.05 | [0.03, 0.09] | 0.02 | 117/252,744 |
+| `github` | gate_miss | 0.41 | [0.00, 0.95] | 0.00 | 3/740 |
+| `github` | gate_false_alarm | 3.08 | [2.05, 4.38] | 2.73 | 131/4,260 |
+| `github` | gate_wrong_reason | 0.81 | [0.12, 1.83] | 0.00 | 6/740 |
+| `github` | hidden_masked | 0.77 | [0.53, 1.21] | 0.38 | 100/13,024 |
+| `github` | hidden_silent | 0.06 | [0.00, 0.24] | 0.00 | 8/13,024 |
 | `codeguard` | false_new | 0.54 | [0.28, 0.94] | 0.22 | 944/174,853 |
 | `codeguard` | false_new_same_path | 0.50 | [0.26, 0.90] | 0.21 | 874/174,783 |
 | `codeguard` | false_new_renamed | 100.00 | [100.00, 100.00] | 100.00 | 70/70 |
 | `codeguard` | hidden | 0.69 | [0.41, 1.28] | 0.34 | 90/13,024 |
 | `codeguard` | mispair | 0.04 | [0.02, 0.06] | 0.00 | 63/174,853 |
 | `codeguard` | collision | 20.34 | [14.20, 26.56] | 23.67 | 51,411/252,744 |
+| `codeguard` | gate_miss | 0.54 | [0.13, 1.09] | 0.00 | 4/740 |
+| `codeguard` | gate_false_alarm | 0.87 | [0.53, 1.26] | 0.58 | 37/4,260 |
+| `codeguard` | gate_wrong_reason | 0.41 | [0.00, 1.09] | 0.00 | 3/740 |
+| `codeguard` | hidden_masked | 0.62 | [0.36, 1.12] | 0.19 | 81/13,024 |
+| `codeguard` | hidden_silent | 0.07 | [0.01, 0.25] | 0.00 | 9/13,024 |
 | `sonar` | false_new | 0.33 | [0.14, 0.67] | 0.13 | 570/174,853 |
 | `sonar` | false_new_same_path | 0.33 | [0.14, 0.67] | 0.13 | 570/174,783 |
 | `sonar` | false_new_renamed | 0.00 | [0.00, 0.00] | 0.00 | 0/70 |
 | `sonar` | hidden | 1.42 | [0.75, 2.94] | 0.61 | 185/13,024 |
 | `sonar` | mispair | 0.73 | [0.54, 0.89] | 0.58 | 1,284/174,853 |
 | `sonar` | collision | 60.75 | [51.23, 65.26] | 50.86 | 153,531/252,744 |
+| `sonar` | gate_miss | 0.81 | [0.29, 1.44] | 0.00 | 6/740 |
+| `sonar` | gate_false_alarm | 0.49 | [0.29, 0.73] | 0.55 | 21/4,260 |
+| `sonar` | gate_wrong_reason | 0.41 | [0.00, 0.86] | 0.00 | 3/740 |
+| `sonar` | hidden_masked | 1.34 | [0.69, 2.77] | 0.46 | 174/13,024 |
+| `sonar` | hidden_silent | 0.08 | [0.02, 0.28] | 0.00 | 11/13,024 |
 | `sonar_branch` | false_new | 0.33 | [0.14, 0.67] | 0.13 | 570/174,853 |
 | `sonar_branch` | false_new_same_path | 0.33 | [0.14, 0.67] | 0.13 | 570/174,783 |
 | `sonar_branch` | false_new_renamed | 0.00 | [0.00, 0.00] | 0.00 | 0/70 |
 | `sonar_branch` | hidden | 1.42 | [0.75, 2.94] | 0.61 | 185/13,024 |
 | `sonar_branch` | mispair | 0.73 | [0.54, 0.89] | 0.58 | 1,284/174,853 |
 | `sonar_branch` | collision | 60.75 | [51.23, 65.26] | 50.86 | 153,531/252,744 |
+| `sonar_branch` | gate_miss | 0.81 | [0.29, 1.44] | 0.00 | 6/740 |
+| `sonar_branch` | gate_false_alarm | 0.49 | [0.29, 0.73] | 0.55 | 21/4,260 |
+| `sonar_branch` | gate_wrong_reason | 0.41 | [0.00, 0.86] | 0.00 | 3/740 |
+| `sonar_branch` | hidden_masked | 1.34 | [0.69, 2.77] | 0.46 | 174/13,024 |
+| `sonar_branch` | hidden_silent | 0.08 | [0.02, 0.28] | 0.00 | 11/13,024 |
 | `bandit` | false_new | 0.04 | [0.00, 0.14] | 0.00 | 75/174,853 |
 | `bandit` | false_new_same_path | 0.00 | [0.00, 0.01] | 0.00 | 5/174,783 |
 | `bandit` | false_new_renamed | 100.00 | [100.00, 100.00] | 100.00 | 70/70 |
 | `bandit` | hidden | 51.21 | [42.46, 65.18] | 53.96 | 6,670/13,024 |
 | `bandit` | mispair | 23.48 | [18.83, 28.87] | 11.73 | 41,064/174,853 |
 | `bandit` | collision | 97.66 | [94.98, 98.66] | 92.79 | 246,840/252,744 |
+| `bandit` | gate_miss | 59.73 | [50.08, 67.76] | 54.34 | 442/740 |
+| `bandit` | gate_false_alarm | 0.05 | [0.00, 0.12] | 0.00 | 2/4,260 |
+| `bandit` | gate_wrong_reason | 0.00 | [0.00, 0.00] | 0.00 | 0/740 |
+| `bandit` | hidden_masked | 18.63 | [14.42, 20.35] | 9.78 | 2,426/13,024 |
+| `bandit` | hidden_silent | 32.59 | [22.63, 49.84] | 30.30 | 4,244/13,024 |
+
+Paired differences between schemes on the same findings (percentage points, a - b), with 95% intervals from the same resamples. *Excludes 0*: the interval lies wholly on one side of zero.
+
+| metric | a | b | a - b | 95% CI | excludes 0 |
+|---|---|---|---:|---|---|
+| false_new | `sonar` | `codeguard` | -0.21 | [-0.39, -0.12] | yes |
+| false_new | `codeguard` | `line_text` | -0.19 | [-0.29, -0.11] | yes |
+| false_new | `github` | `codeguard` | 1.27 | [0.69, 2.15] | yes |
+| false_new | `sonar` | `sonar_branch` | 0.00 | [0.00, 0.00] | no |
+| false_new | `sonar` | `github` | -1.48 | [-2.40, -0.85] | yes |
+| false_new_same_path | `codeguard` | `sonar` | 0.17 | [0.11, 0.30] | yes |
+| false_new_same_path | `github` | `codeguard` | 1.27 | [0.69, 2.15] | yes |
+| false_new_same_path | `codeguard` | `line_text` | -0.19 | [-0.29, -0.11] | yes |
+| hidden | `bandit` | `line` | 47.73 | [39.65, 60.26] | yes |
+| hidden | `bandit` | `line_text` | 47.33 | [39.69, 59.13] | yes |
+| hidden | `bandit` | `github` | 50.38 | [41.82, 64.00] | yes |
+| hidden | `bandit` | `codeguard` | 50.52 | [41.86, 64.15] | yes |
+| hidden | `bandit` | `sonar` | 49.79 | [41.46, 62.60] | yes |
+| hidden | `codeguard` | `github` | -0.14 | [-0.42, 0.17] | no |
+| gate_miss | `bandit` | `line` | 59.59 | [49.93, 67.64] | yes |
+| gate_miss | `bandit` | `line_text` | 59.73 | [50.08, 67.76] | yes |
+| gate_miss | `bandit` | `github` | 59.32 | [49.64, 67.33] | yes |
+| gate_miss | `bandit` | `codeguard` | 59.19 | [49.65, 67.08] | yes |
+| gate_miss | `bandit` | `sonar` | 58.92 | [49.35, 66.79] | yes |
+| gate_miss | `sonar` | `codeguard` | 0.27 | [-0.26, 0.82] | no |
+| gate_false_alarm | `github` | `codeguard` | 2.21 | [1.35, 3.39] | yes |
+| gate_false_alarm | `codeguard` | `sonar` | 0.38 | [0.12, 0.67] | yes |
+
+Bootstrap resamples (of 10,000) left out because they hold no repository with a non-zero denominator:
+
+| metric | dropped |
+|---|---:|
+| false_new | 0 |
+| false_new_same_path | 0 |
+| false_new_renamed | 409 |
+| hidden | 0 |
+| mispair | 0 |
+| collision | 0 |
+| gate_miss | 0 |
+| gate_false_alarm | 0 |
+| gate_wrong_reason | 0 |
+| hidden_masked | 0 |
+| hidden_silent | 0 |
 
 Rules with the most persisting findings (share of all; findings in test code):
 
@@ -189,3 +558,8 @@ Metrics:
 - `hidden`: introduced findings matched to an old one.
 - `mispair`: persisting findings matched to the wrong old one.
 - `collision`: findings sharing a key with another in the same file version.
+- `gate_miss`: commit pairs with an introduced finding where the gate reports nothing new.
+- `gate_false_alarm`: commit pairs without introduced findings where the gate reports something new.
+- `gate_wrong_reason`: commit pairs with an introduced finding where the gate fails only on persisting ones.
+- `hidden_masked`: introduced findings hidden in a commit pair whose gate fails anyway.
+- `hidden_silent`: introduced findings hidden in a commit pair whose gate stays silent.
