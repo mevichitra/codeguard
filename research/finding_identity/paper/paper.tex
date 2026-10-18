@@ -43,13 +43,16 @@ measure how well the methods that shipped tools use for this work. We ported
 SonarQube's issue tracker, Bandit's baseline comparison and the line hash that GitHub's
 CodeQL Action uploads as a fingerprint, checked each port against the original, and
 replayed 200 consecutive commit pairs from each of 35 open-source web
-applications, scoring every method against a line-diff ground truth. Line numbers report
+applications, scoring every method against a line-diff ground truth that also detects
+moved code. Line numbers report
 52.6\% of persisting findings as new; the other methods report 0.4--4.4\%. Much of what
 remains comes from renamed files. They hold 1.2\% of persisting findings, and every
 method whose identity includes the path reports all of them as new; SonarQube loses
 2.8\% of them in pull-request analyses and 20.2\% in branch analyses. Bandit's baseline
-hides 29.2\% of Bandit's own new findings, because it matches by set membership. Ten
-controlled code transformations show that each method has a change it cannot follow.
+matches by set membership: it hides 27.3\% of Bandit's own new findings, and a CI gate
+built on it stays silent on 34.1\% of the commit pairs that introduce one, where every
+other method misses none. Ten controlled code transformations show that each method has
+a change it cannot follow.
 \end{abstract}
 
 \section{Introduction}
@@ -62,12 +65,8 @@ developers are asked again about code they did not touch. A new finding taken fo
 old one is \emph{hidden}. For a security gate that is the expensive error, since the
 vulnerability passes the check that was meant to stop it.
 
-Tools answer the question in very different ways. The CodeQL Action, which uploads
-results to GitHub code scanning, fingerprints a result by hashing the characters that
-start at the flagged line. SonarQube runs a six-pass matcher over line
-hashes, messages and moved blocks of code. Bandit treats a result as known when an
-equal issue, compared without any location, is in the baseline. These choices are
-documented mostly in source code, and we know of no study that measures them against one
+Tools answer the question in very different ways (Section~\ref{sec:schemes}), mostly
+documented only in their source code, and we know of no study that measures them against one
 another on the same findings: earlier work built a better tracker for one family of
 tools~\cite{li2022statictracker} or used a tracker as a step in studying
 developers~\cite{avgustinov2015,kim2007}.
@@ -77,8 +76,8 @@ tool's method report a persisting finding as new, and how often does it hide a n
 \textbf{RQ2:} which kinds of code change break which methods?
 
 To answer them we replay commit histories and score each method against an independent
-ground truth, a line diff, which a manual check of 100 findings supports for persisting
-findings (Section~\ref{sec:threats}). This paper contributes:
+ground truth, a line diff that also detects moved code, which a manual check of 100
+findings supports (Section~\ref{sec:threats}). This paper contributes:
 \begin{itemize}
 % PENDING: Semgrep results are being added as a third analyzer; reword this bullet
 % (and the next) once they are in, or drop Semgrep from it if they are not.
@@ -89,7 +88,8 @@ findings (Section~\ref{sec:threats}). This paper contributes:
   two analyzers, and RQ2 on ten controlled transformations;
 \item two results that tool builders can act on: putting the file path into a
   finding's identity causes most of the false-new reports of \texttt{codeguard} and
-  \texttt{line\_text}, and matching by set membership hides new findings;
+  \texttt{line\_text}, and matching by set membership hides new findings, so that a
+  gate built on it misses a third of the commits that add a Bandit finding;
 \item the replay tool, the corpus, the results and the scripts behind every number,
   under Apache-2.0.
 \end{itemize}
@@ -103,10 +103,9 @@ other three run a matching algorithm (Table~\ref{tab:schemes}). \texttt{line} is
 naive baseline and \texttt{line\_text} a simple content key. \texttt{codeguard} is the
 fingerprint of CodeGuard, \ifanon the authors' own open-source analyzer\else the
 open-source analyzer the author maintains\fi. \texttt{github} is the
-\texttt{primaryLocationLineHash} that the CodeQL Action computes from the source and
-uploads in SARIF's \texttt{partialFingerprints}. We pair findings by that key alone; how
-GitHub's service then matches uploaded results to its open alerts is not part of the
-port, so \texttt{github} measures the fingerprint, not GitHub's alert tracking.
+\texttt{primaryLocationLineHash} that the CodeQL Action uploads in SARIF's
+\texttt{partialFingerprints}; we pair findings by that key alone, so \texttt{github}
+measures the fingerprint, not how GitHub's service matches results to open alerts.
 
 SonarQube's tracker tries six passes in turn: rule, line, line hash and message; rule,
 line and line hash; code moves, found by unique 11-line block hashes and then by the
@@ -152,10 +151,9 @@ Scheme & Identity built from & Pairing & Path \\
 \end{tabularx}
 \end{table}
 
-Bandit's baseline is the odd one out. It does not pair findings at all: a new result is
-known when an equal issue is in the baseline, so one baselined issue hides any number of
-equal new ones. Since its issues carry no location, a second SQL injection with the same
-message, in the same file, looks exactly like the first.
+Bandit's baseline does not pair findings at all: a new result is known when an equal
+issue is in the baseline, so one baselined issue hides any number of equal new ones, and
+a second SQL injection with the same message, in the same file, looks like the first.
 
 \section{Method}\label{sec:method}
 
@@ -178,9 +176,19 @@ B_{i,j} = \max \bigl( B_{i+1,j},\ B_{i,j+1},\ s(a_i, b_j) + B_{i+1,j+1} \bigr),
 \end{equation}
 where the third term applies only when $s(a_i, b_j) \ge \theta$, and
 $B_{p+1,j} = B_{i,q+1} = 0$. Tracing back from $B_{1,1}$ gives the pairs. A block with
-$pq > 4000$ is paired position by position instead ($a_k$ with $b_k$ when
-$s(a_k, b_k) \ge \theta$), which bounds the cost. Deleted lines, and lines replaced past
-the threshold, stay unmapped.
+$pq > 40{,}000$ is aligned only in a band around its diagonal, which bounds the cost; no
+finding in our replays fell in such a block.
+
+Lines still unmapped can be moved code. Following Git's moved-line detection
+(\texttt{git diff --color-moved}), a run of consecutive unmapped old lines that
+reappears line for line, ignoring surrounding whitespace, as consecutive unmapped new
+lines is mapped as \emph{relocated} when it holds at least 20 alphanumeric characters and
+its text occurs exactly once in each version, so the map never guesses between copies.
+Blocks are taken greedily, largest first. Where two moved blocks are separated by at most
+10 unmapped lines on each side, those lines are aligned by \eqref{eq:align}; an edit at
+either end of a moved block is lost, and moves between files are not detected. Nothing
+here reuses SonarQube's block hashes. Deleted lines, and lines replaced past the
+threshold, stay unmapped.
 
 The ground truth $T\colon N \rightharpoonup O$ pairs the findings. Taking old findings in
 order of line and column, it pairs each $o$ with the still unpaired $n \in N$ that has
@@ -204,9 +212,31 @@ pairs of a replay, the two main rates are
 \end{equation}
 The \emph{collision rate} $\mathrm{C}_\sigma$ is the share of findings, over every file
 version the replay analyses, that share their $\sigma$ key with another finding in the
-same version. For those findings the pairing falls back on line order.
-Algorithm~\ref{alg:replay} puts the steps together; it skips files the analyzer does
-not read (vendored, generated and minified code).
+same version; for those findings the pairing falls back on line order. The key of
+\texttt{sonar} is rule, path and line hash (that of its last pass), and that of
+\texttt{bandit} is the tuple Bandit compares: issue text, severity, CWE, confidence,
+file and test. Algorithm~\ref{alg:replay} puts the steps together; it skips files the
+analyzer does not read (vendored, generated and minified code).
+
+\textit{The gate.} A CI gate that fails on new findings sees one commit pair at a time.
+With $N_t$ the findings in the changed files of pair $t$ and $I_t \subseteq N_t$ the
+introduced ones, the gate fires when $G_\sigma(t)$ holds and should fire when $G^*(t)$
+does:
+\begin{equation}\label{eq:gate}
+G_\sigma(t) = \bigl[\, \exists\, n \in N_t : n \notin \operatorname{dom} P_\sigma \,\bigr],
+\qquad
+G^{*}(t) = \bigl[\, I_t \neq \emptyset \,\bigr].
+\end{equation}
+With $T^{+}$ the pairs where $G^{*}$ holds and $T^{-}$ the others, the miss and
+false-alarm rates are
+\begin{equation}\label{eq:gaterates}
+\mathrm{Miss}_\sigma = \frac{|\{t \in T^{+} : \neg G_\sigma(t)\}|}{|T^{+}|},
+\
+\mathrm{FA}_\sigma = \frac{|\{t \in T^{-} : G_\sigma(t)\}|}{|T^{-}|}.
+\end{equation}
+A hidden finding is \emph{masked} when its pair's gate fires anyway, because the scheme
+reports another finding of the pair as new, and \emph{silent} otherwise; the two add up
+to the hidden rate.
 
 \begin{algorithm}[t]
 \caption{Replaying and scoring one repository}\label{alg:replay}
@@ -219,7 +249,7 @@ not read (vendored, generated and minified code).
   \ForAll{changed file $(p, p')$ from $c_{t-1}$ to $c_t$}
     \State $O, N \gets$ findings in $p$ at $c_{t-1}$, in $p'$ at $c_t$
       \Comment{$\emptyset$ if absent}
-    \State $\mu \gets$ line map by \eqref{eq:sim} and \eqref{eq:align}
+    \State $\mu \gets$ line map by \eqref{eq:sim}, \eqref{eq:align} and moved blocks
     \State $T \gets \textsc{GroundTruth}(O, N, \mu)$
     \ForAll{$\sigma \in \Sigma$}
       \State $P \gets \textsc{Pair}_\sigma(O, N)$
@@ -235,23 +265,20 @@ not read (vendored, generated and minified code).
 \end{algorithmic}
 \end{algorithm}
 
-\textit{Corpus.} We chose 35 open-source web applications by written criteria: a
-deployable application rather than a library or a sample; a Python or JavaScript or
-TypeScript back end with at least 100 analysable files; code that handles user requests
-and builds queries, renders templates, runs subprocesses, accepts uploads, fetches URLs
-or authenticates users; at least 200 first-parent commits in the two years before the
-pinned commit; one OSI-approved licence for the whole repository; and no committed build
-output. Twenty-five are Python projects (16 Django, 4 Flask, 2 FastAPI, and one each on
+\textit{Corpus.} We chose 35 open-source web applications by written criteria:
+deployable applications with at least 100 analysable back-end files that handle user
+requests, at least 200 first-parent commits in the two years before the pin, one
+OSI-approved licence and no committed build output. Twenty-five are Python projects (16 Django, 4 Flask, 2 FastAPI, and one each on
 Pyramid, web.py and Frappe), ten JavaScript or TypeScript (5 Express, 3 NestJS,
 2 Next.js). Each was pinned on 2026-10-14, and we replayed its last 200 first-parent
 commit pairs.
 
-\textit{Findings.} CodeGuard 2.2.0 analysed all 35 repositories: 23,237 persisting and
-1,974 introduced findings over 7,000 commit pairs. So that Bandit's method is also judged on
+\textit{Findings.} CodeGuard 2.2.0 analysed all 35 repositories: 23,245 persisting and
+1,966 introduced findings over 7,000 commit pairs. So that Bandit's method is also judged on
 Bandit's own findings, Bandit 1.9.4 analysed the 25 Python repositories (5,000 pairs).
 We leave out Bandit's B101, which flags every \texttt{assert}: it is 91.0\% of
 Bandit's persisting findings, 98\% of them in test code, and its constant message would
-dominate the hidden rate. Without it Bandit has 15,718 persisting and 1,097 introduced
+dominate the hidden rate. Without it Bandit has 15,746 persisting and 1,069 introduced
 findings.
 
 \textit{Ports and their checks.} We measure ports of each tool's method, so each port
@@ -268,23 +295,21 @@ those two repositories only and leave it out here.
 numerator and denominator of \eqref{eq:rates} in repository $r$,
 $R = \sum_r x_r / \sum_r y_r$. Findings within a repository are correlated, so the 95\%
 interval comes from a cluster bootstrap. Each of $10{,}000$ resamples draws as many
-repositories as the corpus has, with replacement, and recomputes $R^{(b)}$; the interval
-runs from the 2.5th to the 97.5th percentile of the $R^{(b)}$. A resample with a zero
-denominator is dropped, and every table uses the same draws. A per-finding interval
-would be far too narrow: for \texttt{line\_text}'s
-false-new rate of 1.89\%, the Wilson interval is 1.73--2.08 and the cluster bootstrap
-gives 0.80--3.51.
+repositories as the corpus has, with replacement; the interval runs from the 2.5th to
+the 97.5th percentile of the resampled $R^{(b)}$. A resample with a zero
+denominator is dropped, and every table uses the same draws, so differences between
+schemes get paired intervals. The renamed-file column rests on the 8 repositories with
+renames; no resample of CodeGuard findings lacked all of them. A per-finding interval
+would be far too narrow: for \texttt{line\_text}'s false-new rate of 1.91\%, the Wilson
+interval is 1.75--2.10 and the cluster bootstrap gives 0.81--3.54.
 
 \textit{RQ2 transformations.} We used ten transformations, each applied with libcst to one
-target finding in each of 40 sampled files per Python repository, at the pinned commits:
-\texttt{reformat} (black at 79 columns), \texttt{insert\_top} (a comment and an unused
-import at the top of the module), \texttt{insert\_below} (a comment right below the
-flagged statement), \texttt{rename\_local} and \texttt{rename\_function} (the enclosing
-function and its references in the file), \texttt{move\_function} (swapped with its
-neighbour), \texttt{change\_literal} (a string or number on the flagged line),
-\texttt{extract\_helper} (the statement moved into a new function), and
-\texttt{duplicate\_above} and \texttt{duplicate\_below}, which copy the flagged statement
-and so introduce a finding. Each transformation returns an exact map from old to new
+target finding in each of 40 sampled files per Python repository (Fig.~\ref{fig:rq2}).
+\texttt{reformat} runs black at 79 columns; \texttt{insert\_top} adds a comment and an
+unused import at the top of the module; \texttt{move\_function} swaps the enclosing
+function with its neighbour; \texttt{extract\_helper} moves the statement into a new
+function; the two \texttt{duplicate} edits copy the statement and so introduce a
+finding. Each transformation returns an exact map from old to new
 lines, which is the ground truth by construction. One that does not fit a file is skipped
 with a recorded reason, which leaves 150 (\texttt{extract\_helper}) to 937
 (\texttt{insert\_top}) cases per transformation.
@@ -298,14 +323,17 @@ findings as new, and 55.0\% of Bandit's. Every other scheme reports 0.4 to 4.4\%
 \texttt{sonar} the fewest, then \texttt{sonar\_branch}, \texttt{codeguard},
 \texttt{line\_text}, \texttt{github} and \texttt{bandit}. On Bandit's own findings the
 order of the four content schemes is the same (\texttt{sonar} 0.27\%, \texttt{codeguard}
-0.42\%, \texttt{line\_text} 0.78\%, \texttt{github} 1.93\%).
+0.47\%, \texttt{line\_text} 0.89\%, \texttt{github} 2.01\%). On both sets of findings the
+paired differences put \texttt{sonar} below \texttt{codeguard}, \texttt{codeguard} below
+\texttt{line\_text} and \texttt{github} above \texttt{codeguard}, each with an interval
+that excludes zero.
 
 \textit{The path inside the identity.} Renamed files hold 287 persisting findings, 1.2\%
 of the total, in 8 repositories. Every scheme whose identity includes the path reports
 all 287 as new. That is most of what the content schemes get wrong: renames account for
-69\% of \texttt{codeguard}'s false-new reports (287 of 417), 65\% of
+69\% of \texttt{codeguard}'s false-new reports (287 of 418), 64\% of
 \texttt{line\_text}'s and 39\% of \texttt{github}'s. On files that keep their path the
-schemes are close together, from \texttt{sonar}'s 0.36\% to \texttt{github}'s 1.93\%.
+schemes are close together, from \texttt{sonar}'s 0.37\% to \texttt{github}'s 1.94\%.
 SonarQube follows renames, but how well depends on the analysis type. A pull-request
 analysis, which trusts the SCM, loses 8 of the 287 (2.8\%); a branch analysis, which runs
 its own file move detection, loses 58 (20.2\%, interval 4.3--62.3). Pooled rates hide how
@@ -314,30 +342,43 @@ persisting findings as new, because files were renamed from \texttt{.js} to
 \texttt{.ts}; \texttt{sonar} reports 1.0\% there. The median repository's rate for
 \texttt{codeguard} is 0.48\%.
 
-\textit{Edited lines.} Only 142 persisting findings (0.6\%) sit on a line the commit
+\textit{Edited lines.} Only 143 persisting findings (0.6\%) sit on a line the commit
 edited, and there every content scheme reports many of them as new:
-\texttt{line\_text} all of them, \texttt{github} 87.3\%, \texttt{codeguard} 74.6\% and
-\texttt{sonar} 63.4\%. These rates count false-new reports only, not mispairings.
-Bandit reports 23.9\% as new, because it ignores both
-location and code.
+\texttt{line\_text} all of them, \texttt{github} 87.4\%, \texttt{codeguard} 74.8\% and
+\texttt{sonar} 63.6\%. These rates count false-new reports only, not mispairings.
+Bandit reports 23.8\% as new, because it ignores both location and code. Mispairing is
+rare everywhere: 0.1 to 0.3\% for the content schemes, against 2.8\% for \texttt{line},
+which pairs whatever lands on the old line number, and 3.7\% for \texttt{bandit}.
 
-\textit{Set membership hides new findings.} Bandit's baseline hides 29.2\% of Bandit's
-own introduced findings (320 of 1,097; interval 20.1--40.9) and 20.0\% of CodeGuard's.
-With B101 included, it hides 51.2\%. This is not a test-fixture effect: outside test
-code it hides 36.3\% of 273 introduced findings, against 26.8\% in test code (we give
-this split without an interval). Every other scheme hides at most 6.0\% of Bandit's
-findings and 1.9\% of CodeGuard's, and these rates are upper bounds: the manual check
-in Section~\ref{sec:threats} found that many of the findings the content schemes
-``hid'' had in fact persisted, and puts SonarQube's hidden rate at about 0.24\% rather
-than 1.47\%. Bandit's rate barely moves under the same correction: 339 of its 394 hidden CodeGuard
-findings come from the stratum where the ground truth held every time.
+\textit{Set membership hides new findings.} Bandit's baseline hides 27.3\% of Bandit's
+own introduced findings (292 of 1,069; interval 18.7--39.0) and 19.6\% of CodeGuard's.
+With B101 included, it hides 51.0\%. This is not a test-fixture effect: outside test
+code it hides 35.1\% of 268 introduced findings, against 24.7\% in test code (we give
+this split without an interval). Every other scheme hides at most 5.2\% of Bandit's
+findings and 1.5\% of CodeGuard's, and SonarQube's rate is an upper bound: the manual
+check (Section~\ref{sec:threats}) puts it at about 0.14\% rather than 1.12\%. Bandit's
+rate barely moves under the same correction: 338 of its 386 hidden CodeGuard findings
+come from the stratum where the ground truth held every time.
+
+\input{table_gate.tex}
+
+\textit{The gate.} Table~\ref{tab:gate} shows what this costs a CI gate. On Bandit's own
+findings, a gate built on its baseline stays silent on 34.1\% of the 264 commit pairs
+that introduce a finding, and it misses 26.4\% of the pairs that introduce a CodeGuard
+security finding. Every other scheme misses at most 1.2\%, and none misses a pair on
+Bandit's findings. Bandit's errors are also the ones a gate cannot see: 215 of the 292
+Bandit findings it hides are silent, while 29 of the 30 that \texttt{codeguard} hides
+among CodeGuard's are masked by another report in the same pair. SonarQube's gate misses
+1.0\%, 0.79 points more than \texttt{codeguard}'s (0.18--1.67), but from hidden findings
+that the manual check mostly found to have persisted. Line numbers fail the other way,
+firing on 20.0\% of the commit pairs that introduce nothing.
 
 \textit{Collisions.} Schemes that survive more edits share keys more often.
 \texttt{github}'s occurrence index keeps its collision rate at 2.1\%, against 17.4\%
 for \texttt{line\_text}, 18.6\% for \texttt{codeguard}, 20.3\% for \texttt{sonar} and
 54.2\% for \texttt{bandit}. Every collision is a place where pairing order decides the
-outcome. On real histories this tends to show up as a higher hidden rate, though the
-intervals of \texttt{codeguard} (0.9--3.5) and \texttt{github} (0.2--1.9) overlap.
+outcome. On CodeGuard's findings this costs \texttt{codeguard} 1.02 points of hidden
+rate against \texttt{github} (paired interval 0.57--1.66); on Bandit's it hides fewer.
 
 \section{RQ2: Controlled Changes}\label{sec:rq2}
 
@@ -366,9 +407,8 @@ file. It still loses 59.0\% after \texttt{rename\_function}, 17.6\% after
 \texttt{reformat} and 9.8\% after \texttt{rename\_local}. The renamed functions break the
 text schemes too (59.5\% for \texttt{line\_text} and \texttt{github}): 485 of those 822
 cases are complexity, nesting and parameter-count findings reported on the \texttt{def}
-line, which the rename rewrites. The \texttt{reformat} row should be read as one edit, not
-as formatting in general; how much black changes a file depends on how the project was
-formatted before.
+line, which the rename rewrites. The \texttt{reformat} row measures one edit: how much
+black changes a file depends on how the project was formatted before.
 
 The two duplicate rows show what pairing order does. A copy placed above a finding is
 paired with the old finding, so the copy is hidden and the original reported as new:
@@ -382,18 +422,13 @@ line N'').
 \section{Implications}\label{sec:implications}
 
 For tool builders, the results suggest five changes, in rough order of payoff. Keep
-the path out of the identity, or carry identities across renames; in our corpus this
-alone would remove 69\% of \texttt{codeguard}'s false-new reports. Pair findings one to one,
-never by set membership, and use the location at least to break ties: Bandit's baseline
-hides more than a third of the new findings it sees outside test code. Fall back on more than
-one kind of evidence, as SonarQube's passes do; a single key breaks on every change it
-does not model.
-Mask literals before hashing. And keep locations out of messages if messages take part
-in matching.
-
-For users, the warning is simpler. A ``new findings only'' gate is as good as the
-tool's identity method, and a gate built on set membership can let a second copy of a
-known vulnerability through without a report.
+the path out of the identity, or carry identities across renames: in our corpus that
+alone would remove 69\% of \texttt{codeguard}'s false-new reports. Pair findings one to
+one, never by set membership. Fall back on more than one kind of evidence, as SonarQube's
+passes do. Mask literals before hashing. And keep locations out of messages if messages
+take part in matching. For users, a ``new findings only'' gate is as good as the tool's
+identity method: a gate built on set membership let a third of the commits that added a
+Bandit finding through without a report.
 
 \input{threats.tex}
 
@@ -405,8 +440,10 @@ Over 7,000 real commit pairs, line numbers lose about half of all persisting fin
 and the content-based methods of shipped tools lose 0.4 to 4.4\%. Most of their
 remaining losses come from one design choice, the file path inside the identity, and the
 costliest error, hiding a new finding, comes mostly from another, matching by set
-membership. Neither needs a better analyzer to fix. Long baselines, which compare code many commits
-apart, are the next thing to measure.
+membership, which lets a third of the commits that add a Bandit finding past a gate.
+Neither needs a better analyzer to fix.
+% LONG-SPAN: replace the next sentence with the long-span result when it lands.
+Long baselines, which compare code many commits apart, are the next thing to measure.
 
 \textit{Data availability.} The replay tool, the ports and their checks, the corpus with
 its pinned commits, the results, the ground-truth sample with both raters' labels, and
