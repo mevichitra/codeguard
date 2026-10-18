@@ -21,6 +21,7 @@ ports of their source code at a pinned version, checked against the original too
 | `line_text` | the exact text of the flagged line | |
 | `github` | GitHub code scanning's `primaryLocationLineHash`: a rolling hash over the 100 non-blank characters from the start of the line, plus an occurrence count | github/codeql-action `src/fingerprints.ts` |
 | `sonar` | SonarQube's issue tracker, a **multi-pass matcher**: (1) same rule, line, line hash and message; (2) same rule, line and line hash; (3) code moves, by unique 11-line block hashes and then by the longest identical block; (4) same rule, line hash and message; (5) same rule, line and message; (6) same rule and line hash. The line hash is the MD5 of the line without spaces and tabs | SonarQube 26.10.0.133078, `sonar-core` `issue/tracking/Tracker.java`, `AbstractTracker.java`, `BlockRecognizer.java`, `BlockHashSequence.java`, `hash/SourceLineHashesComputer.java` |
+| `sonar_branch` | the `sonar` tracker as a **branch analysis** runs it. A renamed file keeps its findings only if SonarQube's file move detection takes it for the old file: line counts within (0.84×, 1.18×) and a similarity of at least 85, where similarity is 100 × (1 − edit distance / longer length) over the line hashes. `sonar` is the **pull-request** analysis, which takes renames from the SCM | SonarQube 26.10.0.133078, `sonar-ce-task-projectanalysis` `filemove/FileMoveDetectionStep.java`, `SourceSimilarityImpl.java` |
 | `bandit` | `bandit -b baseline.json`: a result is known when an issue with the same text, severity, CWE, confidence, file, test name and test ID is in the baseline. No location at all, and **set membership**: once one such issue is baselined, any number of equal new ones are hidden | Bandit 1.9.4 `bandit/core/manager.py` (`_compare_baseline_results`), `bandit/core/issue.py` (`Issue.__eq__`) |
 | `semgrep` | Semgrep's `match_based_id` (JSON `extra.fingerprint`, SARIF `fingerprints["matchBasedId/v1"]`): BLAKE2b of the rule's patterns with metavariables replaced by the code they bound, the path and the rule ID, plus an ordinal among equal keys in the file. No line, column or matched code beyond the bindings. **Semgrep findings only** | Semgrep 1.180.0 `semgrep/rule_match.py` (`get_match_based_key`, `get_match_based_id`, `RuleMatches.add`), `semgrep/rule.py` (`formula_string`) |
 | `codeguard` | CodeGuard's `codeguard/v1` fingerprint: enclosing function/class plus the normalized statement (literals masked, comments and whitespace removed) | `src/codeguard/engine/fingerprint.py` |
@@ -28,9 +29,10 @@ ports of their source code at a pinned version, checked against the original too
 | `cg_no_mask` | ablation: `codeguard` without masking literals | |
 | `cg_raw` | ablation: `codeguard` without any normalization (scope plus raw line) | |
 
-`sonar` and `bandit` match with an algorithm rather than a key (`trackers.py`, plugged in
-through `trackers.MATCHERS`); their keys hold what that algorithm compares and are used
-only for the collision rate (`sonar`: rule and line hash). Bandit pairs nothing, so to
+`sonar`, `sonar_branch` and `bandit` match with an algorithm rather than a key
+(`trackers.py`, plugged in through `trackers.MATCHERS`); their keys hold what that
+algorithm compares and are used only for the collision rate (`sonar` and `sonar_branch`:
+rule and line hash). Bandit pairs nothing, so to
 score mispairs the `bandit` matcher pairs equal issues in line order and sends surplus
 new issues to the last equal old one.
 
@@ -43,7 +45,11 @@ Where a port fixes what the tool leaves to its environment:
   ranges; a SonarQube language plugin that reports such ranges hashes only those. Only
   the tracking of open issues runs (there are no closed issues to reopen between two
   consecutive versions). The tie-breaking order of `BlockRecognizer`, which iterates
-  `java.util.HashMap` key sets, is reproduced exactly by a port of `HashMap`.
+  `java.util.HashMap` key sets, is reproduced exactly by a port of `HashMap`. For
+  `sonar_branch`, the file move detection scores every removed file against every added
+  file and elects the best pairs; the harness already pairs files by git's rename
+  detection (`git diff -M`, 50% similarity), so only SonarQube's decision for that pair
+  is ported. A move SonarQube would find but git would not is therefore not modelled.
 - **Bandit.** Findings from other analyzers fill Bandit's fields with their closest
   equivalents: CodeGuard's description, severity, confidence, CWE and rule title;
   Semgrep's message, severity and the rule's `confidence` and `cwe` metadata.
@@ -268,7 +274,14 @@ python -m research.finding_identity transform https://github.com/DefectDojo/djan
 
 # A subset of transformations, on a local directory
 python -m research.finding_identity transform path/to/src --transforms rename_local,extract_helper
+
+# A pinned commit of a corpus clone (clones made by `batch` have no working tree)
+python -m research.finding_identity transform research/finding_identity/.repos/zulip \
+    --ref <pinned sha> --label zulip --samples 40
 ```
+
+With a local repository and `--ref`, the Python files of that commit are exported to a
+temporary directory and `summary.json` records the commit as `head`.
 
 `--samples` is the number of files with findings to use; `--seed` fixes the sample and
 the target findings. Results go to `results/transform-<label>/` (git-ignored):
@@ -432,6 +445,17 @@ repository). Failures do not stop the batch: each attempt is appended to
 `results/_logs/<label>.log`; the command exits with status 1 if any repository failed.
 `--only a,b` restricts the run, `--delete-clones` removes each clone after its replay.
 
+`--analyzer bandit|semgrep` replays the corpus with that analyzer's findings (see
+[Analyzers](#analyzers)); results go to `results/corpus-<analyzer>/` unless `--out` is
+given. Bandit reads Python only, so its batch leaves out the JavaScript repositories. A
+result directory counts as done only for the analyzer named in its `analyzer.json`, so
+runs of different analyzers never satisfy each other's resume check.
+
+```bash
+python -m research.finding_identity batch research/finding_identity/corpus.csv \
+    --commits 200 --jobs 4 --analyzer bandit
+```
+
 Every replay also records its totals **per rule category** (`by_category` in
 `summary.json`, with the same `totals` and `collisions` blocks as the summary itself).
 Scheme keys include the rule ID and the ground truth pairs findings of the same rule
@@ -479,25 +503,27 @@ Outputs in `--out`:
 
 ### Committed results
 
-`paper/` holds the aggregated outputs of the corpus run of 2026-10-14 (CodeGuard 2.2.0,
-200 commit pairs per repository, all rule categories), produced with:
+`paper/` holds the outputs the paper is written from, produced on 2026-10-17 from the
+corpus pinned on 2026-10-14 (CodeGuard 2.2.0, Bandit 1.9.4, 200 commit pairs per
+repository, all rule categories):
 
-```bash
-python -m research.finding_identity batch research/finding_identity/corpus.csv --commits 200 --jobs 4
-python -m research.finding_identity stats research/finding_identity/results \
-    --corpus research/finding_identity/corpus.csv --out research/finding_identity/paper --plot
-```
+- `outline.md`: the plan of the paper; its *Regenerating* section has the exact commands
+  that produce every file below;
+- `claims.md`: every number the paper can cite, with its interval and source;
+- `table_rq1.tex`, `numbers.md`, `rq1.csv`: RQ1 from `paper_kit.py`, including the
+  false-new rate split by renamed files and Bandit's findings with and without B101;
+- `fig_rq2.pdf`, `rq2.csv`: RQ2, the invariance matrix pooled over the 25 Python
+  repositories (40 sampled files each);
+- `tables.md`, `pooled.csv`, `per_repo.csv`, `per_repo.md`, `repos.csv`,
+  `false_new_by_repo.png`: the `stats` tables for the CodeGuard replays;
+- `ground_truth_check/`: a seeded sample of 100 ground-truth decisions to check by hand.
 
-The batch took 14 min 44 s of wall-clock time for the 35 repositories on 4 cores
-(2,781 s summed over repositories, fetching included): 7,000 commit pairs, 34,275 file
-versions scanned, 36,232 findings, 8,703 of them security findings. Clones and per-commit
-results are not committed.
-
-That run predates the `sonar` and `bandit` schemes, so `paper/` has no columns for them.
-It also predates CodeGuard's fix for line separators (lines split on LF, CRLF and CR
-only), which can shift the `codeguard`-family keys slightly. Re-running the batch with
-`--force` (otherwise `batch` skips repositories whose results are already done) scores
-every scheme.
+The CodeGuard batch took 18 min 20 s of wall-clock time for the 35 repositories on 4
+cores, the Bandit batch 6 min 55 s for the 25 Python repositories, and the
+transformation runs 7 min 41 s. Clones and per-commit results are not committed. The
+replay results of the `line`, `line_text`, `github` and `codeguard` families are
+identical to those of the first corpus run (2026-10-14), which had no SonarQube or
+Bandit schemes.
 
 ## Known limitations
 

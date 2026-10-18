@@ -11,9 +11,17 @@ from typing import Any
 
 from .batch import BatchOptions, run_batch
 from .corpus import CorpusEntry, load_corpus, measure, pin, save_corpus
+from .schemes import ANALYZERS
 from .stats import ALL, run_stats
 
 HERE = Path(__file__).parent
+
+#: Corpus languages each analyzer can scan; the others are left out of its batch.
+ANALYZER_LANGUAGES = {
+    "codeguard": {"python", "javascript"},
+    "bandit": {"python"},
+    "semgrep": {"python", "javascript"},
+}
 
 Handler = Callable[[argparse.Namespace], None]
 
@@ -24,7 +32,17 @@ def register(sub: Any) -> dict[str, Handler]:
     bp.add_argument("corpus", type=Path, help="corpus CSV (see corpus.csv)")
     bp.add_argument("--commits", type=int, default=200, help="commit pairs per repository")
     bp.add_argument("--jobs", type=int, default=4, help="repositories replayed in parallel")
-    bp.add_argument("--out", type=Path, default=HERE / "results", help="results directory")
+    bp.add_argument(
+        "--out",
+        type=Path,
+        help="results directory (default: results/, or results/corpus-<analyzer>/)",
+    )
+    bp.add_argument(
+        "--analyzer",
+        choices=ANALYZERS,
+        default="codeguard",
+        help="what produces the findings; bandit replays only the Python repositories",
+    )
     bp.add_argument("--workdir", type=Path, default=HERE / ".repos", help="where to clone")
     bp.add_argument("--only", help="comma-separated labels to run (default: all)")
     bp.add_argument(
@@ -74,17 +92,30 @@ def _select(entries: list[CorpusEntry], only: str | None) -> list[CorpusEntry]:
 
 def _batch(args: argparse.Namespace) -> None:
     entries = _select(load_corpus(args.corpus), args.only)
+    languages = ANALYZER_LANGUAGES[args.analyzer]
+    skipped = [e.label for e in entries if e.language not in languages]
+    if skipped:
+        print(f"{args.analyzer} skips {', '.join(skipped)} (language)", file=sys.stderr)
+        entries = [e for e in entries if e.language in languages]
+    out = args.out
+    if out is None:
+        out = (
+            HERE / "results"
+            if args.analyzer == "codeguard"
+            else HERE / "results" / f"corpus-{args.analyzer}"
+        )
     unpinned = [e.label for e in entries if not e.sha]
     if unpinned:
         raise SystemExit(f"not pinned (run `corpus pin` first): {', '.join(unpinned)}")
     opts = BatchOptions(
         commits=args.commits,
-        out=args.out,
+        out=out,
         workdir=args.workdir,
         categories=args.categories,
         details=args.details,
         timeout=args.timeout,
         delete_clones=args.delete_clones,
+        analyzer=args.analyzer,
     )
     statuses = run_batch(entries, opts, jobs=args.jobs, force=args.force)
     if any(s["status"] == "failed" for s in statuses):

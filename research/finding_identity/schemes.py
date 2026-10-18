@@ -39,7 +39,7 @@ from .trackers import sonar_line_hash
 PRIMARY_SCHEMES = ("line", "line_text", "github", "codeguard")
 ABLATION_SCHEMES = ("cg_no_scope", "cg_no_mask", "cg_raw")
 #: Matching methods of shipped tools that apply to findings from any analyzer.
-TOOL_SCHEMES = ("sonar", "bandit")
+TOOL_SCHEMES = ("sonar", "sonar_branch", "bandit")
 #: Schemes every analyzer supports.
 ALL_SCHEMES = PRIMARY_SCHEMES + ABLATION_SCHEMES + TOOL_SCHEMES
 #: Needs Semgrep's rule formula and metavariable bindings, so Semgrep findings only.
@@ -336,7 +336,7 @@ def keys_for(
             out[name] = _sha(rule, ctx.path, scope, _strip_comments_and_space(raw))
         elif name == "cg_raw":
             out[name] = _sha(rule, ctx.path, scope, raw)
-        elif name == "sonar":
+        elif name in ("sonar", "sonar_branch"):
             # The weakest pass of SonarQube's tracker: same rule and line hash.
             out[name] = _sha(rule, ctx.path, sonar_line_hash(raw))
         elif name == "bandit":

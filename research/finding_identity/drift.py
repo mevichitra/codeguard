@@ -247,7 +247,8 @@ def _compare_span(
         by_unit[u][0].append(i)
     for j, u in enumerate(new_unit):
         by_unit[u][1].append(j)
-    for _, (olds, news) in sorted(by_unit.items()):
+    for u, (olds, news) in sorted(by_unit.items()):
+        p, q = units[u]
         local = {i: k for k, i in enumerate(olds)}
         unit_gt = {
             k: (local[gt_pairs[j][0]], gt_pairs[j][1]) for k, j in enumerate(news) if j in gt_pairs
@@ -258,6 +259,7 @@ def _compare_span(
             unit_gt,
             schemes,
             keep_records=records is not None,
+            renamed=p is not None and q is not None and p != q,
         )
         for key, count in result.gt.items():
             totals["gt"][key] += count

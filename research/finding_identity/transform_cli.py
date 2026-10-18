@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -22,7 +23,11 @@ def add_parser(sub: Any) -> None:
         help="apply controlled transformations and score every scheme (invariance matrix)",
     )
     tp.add_argument("source", help="local directory, local repository or git URL to clone")
-    tp.add_argument("--ref", help="branch or tag to clone (URLs only)")
+    tp.add_argument(
+        "--ref",
+        help="branch or tag to clone for a URL; for a local repository, the commit whose "
+        "Python files to use (for example a pinned corpus commit)",
+    )
     tp.add_argument(
         "--transforms",
         default="all",
@@ -81,24 +86,53 @@ def run(args: argparse.Namespace) -> None:
 
     meta: dict[str, Any] = {"source": args.source, "ai_model": model if model else None}
     local = Path(args.source)
-    if local.is_dir():
-        root = local
-    else:
-        repo = GitRepo.open_or_clone(args.source, args.workdir, depth=1, ref=args.ref)
-        root = repo.path
-        meta["head"] = repo.resolve("HEAD")
-        repo.close()
-    label = args.label or root.resolve().name
+    label = args.label or local.resolve().name
     categories = [c.strip() for c in args.categories.split(",") if c.strip()]
-    run_experiment(
-        root,
-        label=label,
-        transforms=transforms,
-        scanner=Scanner(rule_ids_for(categories), ALL_SCHEMES),
-        schemes=ALL_SCHEMES,
-        samples=args.samples,
-        seed=args.seed,
-        out_dir=args.out or HERE / "results" / f"transform-{label}",
-        meta={**meta, "categories": categories},
-        draw_heatmap=args.heatmap,
-    )
+
+    def experiment(root: Path) -> None:
+        run_experiment(
+            root,
+            label=label,
+            transforms=transforms,
+            scanner=Scanner(rule_ids_for(categories), ALL_SCHEMES),
+            schemes=ALL_SCHEMES,
+            samples=args.samples,
+            seed=args.seed,
+            out_dir=args.out or HERE / "results" / f"transform-{label}",
+            meta={**meta, "categories": categories},
+            draw_heatmap=args.heatmap,
+        )
+
+    if local.is_dir() and not args.ref:
+        experiment(local)  # a working tree, used as it is
+        return
+    if local.is_dir():
+        # A commit of a local repository, such as a corpus clone (which has no checkout):
+        # its Python files are exported to a temporary directory.
+        repo = GitRepo(local)
+        try:
+            meta["head"] = repo.resolve(args.ref)
+            with tempfile.TemporaryDirectory(prefix="transform-") as tmp:
+                export_python_files(repo, meta["head"], Path(tmp))
+                experiment(Path(tmp))
+        finally:
+            repo.close()
+        return
+    repo = GitRepo.open_or_clone(args.source, args.workdir, depth=1, ref=args.ref)
+    meta["head"] = repo.resolve("HEAD")
+    repo.close()
+    label = args.label or repo.path.resolve().name
+    experiment(repo.path)
+
+
+def export_python_files(repo: Any, commit: str, dest: Path) -> int:
+    """Write the ``.py`` files of *commit* under *dest*; return how many were written."""
+    count = 0
+    for path, blob in repo.files(commit).items():
+        if not path.endswith(".py"):
+            continue
+        target = dest / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(repo.blob(blob))
+        count += 1
+    return count

@@ -22,7 +22,7 @@ from collections import defaultdict
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
-from .trackers import MATCHERS
+from .trackers import MATCHERS, RENAME_CHECKS
 
 OUTCOMES = ("known_ok", "mispaired", "false_new", "false_known", "new_ok")
 
@@ -74,9 +74,16 @@ def ground_truth(
 
 
 def scheme_pairs(
-    old: Sequence[Observation], new: Sequence[Observation], scheme: str
+    old: Sequence[Observation], new: Sequence[Observation], scheme: str, *, renamed: bool = False
 ) -> dict[int, int]:
-    """``{new index: old index}`` as the scheme would match them."""
+    """``{new index: old index}`` as the scheme would match them.
+
+    *renamed* says the two versions have different paths (a rename the ground truth
+    follows); schemes in :data:`trackers.RENAME_CHECKS` then decide whether to pair at all.
+    """
+    check = RENAME_CHECKS.get(scheme)
+    if renamed and check is not None and old and new and not check(old, new):
+        return {}
     matcher = MATCHERS.get(scheme)
     if matcher is not None:
         return matcher(old, new)
@@ -102,9 +109,10 @@ def evaluate(
     schemes: Sequence[str],
     *,
     keep_records: bool = False,
+    renamed: bool = False,
 ) -> FileResult:
     gt_pairs = ground_truth(old, new, line_map)
-    return score(old, new, gt_pairs, schemes, keep_records=keep_records)
+    return score(old, new, gt_pairs, schemes, keep_records=keep_records, renamed=renamed)
 
 
 def score(
@@ -114,6 +122,7 @@ def score(
     schemes: Sequence[str],
     *,
     keep_records: bool = False,
+    renamed: bool = False,
 ) -> FileResult:
     """Score every scheme against true pairs ``{new index: (old index, kind)}``."""
     gt = {
@@ -128,7 +137,7 @@ def score(
     by_scheme: dict[str, dict[str, int]] = {}
     statuses: dict[str, list[str]] = {}
     for scheme in schemes:
-        predicted = scheme_pairs(old, new, scheme)
+        predicted = scheme_pairs(old, new, scheme, renamed=renamed)
         counts = dict.fromkeys(OUTCOMES, 0)
         counts["false_new_equal"] = counts["false_new_edited"] = 0
         per_new: list[str] = []

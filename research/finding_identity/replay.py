@@ -76,7 +76,10 @@ def _replay_change(
     if not old_obs and not new_obs:
         return
     line_map = map_lines(old_res.lines, new_res.lines) if old_res and new_res else {}
-    result = evaluate(old_obs, new_obs, line_map, schemes, keep_records=records is not None)
+    renamed = ch.status == "R"
+    result = evaluate(
+        old_obs, new_obs, line_map, schemes, keep_records=records is not None, renamed=renamed
+    )
     for k, v in result.gt.items():
         totals["gt"][k] += v
     for s, counts in result.by_scheme.items():
@@ -105,7 +108,11 @@ def _add_by_category(
     old_split, new_split = split_by_category(old_obs), split_by_category(new_obs)
     for category in sorted(old_split.keys() | new_split.keys()):
         result = evaluate(
-            old_split.get(category, []), new_split.get(category, []), line_map, schemes
+            old_split.get(category, []),
+            new_split.get(category, []),
+            line_map,
+            schemes,
+            renamed=status == "R",
         )
         totals = by_category.setdefault(category, _empty_totals(schemes))
         for k, v in result.gt.items():
