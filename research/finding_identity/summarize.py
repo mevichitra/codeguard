@@ -36,6 +36,9 @@ def rates(summary: dict[str, Any]) -> list[dict[str, Any]]:
                 "false_new_rate": _rate(c["false_new"], gt["known"]),
                 "false_new_equal_rate": _rate(c["false_new_equal"], gt["known_equal"]),
                 "false_new_edited_rate": _rate(c["false_new_edited"], gt["known_edited"]),
+                "false_new_relocated_rate": _rate(
+                    c.get("false_new_relocated", 0), gt.get("known_relocated", 0)
+                ),
                 "false_known": c["false_known"],
                 "hidden_rate": _rate(c["false_known"], gt["introduced"]),
                 "mispair_rate": _rate(c["mispaired"], gt["known"]),
@@ -71,15 +74,16 @@ def _pct(x: float | None) -> str:
 
 def print_table(rows: Sequence[dict[str, Any]]) -> None:
     head = (
-        f"{'scheme':<12} {'false-new %':>11} {'(moved)':>8} {'(edited)':>9} "
-        f"{'hidden %':>9} {'mispair %':>10} {'collide %':>10}"
+        f"{'scheme':<12} {'false-new %':>11} {'(unchanged)':>11} {'(edited)':>9} "
+        f"{'(relocated)':>11} {'hidden %':>9} {'mispair %':>10} {'collide %':>10}"
     )
     print(head)
     print("-" * len(head))
     for r in rows:
         print(
             f"{r['scheme']:<12} {_pct(r['false_new_rate']):>11} "
-            f"{_pct(r['false_new_equal_rate']):>8} {_pct(r['false_new_edited_rate']):>9} "
+            f"{_pct(r['false_new_equal_rate']):>11} {_pct(r['false_new_edited_rate']):>9} "
+            f"{_pct(r['false_new_relocated_rate']):>11} "
             f"{_pct(r['hidden_rate']):>9} {_pct(r['mispair_rate']):>10} "
             f"{_pct(r['collision_rate']):>10}"
         )
@@ -93,7 +97,8 @@ def summarize(paths: Sequence[Path], csv_out: Path | None = None) -> None:
         print(
             f"\n{s['label']}: {s['commit_pairs']} commit pairs, {s['totals']['files']} file "
             f"changes with findings, {gt['known']} persisting findings "
-            f"({gt['known_equal']} moved, {gt['known_edited']} edited), "
+            f"({gt['known_equal']} unchanged, {gt['known_edited']} edited, "
+            f"{gt.get('known_relocated', 0)} relocated), "
             f"{gt['introduced']} introduced"
         )
         rows = rates(s)
@@ -171,7 +176,8 @@ def print_drift(summary: dict[str, Any]) -> list[dict[str, Any]]:
         print(
             f"\nspan {entry['span']}{commit}: {entry['totals']['files']} files with findings, "
             f"{gt['old']} anchor findings, {gt['known']} persisting "
-            f"({gt['known_equal']} moved, {gt['known_edited']} edited), "
+            f"({gt['known_equal']} unchanged, {gt['known_edited']} edited, "
+            f"{gt.get('known_relocated', 0)} relocated), "
             f"{gt['introduced']} introduced"
         )
         print_table(rates({"label": summary["label"], **entry}))
