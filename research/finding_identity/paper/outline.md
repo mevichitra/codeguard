@@ -229,6 +229,16 @@ python -m research.finding_identity stats $P/results/corpus-v3 --corpus $P/corpu
 
 # The ground-truth sample for the manual check (paper/ground_truth_check/)
 python -m research.finding_identity.gt_sample $P/results/corpus-v3
+
+# Long spans: deep clones (402 first-parent commits behind each pin, 3.3 GB, in
+# .repos/deep/), then drift mode from anchors 200, 300 and 400 commits behind the pin,
+# each compared with the commits 1, 10, 50, 100 and 200 steps later (CodeGuard
+# findings), then drift.csv, numbers_drift.md and fig_drift.pdf
+python -m research.finding_identity.drift_kit fetch --corpus $P/corpus.csv --anchors 200,300,400
+python -m research.finding_identity.drift_kit run --corpus $P/corpus.csv \
+    --anchors 200,300,400 --window 200 --spans 1,10,50,100,200 --jobs 4 \
+    --out $P/results/drift-v1
+python -m research.finding_identity.drift_kit report $P/results/drift-v1 --out $P/paper
 ```
 
 Build the paper (TeX Live with IEEEtran; the build files stay out of the tree):

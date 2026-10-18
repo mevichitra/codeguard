@@ -131,7 +131,12 @@ file it is in, the line is mapped with the same line diff as above (`linemap.map
 and renames are followed per step (`git diff -M`). A finding persists to c_k when its
 chain is unbroken (file not deleted, line mapped at every step) and a finding with the
 same rule sits at the mapped line in c_k. It counts as **edited** when any step mapped
-its line as edited, otherwise as **moved**.
+its line as edited, otherwise as **moved**. A file deleted and later added again at the
+same path (a revert) resumes its chains, through the line map from the deleted version to
+the re-added one, so that a baseline seeing the same file at both ends is not charged with
+hiding its findings; `summary.json` counts these as `readded_files`. Only c0 and c_k
+matter for the rule itself: a finding not reported at some intermediate commit but
+reported again at c_k, on the line its chain leads to, persists.
 
 **What is compared.** For span k: the files of c0 whose lineage changed in steps 1..k,
 the files they became at c_k, and the files added since c0. Files never touched in the
@@ -179,6 +184,13 @@ python -m research.finding_identity drift https://github.com/DefectDojo/django-D
 # scheme (pooled "ALL" rows too), ready to plot false-new and hidden rate against span
 python -m research.finding_identity drift-summary research/finding_identity/results/drift/* \
     --csv drift.csv
+
+# The whole corpus, three anchors per repository (200, 300 and 400 first-parent commits
+# behind the pin, each followed for 200 commits), pooled per repository and reported with
+# cluster-bootstrap intervals: see drift_kit.py and paper/outline.md ("Regenerating")
+python -m research.finding_identity.drift_kit fetch
+python -m research.finding_identity.drift_kit run --out research/finding_identity/results/drift-v1
+python -m research.finding_identity.drift_kit report research/finding_identity/results/drift-v1
 ```
 
 Clones go to `.repos/` and results to `results/<label>/` (drift: `results/drift/<label>/`);

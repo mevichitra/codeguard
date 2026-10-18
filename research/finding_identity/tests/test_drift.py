@@ -291,3 +291,87 @@ def test_trace_files_handles_a_rename_swap() -> None:
     assert first_touch == {"a.py": 1, "b.py": 1, "c.py": 2}
     assert origins[1] == {"b.py": "a.py", "a.py": "b.py", "c.py": "c.py", "e.py": "e.py"}
     assert "d.py" not in origins[3]  # added after the anchor: no lineage
+
+
+def test_chain_resumes_a_file_deleted_and_added_again() -> None:
+    blobs = {"v0": ["x", "eval(a)"], "v1": ["header", "x", "eval(a)"]}
+    steps = [
+        [Change("D", "f.py", None, "v0", None)],
+        [_m("g.py", "1", "2")],
+        [Change("A", None, "f.py", None, "v1")],
+    ]
+    stats: dict[str, int] = {}
+    positions = chain_lines(steps, {"f.py": [2]}, [1, 2, 3], blobs.__getitem__, stats)
+    assert positions[1][("f.py", 2)] is None  # deleted: no position while it is gone
+    assert positions[2][("f.py", 2)] is None
+    # Added again: the chain resumes through the map from the deleted version.
+    assert positions[3][("f.py", 2)] == ("f.py", 3, False)
+    assert stats == {"readded": 1}
+    first_touch, origins = trace_files(["f.py"], steps, [1, 3])
+    assert first_touch == {"f.py": 1}
+    assert "f.py" not in origins[1] and origins[3] == {"f.py": "f.py"}
+
+
+def test_a_rename_onto_a_deleted_path_wins_over_its_old_lineage() -> None:
+    blobs = {"a0": ["eval(a)"], "b0": ["exec(b)"]}
+    steps = [
+        [Change("D", "a.py", None, "a0", None)],
+        [Change("R", "b.py", "a.py", "b0", "b0")],
+    ]
+    positions = chain_lines(steps, {"a.py": [1], "b.py": [1]}, [2], blobs.__getitem__)
+    assert positions[2][("a.py", 1)] is None  # a.py's own chain stays broken
+    assert positions[2][("b.py", 1)] == ("a.py", 1, False)
+    _, origins = trace_files(["a.py", "b.py"], steps, [2])
+    assert origins[2] == {"a.py": "b.py"}
+
+
+LIB_VANISHED = LIB.replace("eval(data)", "evaluate(data)")
+
+
+@pytest.fixture(scope="module")
+def revert_repo(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """c1 rewrites the eval line so the rule stops firing, c2 restores it, c3 deletes the
+    file and c4 restores it unchanged."""
+    repo = tmp_path_factory.mktemp("revert") / "repo"
+    repo.mkdir()
+    _git(repo, "init", "-q")
+    _commit(repo, {"lib.py": LIB, "app.py": APP_C0}, "c0")
+    _commit(repo, {"lib.py": LIB_VANISHED}, "c1")
+    _commit(repo, {"lib.py": LIB}, "c2")
+    _git(repo, "rm", "-q", "lib.py")
+    _git(repo, "commit", "-q", "-m", "c3")
+    _commit(repo, {"lib.py": LIB}, "c4")
+    return repo
+
+
+def test_revert_and_vanished_findings_persist(revert_repo: Path, tmp_path: Path) -> None:
+    repo = GitRepo(revert_repo)
+    try:
+        summary = drift(
+            repo,
+            ref="HEAD",
+            anchor_back=4,
+            spans=[1, 2, 3, 4],
+            scanner=Scanner(["CG-SEC-003"], ALL_SCHEMES),
+            schemes=ALL_SCHEMES,
+            out_dir=tmp_path,
+            label="revert",
+            categories=["security"],
+        )
+    finally:
+        repo.close()
+    gt = {e["span"]: e["totals"]["gt"] for e in summary["spans"]}
+    # c1: the finding is not reported, so it is removed.
+    assert (gt[1]["known"], gt[1]["introduced"], gt[1]["removed"]) == (0, 0, 1)
+    # c2: reported again on the line its chain leads to, so it persists (edited on the
+    # way, although the text is back to what it was at c0).
+    assert (gt[2]["known"], gt[2]["known_edited"], gt[2]["introduced"]) == (1, 1, 0)
+    # c3: the file is gone; c4: added again, the chain resumes and the finding persists.
+    assert (gt[3]["known"], gt[3]["removed"]) == (0, 1)
+    assert (gt[4]["known"], gt[4]["introduced"]) == (1, 0)
+    assert summary["readded_files"] == 1
+    entry = next(e for e in summary["spans"] if e["span"] == 4)
+    for scheme in ALL_SCHEMES:
+        # The file is the same at both ends, so no scheme is charged with hiding it.
+        assert entry["totals"]["schemes"][scheme]["false_known"] == 0, scheme
+        assert entry["totals"]["schemes"][scheme]["known_ok"] == 1, scheme
