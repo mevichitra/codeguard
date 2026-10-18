@@ -12,6 +12,14 @@ renames (``git diff -M``) step by step. A finding persists to c_k when its chain
 unbroken and a finding with the same rule sits at the mapped line in c_k. It counts as
 "edited" when any step edited its line, otherwise as "equal" (only moved).
 
+A file that is deleted and later added again at the same path (a revert, say) keeps
+its lineage: the deleted version's chains are kept aside and resumed, through the line
+map from the deleted version to the re-added one. Without this, a baseline that sees
+the same file at both ends would be charged with hiding findings that never went away.
+What the rule reports in between does not matter: a finding that is not reported at
+some intermediate commit and is reported again at c_k, on the line its chain leads to,
+persists, since a baseline only ever sees c0 and c_k.
+
 Only files are compared whose lineage changed in the first k steps, plus files added
 since c0: every scheme trivially keeps the findings of untouched files. Only c0 and the
 c_k are scanned; intermediate commits are read only as blobs of files that hold tracked
@@ -60,6 +68,8 @@ def trace_files(
     ``{path at c_k: anchor path}`` for the anchor files still present at c_k.
     """
     origin = {p: p for p in paths}
+    #: Deleted anchor files by path, so that a file added again at that path resumes.
+    deleted: dict[str, str] = {}
     first_touch: dict[str, int] = {}
     snapshots: dict[int, dict[str, str]] = {}
     wanted = set(spans)
@@ -67,13 +77,19 @@ def trace_files(
         # Apply renames after the whole step, so a swap a <-> b reads the old origins.
         moved: dict[str, str] = {}
         for ch in changes:
+            if ch.status == "A" and ch.new_path in deleted and ch.new_path not in origin:
+                moved[ch.new_path] = deleted.pop(ch.new_path)
+                continue
             if ch.old_path is None or ch.status == "C" or ch.old_path not in origin:
                 continue
             first_touch.setdefault(origin[ch.old_path], step)
             if ch.status in ("D", "R"):
                 src = origin.pop(ch.old_path)
-                if ch.status == "R" and ch.new_path is not None:
+                if ch.status == "D":
+                    deleted[ch.old_path] = src
+                elif ch.new_path is not None:
                     moved[ch.new_path] = src
+                    deleted.pop(ch.new_path, None)  # a rename onto the path wins
         origin.update(moved)
         if step in wanted:
             snapshots[step] = dict(origin)
@@ -85,36 +101,64 @@ def chain_lines(
     tracked: Mapping[str, Iterable[int]],
     spans: Iterable[int],
     read_lines: Callable[[str], list[str]],
+    stats: dict[str, int] | None = None,
 ) -> dict[int, dict[Anchor, Position]]:
     """Follow anchor lines through *steps*, one line map per changed file per step.
 
     *tracked* maps anchor paths to the lines to follow and *read_lines* returns the
-    lines of a blob. Returns, for each span k, ``{anchor: position at c_k}``.
+    lines of a blob. A file deleted and later added again at the same path resumes its
+    chains (counted in ``stats["readded"]``). Returns, for each span k,
+    ``{anchor: position at c_k}``.
     """
     live: dict[str, dict[Anchor, tuple[int, bool]]] = {
         path: {(path, line): (line, False) for line in lines} for path, lines in tracked.items()
     }
     anchors = [anchor for chains in live.values() for anchor in chains]
+    #: Chains of deleted files by path, with the blob they were deleted at.
+    deleted: dict[str, tuple[dict[Anchor, tuple[int, bool]], str]] = {}
     snapshots: dict[int, dict[Anchor, Position]] = {}
     wanted = set(spans)
+
+    def follow(
+        chains: dict[Anchor, tuple[int, bool]], old_sha: str, new_sha: str
+    ) -> dict[Anchor, tuple[int, bool]]:
+        line_map = map_lines(read_lines(old_sha), read_lines(new_sha))
+        kept: dict[Anchor, tuple[int, bool]] = {}
+        for anchor, (line, edited) in chains.items():
+            hit = line_map.get(line)
+            if hit is not None:
+                kept[anchor] = (hit[0], edited or hit[1] == "edited")
+        return kept
+
     for step, changes in enumerate(steps, start=1):
         moved: dict[str, dict[Anchor, tuple[int, bool]]] = {}
         for ch in changes:
+            if ch.status == "A" and ch.new_path in deleted and ch.new_path not in live:
+                resumed, last_sha = deleted.pop(ch.new_path)
+                assert ch.new_path is not None and ch.new_sha is not None
+                same = last_sha == ch.new_sha
+                kept = resumed if same else follow(resumed, last_sha, ch.new_sha)
+                if kept:
+                    moved[ch.new_path] = kept
+                if stats is not None:
+                    stats["readded"] = stats.get("readded", 0) + 1
+                continue
             if ch.old_path is None or ch.status == "C":
                 continue
             chains = live.pop(ch.old_path, None)
-            if chains is None or ch.new_path is None or ch.new_sha is None:
-                continue  # untracked, or deleted: the chains break
+            if chains is None:
+                continue  # untracked
+            if ch.new_path is None or ch.new_sha is None:
+                if ch.old_sha is not None:
+                    deleted[ch.old_path] = (chains, ch.old_sha)  # kept aside for a re-add
+                continue
+            if ch.new_path != ch.old_path:
+                deleted.pop(ch.new_path, None)  # a rename onto the path wins
             if ch.old_sha == ch.new_sha:  # pure rename or mode change
                 moved[ch.new_path] = chains
                 continue
             assert ch.old_sha is not None
-            line_map = map_lines(read_lines(ch.old_sha), read_lines(ch.new_sha))
-            kept: dict[Anchor, tuple[int, bool]] = {}
-            for anchor, (line, edited) in chains.items():
-                hit = line_map.get(line)
-                if hit is not None:
-                    kept[anchor] = (hit[0], edited or hit[1] == "edited")
+            kept = follow(chains, ch.old_sha, ch.new_sha)
             if kept:
                 moved[ch.new_path] = kept
         live.update(moved)
@@ -321,7 +365,8 @@ def drift(
     tracked = {p: {o.line for o in r.observations} for p, r in old_scans.items() if r}
     progress(f"anchor {anchor[:12]}: {len(old_scans)} changed files scanned")
     blobs = _Blobs(repo)
-    positions = chain_lines(steps, tracked, spans, blobs.lines)
+    chain_stats: dict[str, int] = {}
+    positions = chain_lines(steps, tracked, spans, blobs.lines, chain_stats)
     progress(f"chained {sum(map(len, tracked.values()))} lines over {len(steps)} commits")
 
     entries: list[dict[str, Any]] = []
@@ -362,6 +407,7 @@ def drift(
         "versions_scanned": scanner.versions_scanned,
         "parse_failures": scanner.parse_failures,
         "blobs_read": blobs.read,
+        "readded_files": chain_stats.get("readded", 0),
         "spans": entries,
     }
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
