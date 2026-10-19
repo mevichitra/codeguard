@@ -97,6 +97,23 @@ silent = hidden).
 Caution on K2b and K4: a masked finding still trips the gate, but the report points the
 developer at another finding.
 
+## Long spans (drift)
+
+Three anchors per repository (200, 300 and 400 first-parent commits behind the pin; 105
+anchors), each compared with the commit k steps later, k in {1, 10, 50, 100, 200}, with
+the line maps chained through every commit in between (move-aware line map). CodeGuard
+findings. Source: `results/drift-v2`, `drift_kit report`. The manual check did not cover
+long spans.
+
+| # | Claim | Value | Source |
+|---|---|---|---|
+| D1 | Renames accumulate over long spans | at k = 200: 3,813 of 36,325 persisting findings (10.5%) in 1,000 renamed files; at k = 1: 0 | `numbers_drift.md`, *Ground truth per span* and the renamed-files denominators |
+| D2 | Path-keyed schemes lose those findings; SonarQube keeps them | false new at k = 200: `codeguard` 12.2 (1.7–29.6), `bandit` 14.5 (4.1–31.6), `github` 14.9 (4.0–31.9), `line_text` 18.4 (2.7–35.0), `sonar` 1.5 (0.7–2.9), `sonar_branch` 1.8 (0.9–3.3), `line` 65.0 (56.3–74.1) | `numbers_drift.md`, *False-new rate* |
+| D3 | On files that keep their path the content schemes stay close | k = 200: `sonar` 1.6 (0.7–3.2), `codeguard` 1.9 (1.0–3.7), `bandit` 4.4 (3.6–5.5), `github` 4.9 (3.3–7.7), `line_text` 8.8 (1.5–19.2) | `numbers_drift.md`, *files that kept their path* |
+| D4 | Bandit's baseline hides about a third of new findings from k = 50 on | 30.9 (14.5–51.5) at 50, 38.3 (17.1–58.1) at 100, 33.5 (14.5–54.4) at 200 | `numbers_drift.md`, *Hidden rate* |
+| D5 | Other hidden rates at long spans are upper bounds | at k = 50: `codeguard` 15.2 (1.3–37.2), `sonar` 14.5 (0.8–36.6), `github` 13.3 (0.0–35.5); at k = 200: `github` 3.4, `codeguard` 5.1, `sonar` 6.1, `line_text` 0.9. Chained ground truth unchecked by hand | `numbers_drift.md` |
+| D6 | Soundness fix in drift mode | a file deleted and re-added at the same path no longer breaks its chain (`readded_files` counted) | `drift.py`, `tests/test_drift.py` |
+
 ## Ground-truth check
 
 A manual check on 100 sampled findings, drawn from `results/corpus-v3`; the procedure,

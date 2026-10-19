@@ -385,6 +385,16 @@ rate against \texttt{github} (paired interval 0.57--1.66); on Bandit's it hides 
 
 \input{table_rq1_semgrep.tex}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_drift.pdf}
+\caption{Long spans: false-new and hidden rate (percent, symmetric log scale) when a
+baseline at an anchor commit is compared with the commit $k$ first-parent steps later.
+CodeGuard findings, 105 anchors in 35 repositories, pooled over repositories;
+\texttt{drift.csv} has the intervals.}
+\label{fig:drift}
+\end{figure}
+
 \textit{Semgrep's findings.} Table~\ref{tab:rq1-semgrep} repeats the measurement on
 findings from third-party rules. The content schemes keep their order (\texttt{sonar}
 0.5\%, \texttt{codeguard} 1.4\%, \texttt{line\_text} 1.8\%, \texttt{github} 3.2\%
@@ -395,6 +405,20 @@ introduce a Semgrep finding. The ID numbers equal matches in file order, so a ne
 placed before an equal old one inherits the old one's ID: the \texttt{duplicate\_above}
 case of Section~\ref{sec:rq2}, here on real histories. We did not check these findings by
 hand.
+
+\textit{Long spans.} A baseline is usually compared with code many commits later. From
+three anchors per repository, 200, 300 and 400 first-parent commits behind the pin, we
+chained the line maps through every commit in between and compared each anchor with the
+commit $k$ steps later (Fig.~\ref{fig:drift}). Renames pile up. At $k = 200$, 1,000
+renamed files hold 3,813 of the 36,325 persisting findings (10.5\%), and every
+path-keyed scheme loses all of them: \texttt{codeguard} reports 12.2\% (1.7--29.6) as
+new, \texttt{bandit} 14.5\%, \texttt{github} 14.9\% and \texttt{line\_text} 18.4\%,
+against SonarQube's 1.5\% (0.7--2.9). In files that keep their path the gap closes
+(\texttt{codeguard} 1.9\%, SonarQube 1.6\%, \texttt{github} 4.9\%). Bandit's baseline
+hides about a third of the new findings from $k = 50$ on (33.5\% at $k = 200$). The
+other schemes' hidden rates peak at 13--15\% at $k = 50$, with intervals from about 1 to
+37\%, and fall to 3--6\% by $k = 200$; a chained line diff has many more steps at which
+to lose a line, so we read these as upper bounds.
 
 \section{RQ2: Controlled Changes}\label{sec:rq2}
 
@@ -458,8 +482,9 @@ remaining losses come from one design choice, the file path inside the identity,
 costliest error, hiding a new finding, comes mostly from another, matching by set
 membership, which lets a third of the commits that add a Bandit finding past a gate.
 Neither needs a better analyzer to fix.
-% LONG-SPAN: replace the next sentence with the long-span result when it lands.
-Long baselines, which compare code many commits apart, are the next thing to measure.
+Long-lived baselines make the first choice costlier: 200 commits after an anchor, a
+tenth of the persisting findings sit in renamed files, and every path-keyed scheme loses
+them.
 
 \textit{Data availability.} The replay tool, the ports and their checks, the corpus with
 its pinned commits, the results, the ground-truth sample with both raters' labels, and
