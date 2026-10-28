@@ -18,7 +18,7 @@ from typing import Any
 
 import pytest
 
-from research.finding_identity.drift import chain_lines, drift, trace_files
+from research.finding_identity.drift import chain_lines, drift, drift_scanner, trace_files
 from research.finding_identity.gitrepo import Change, GitRepo
 from research.finding_identity.linemap import map_lines
 from research.finding_identity.scan import Scanner
@@ -375,3 +375,34 @@ def test_revert_and_vanished_findings_persist(revert_repo: Path, tmp_path: Path)
         # The file is the same at both ends, so no scheme is charged with hiding it.
         assert entry["totals"]["schemes"][scheme]["false_known"] == 0, scheme
         assert entry["totals"]["schemes"][scheme]["known_ok"] == 1, scheme
+
+
+def test_drift_replays_its_own_recording(repo_dir: Path, tmp_path: Path) -> None:
+    def run(out: Path, record_to: Path | None, replay_from: Path | None) -> dict[str, Any]:
+        scanner, writer = drift_scanner(["security"], record_to, replay_from)
+        repo = GitRepo(repo_dir)
+        try:
+            summary = drift(
+                repo,
+                ref="HEAD",
+                anchor_back=5,
+                spans=[1, 3, 5],
+                scanner=scanner,
+                schemes=ALL_SCHEMES,
+                out_dir=out,
+                label="tiny",
+                categories=["security"],
+                details=True,
+            )
+        finally:
+            repo.close()
+        if writer is not None:
+            writer.close({"label": "tiny", "kind": "drift", "analyzer": scanner.describe()})
+        return summary
+
+    live = run(tmp_path / "live", tmp_path / "rec", None)
+    replayed = run(tmp_path / "replayed", None, tmp_path / "rec")
+    assert replayed["spans"] == live["spans"]
+    assert (tmp_path / "replayed" / "findings.jsonl").read_bytes() == (
+        tmp_path / "live" / "findings.jsonl"
+    ).read_bytes()

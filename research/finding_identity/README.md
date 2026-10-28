@@ -526,6 +526,52 @@ Scheme keys include the rule ID and the ground truth pairs findings of the same 
 only, so each category is scored on its own findings and the categories add up exactly to
 the totals.
 
+## Observation cache and rescoring
+
+A replay spends nearly all its time in the analyzer; scoring a scheme needs only the
+findings and the file text. `--observations <dir>` (on `replay`, `batch`, `transform`,
+`drift` and `drift_kit run`) records every scanned file version under
+`<dir>/<label>/`: `versions.jsonl.gz` holds, per blob SHA and path, the scan's status
+and the raw findings (rule, line, column, message and the fields Bandit compares, plus
+Semgrep's emitted ID); `pairs.jsonl` holds each commit pair's changes; `meta.json` the
+run and the analyzer's description. No scheme key is stored.
+
+`rescore` replays a recording through the same code as a live replay, reading findings
+from the cache and file text from the clone's git blobs, and computes the keys of any
+schemes, including ones added to `schemes.py` or `trackers.py` after the run:
+
+```bash
+# Record while replaying (results as usual, the cache beside them)
+python -m research.finding_identity batch research/finding_identity/corpus.csv \
+    --commits 200 --jobs 4 --details --out results/corpus-v4 \
+    --observations results/obs-codeguard
+
+# Rescore every scheme and check that it reproduces the live run exactly
+python -m research.finding_identity rescore results/obs-codeguard --out results/rescored \
+    --check results/corpus-v4
+
+# Iterate on one scheme: score it alone and take the others from an earlier run
+python -m research.finding_identity rescore results/obs-codeguard --schemes codeguard_v2 \
+    --merge-from results/corpus-v4 --out results/trial-1
+```
+
+The output has a live replay's layout, so `paper_kit`, `stats`, `gate`, `gt_agreement`
+and the leaderboard read it unchanged. A full rescore takes a quarter of the live time
+(SonarQube's tracker and GitHub's rolling hash are most of what is left); one scheme with
+`--merge-from` takes about a tenth. `transform --from-observations` and `drift
+--from-observations` replay their own recordings the same way.
+
+`leaderboard` ranks every scheme on every RQ1 metric per analyzer (and, with
+`--transform` and `--drift`, on the invariance matrix and the longest span), with each
+scheme's paired difference to the best one on the same findings; `--repos <file>`
+restricts it to a list of repositories, for a held-out split:
+
+```bash
+python -m research.finding_identity.leaderboard --codeguard results/corpus-v4 \
+    --bandit results/corpus-bandit-v2 --semgrep results/corpus-semgrep \
+    --transform results/transform --drift results/drift-v2 --out paper/leaderboard.md
+```
+
 ## Statistics
 
 ```bash

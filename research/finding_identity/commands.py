@@ -57,6 +57,11 @@ def register(sub: Any) -> dict[str, Handler]:
         help="comma-separated rule categories to run",
     )
     bp.add_argument("--details", action="store_true", help="write one record per finding")
+    bp.add_argument(
+        "--observations",
+        type=Path,
+        help="record every scanned version under <dir>/<label>, for `rescore`",
+    )
     bp.add_argument("--timeout", type=float, help="seconds allowed per repository")
     bp.add_argument("--force", action="store_true", help="rerun repositories already done")
     bp.add_argument(
@@ -123,6 +128,7 @@ def _batch(args: argparse.Namespace) -> None:
         delete_clones=args.delete_clones,
         analyzer=args.analyzer,
         semgrep_rules=args.semgrep_rules,
+        observations=args.observations,
     )
     statuses = run_batch(entries, opts, jobs=args.jobs, force=args.force)
     if any(s["status"] == "failed" for s in statuses):

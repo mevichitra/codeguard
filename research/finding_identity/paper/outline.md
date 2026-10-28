@@ -215,6 +215,10 @@ git -C $P/.repos/opengrep-rules checkout f1d2b562b414783763fd02a6ed2736eaed622ef
 python -m research.finding_identity batch $P/corpus.csv --commits 200 --jobs 4 --details \
     --analyzer semgrep --semgrep-rules $P/.repos/opengrep-rules --out $P/results/corpus-semgrep
 
+# Add --observations $P/results/obs-<analyzer> to any batch above to record the
+# findings; `rescore` then scores new schemes without the analyzer (README,
+# "Observation cache and rescoring"), and `leaderboard` ranks them.
+
 # RQ2: the transformation experiment on each Python repository at its pinned commit
 python - <<'PY' | xargs -P 4 -L 1 sh -c \
     'python -m research.finding_identity transform $0 --ref $1 --label $2 --samples 40 \

@@ -44,8 +44,9 @@ import codeguard
 
 from .gitrepo import Change, GitRepo
 from .linemap import map_lines
-from .matching import Observation, score
-from .replay import GT_KEYS, SCHEME_KEYS
+from .matching import SCHEME_KEYS, Observation, score
+from .observations import ObservationReader, ObservationWriter
+from .replay import GT_KEYS
 from .scan import Scanner, ScanResult, is_candidate, rule_ids_for
 from .schemes import ALL_SCHEMES, split_lines
 from .summarize import summarize_drift
@@ -418,6 +419,17 @@ def drift(
 # -- command line ---------------------------------------------------------------
 
 
+def drift_scanner(
+    categories: Sequence[str], record_to: Path | None, replay_from: Path | None
+) -> tuple[Scanner, ObservationWriter | None]:
+    """A scanner that runs CodeGuard, recording to *record_to* if given, or one that
+    replays the recording at *replay_from* without running it."""
+    if replay_from is not None:
+        return Scanner.from_observations(ObservationReader(replay_from), ALL_SCHEMES), None
+    writer = ObservationWriter(record_to) if record_to is not None else None
+    return Scanner(rule_ids_for(categories), ALL_SCHEMES, record_to=writer), writer
+
+
 def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("repo", help="local repository path or a git URL to clone")
     parser.add_argument("--ref", default="HEAD", help="branch or commit the spans end at")
@@ -441,6 +453,14 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
         help="comma-separated rule categories to run",
     )
     parser.add_argument("--details", action="store_true", help="write one record per finding")
+    parser.add_argument(
+        "--observations", type=Path, help="record every scanned version here (see `rescore`)"
+    )
+    parser.add_argument(
+        "--from-observations",
+        type=Path,
+        help="take the findings from this recording of the same run, run no analyzer",
+    )
 
 
 def run(args: argparse.Namespace) -> None:
@@ -453,7 +473,7 @@ def run(args: argparse.Namespace) -> None:
     label = args.label or repo.path.name
     out = args.out or HERE / "results" / "drift" / label
     categories = [c.strip() for c in args.categories.split(",") if c.strip()]
-    scanner = Scanner(rule_ids_for(categories), ALL_SCHEMES)
+    scanner, writer = drift_scanner(categories, args.observations, args.from_observations)
     try:
         drift(
             repo,
@@ -469,4 +489,6 @@ def run(args: argparse.Namespace) -> None:
         )
     finally:
         repo.close()
+    if writer is not None:
+        writer.close({"label": label, "kind": "drift", "analyzer": scanner.describe()})
     summarize_drift([out])

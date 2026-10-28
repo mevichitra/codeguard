@@ -47,6 +47,14 @@ def add_parser(sub: Any) -> None:
         "--reformat-line-length", type=int, default=79, help="line length for 'reformat'"
     )
     tp.add_argument("--heatmap", action="store_true", help="also draw matrix.png (matplotlib)")
+    tp.add_argument(
+        "--observations", type=Path, help="record every scanned version here (see `rescore`)"
+    )
+    tp.add_argument(
+        "--from-observations",
+        type=Path,
+        help="take the findings from this recording of the same experiment, run no analyzer",
+    )
     ai = tp.add_argument_group("ai_refactor")
     ai.add_argument("--ai-model", help=f"model name (default: ${MODEL_ENV})")
     ai.add_argument("--ai-api-key", help=f"API key (default: ${KEY_ENV})")
@@ -61,6 +69,7 @@ def add_parser(sub: Any) -> None:
 def run(args: argparse.Namespace) -> None:
     from .experiment import run_experiment
     from .gitrepo import GitRepo
+    from .observations import ObservationReader, ObservationWriter
     from .scan import Scanner, rule_ids_for
     from .schemes import ALL_SCHEMES
     from .transforms import ALL_TRANSFORMS, AIRefactor, Transform, deterministic_transforms
@@ -90,11 +99,17 @@ def run(args: argparse.Namespace) -> None:
     categories = [c.strip() for c in args.categories.split(",") if c.strip()]
 
     def experiment(root: Path) -> None:
+        writer = ObservationWriter(args.observations) if args.observations else None
+        if args.from_observations:
+            reader = ObservationReader(args.from_observations)
+            scanner = Scanner.from_observations(reader, ALL_SCHEMES)
+        else:
+            scanner = Scanner(rule_ids_for(categories), ALL_SCHEMES, record_to=writer)
         run_experiment(
             root,
             label=label,
             transforms=transforms,
-            scanner=Scanner(rule_ids_for(categories), ALL_SCHEMES),
+            scanner=scanner,
             schemes=ALL_SCHEMES,
             samples=args.samples,
             seed=args.seed,
@@ -102,6 +117,8 @@ def run(args: argparse.Namespace) -> None:
             meta={**meta, "categories": categories},
             draw_heatmap=args.heatmap,
         )
+        if writer is not None:
+            writer.close({"label": label, "kind": "transform", "analyzer": scanner.describe()})
 
     if local.is_dir() and not args.ref:
         experiment(local)  # a working tree, used as it is

@@ -23,6 +23,7 @@ from .gitrepo import Change, GitRepo
 from .linemap import line_map as compute_line_map
 from .matching import GT_KEYS as MATCH_GT_KEYS
 from .matching import SCHEME_KEYS, Observation, evaluate, ground_truth, score
+from .observations import ObservationWriter
 from .scan import Scanner, is_candidate
 
 #: The ground-truth counts, plus the findings whose new line lies in a replaced block too
@@ -173,7 +174,13 @@ def replay(
     label: str,
     categories: Sequence[str],
     details: bool = False,
+    observations: ObservationWriter | None = None,
 ) -> dict[str, Any]:
+    """Replay *commits* pairs behind *ref* and write the results to *out_dir*.
+
+    With *observations* (which the *scanner* must also record to), the commit pairs and
+    their changes are recorded too, so that :mod:`rescore` can replay the run.
+    """
     out_dir.mkdir(parents=True, exist_ok=True)
     history = repo.first_parent_history(ref, commits + 1)
     head = repo.resolve(ref)
@@ -199,7 +206,13 @@ def replay(
         for n, (old, new) in enumerate(pairwise(history), start=1):
             pair_totals = _empty_totals(schemes)
             records: list[dict[str, Any]] | None = [] if details else None
-            for ch in repo.changes(old, new):
+            changes = repo.changes(old, new)
+            if observations is not None:
+                looked_at = [
+                    c for c in changes if is_candidate(c.old_path) or is_candidate(c.new_path)
+                ]
+                observations.pair(old, new, looked_at)
+            for ch in changes:
                 _replay_change(repo, scanner, ch, schemes, pair_totals, records, category_totals)
             _add(totals, pair_totals)
             pairs_out.write(json.dumps({"old": old, "new": new, **pair_totals}) + "\n")
@@ -225,4 +238,6 @@ def replay(
         "by_category": _category_summaries(category_totals, scanner, schemes, categories),
     }
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+    if observations is not None:
+        observations.close({**meta, "commits": commits, "analyzer": scanner.describe()})
     return summary
