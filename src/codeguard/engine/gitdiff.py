@@ -38,6 +38,32 @@ def is_git_repo(root: Path) -> bool:
     return _git(["rev-parse", "--git-dir"], root=root) is not None
 
 
+def head_commit(root: Path) -> str | None:
+    """The full SHA of ``HEAD``, or ``None`` outside a git repository."""
+    out = _git(["rev-parse", "HEAD"], root=root)
+    return out.strip() or None if out else None
+
+
+def renames_since(commit: str, *, root: Path) -> dict[str, str] | None:
+    """Files git sees as renamed between *commit* and the working tree.
+
+    Returns ``{old path: new path}`` with paths relative to *root* (forward slashes),
+    or ``None`` when git cannot answer (no repository, unknown commit).
+    """
+    out = _git(["diff", "-M", "--name-status", "--diff-filter=R", "-z", commit], root=root)
+    if out is None:
+        return None
+    fields = out.split("\0")
+    renames: dict[str, str] = {}
+    i = 0
+    while i + 2 < len(fields) and fields[i]:
+        status, old, new = fields[i], fields[i + 1], fields[i + 2]
+        if status.startswith("R"):
+            renames[old] = new
+        i += 3
+    return renames
+
+
 def default_base(root: Path) -> str | None:
     """Best guess at the branch a PR would target."""
     for ref in _CANDIDATE_BASES:
