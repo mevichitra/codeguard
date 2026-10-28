@@ -1,6 +1,7 @@
 """Command line: ``python -m research.finding_identity <command>``.
 
-Commands: replay, summarize, transform, drift, drift-summary, batch, corpus, stats.
+Commands: replay, rescore, summarize, transform, drift, drift-summary, batch, corpus,
+stats.
 """
 
 from __future__ import annotations
@@ -9,10 +10,11 @@ import argparse
 import json
 from pathlib import Path
 
-from . import commands, transform_cli
+from . import commands, rescore, transform_cli
 from .drift import add_arguments as add_drift_arguments
 from .drift import run as run_drift
 from .gitrepo import GitRepo
+from .observations import ObservationWriter
 from .replay import replay
 from .scan import Scanner, rule_ids_for
 from .schemes import ANALYZERS, schemes_for
@@ -50,6 +52,12 @@ def main(argv: list[str] | None = None) -> None:
         help="for --analyzer semgrep: a rules file or a rules repository checkout "
         "(default: semgrep_rules.yml)",
     )
+    rp.add_argument(
+        "--observations",
+        type=Path,
+        help="record every scanned version and commit pair here, for `rescore`",
+    )
+    rescore.add_parser(sub)
 
     sp = sub.add_parser("summarize", help="print rate tables for one or more result dirs")
     sp.add_argument("results", nargs="+", type=Path)
@@ -73,6 +81,9 @@ def main(argv: list[str] | None = None) -> None:
     if args.command == "drift":
         run_drift(args)
         return
+    if args.command == "rescore":
+        rescore.run(args)
+        return
     if args.command == "drift-summary":
         summarize_drift(args.results, args.csv)
         return
@@ -88,11 +99,13 @@ def main(argv: list[str] | None = None) -> None:
     out = args.out or HERE / "results" / label
     categories = [c.strip() for c in args.categories.split(",") if c.strip()]
     schemes = schemes_for(args.analyzer)
+    writer = ObservationWriter(args.observations) if args.observations else None
     scanner = Scanner(
         rule_ids_for(categories),
         schemes,
         analyzer=args.analyzer,
         semgrep_rules=args.semgrep_rules,
+        record_to=writer,
     )
     try:
         replay(
@@ -105,6 +118,7 @@ def main(argv: list[str] | None = None) -> None:
             label=label,
             categories=categories,
             details=args.details,
+            observations=writer,
         )
     finally:
         repo.close()

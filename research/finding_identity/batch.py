@@ -42,6 +42,8 @@ class BatchOptions:
     analyzer: str = "codeguard"
     #: Semgrep's rules: a file or a rules repository (default: ``semgrep_rules.yml``).
     semgrep_rules: Path | None = None
+    #: Record each repository's scanned versions under ``<observations>/<label>``.
+    observations: Path | None = None
 
 
 def summary_path(opts: BatchOptions, label: str) -> Path:
@@ -117,6 +119,8 @@ def run_one(entry: CorpusEntry, opts: BatchOptions) -> None:
         cmd += ["--analyzer", opts.analyzer]
     if opts.semgrep_rules is not None:
         cmd += ["--semgrep-rules", str(opts.semgrep_rules.resolve())]
+    if opts.observations is not None:
+        cmd += ["--observations", str((opts.observations / entry.label).resolve())]
     with log_path.open("w", encoding="utf-8") as log:
         log.write(" ".join(cmd) + "\n")
         log.flush()

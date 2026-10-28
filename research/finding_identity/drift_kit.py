@@ -35,9 +35,8 @@ from pathlib import Path
 from typing import Any
 
 from .corpus import CorpusEntry, load_corpus
-from .drift import DEFAULT_SPANS, drift
+from .drift import DEFAULT_SPANS, drift, drift_scanner
 from .gitrepo import GitRepo
-from .scan import Scanner, rule_ids_for
 from .schemes import ALL_SCHEMES
 from .stats import bootstrap_draws, cluster_bootstrap
 
@@ -105,9 +104,22 @@ class Task:
     spans: tuple[int, ...]
 
 
-def run_task(task: Task, workdir: Path, out: Path, categories: Sequence[str]) -> dict[str, Any]:
-    """Drift mode for one anchor; returns a status record (``ok`` or ``skipped``)."""
+def run_task(
+    task: Task,
+    workdir: Path,
+    out: Path,
+    categories: Sequence[str],
+    observations: Path | None = None,
+    from_observations: Path | None = None,
+) -> dict[str, Any]:
+    """Drift mode for one anchor; returns a status record (``ok`` or ``skipped``).
+
+    With *observations*, the anchor's scanned versions are recorded under
+    ``<observations>/<label>/a<anchor>``; with *from_observations*, they are taken from
+    such a recording instead of running the analyzer.
+    """
     target = out / task.label / f"a{task.anchor}"
+    anchor_dir = Path(task.label) / f"a{task.anchor}"
     if (target / "summary.json").exists():
         return {"label": task.label, "anchor": task.anchor, "status": "ok", "cached": True}
     repo = GitRepo(workdir / task.label)
@@ -122,18 +134,25 @@ def run_task(task: Task, workdir: Path, out: Path, categories: Sequence[str]) ->
                 "reason": f"only {len(history) - 1} first-parent commits behind the pin",
             }
         end = history[task.window]  # the anchor is history[0]
+        scanner, writer = drift_scanner(
+            categories,
+            observations / anchor_dir if observations else None,
+            from_observations / anchor_dir if from_observations else None,
+        )
         drift(
             repo,
             ref=end,
             anchor_back=task.window,
             spans=task.spans,
-            scanner=Scanner(rule_ids_for(categories), ALL_SCHEMES),
+            scanner=scanner,
             schemes=ALL_SCHEMES,
             out_dir=target,
             label=task.label,
             categories=categories,
             details=True,
         )
+        if writer is not None:
+            writer.close({"label": task.label, "kind": "drift", "analyzer": scanner.describe()})
     finally:
         repo.close()
     return {
@@ -468,6 +487,10 @@ def main(argv: list[str] | None = None) -> None:
     run_p.add_argument("--spans", default=",".join(map(str, DEFAULT_SPANS)))
     run_p.add_argument("--categories", default="security,performance,quality")
     run_p.add_argument("--out", type=Path, required=True)
+    run_p.add_argument("--observations", type=Path, help="record scanned versions here")
+    run_p.add_argument(
+        "--from-observations", type=Path, help="replay such a recording, running no analyzer"
+    )
     rep = sub.add_parser("report")
     rep.add_argument("results", type=Path)
     rep.add_argument("--out", type=Path, default=HERE / "paper")
@@ -501,7 +524,18 @@ def main(argv: list[str] | None = None) -> None:
     args.out.mkdir(parents=True, exist_ok=True)
     statuses = []
     with ProcessPoolExecutor(args.jobs) as pool:
-        runs = [pool.submit(run_task, t, args.workdir, args.out, categories) for t in tasks]
+        runs = [
+            pool.submit(
+                run_task,
+                t,
+                args.workdir,
+                args.out,
+                categories,
+                args.observations,
+                args.from_observations,
+            )
+            for t in tasks
+        ]
         for done in as_completed(runs):
             status = done.result()
             statuses.append(status)
