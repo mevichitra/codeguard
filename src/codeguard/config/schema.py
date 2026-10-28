@@ -112,6 +112,8 @@ class Config:
     output: str = "human"
     jobs: int = 0  # 0 = auto
     baseline: str | None = None
+    #: Report a baseline match the matcher had to guess (equal candidates) as new.
+    baseline_strict: bool = False
     rule_paths: list[str] = field(default_factory=list)
     enable: list[str] = field(default_factory=list)
     disable: list[str] = field(default_factory=list)
@@ -173,6 +175,10 @@ class Config:
                 if not isinstance(value, str):
                     raise SchemaError("'baseline' must be a string path")
                 out.baseline = value
+            elif key == "baseline_strict":
+                if not isinstance(value, bool):
+                    raise SchemaError("'baseline_strict' must be true or false")
+                out.baseline_strict = value
             elif key == "severity_remap":
                 if not isinstance(value, dict):
                     raise SchemaError("'severity_remap' must be a table of rule-id -> severity")

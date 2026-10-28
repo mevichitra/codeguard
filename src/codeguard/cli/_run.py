@@ -64,6 +64,7 @@ class RunOptions:
     stdin_filename: str = "stdin.py"
     output: Path | None = None
     baseline_path: Path | None = None
+    baseline_strict: bool = False  # report ambiguous baseline matches as new
     now: str | None = None  # pin the date for `until=` suppression expiry
     diff_ref: str | None = None
     diff_auto: bool = False  # `ci` -- pick a base branch if diff_ref not given
@@ -167,7 +168,10 @@ def execute(opt: RunOptions) -> int:
     else:
         baseline = None
 
-    findings = apply_project_policy(findings, config, root=root, baseline=baseline)
+    strict = True if opt.baseline_strict else None
+    findings = apply_project_policy(
+        findings, config, root=root, baseline=baseline, baseline_strict=strict
+    )
     findings.sort(key=lambda f: (f.location.file, f.location.line, f.location.col, f.rule_id))
 
     # --- autofix --------------------------------------------------------
@@ -183,7 +187,11 @@ def execute(opt: RunOptions) -> int:
         _diff, fixed, changed, skipped = _fix_files(findings, write=True)
         if changed:
             rescanned = apply_project_policy(
-                runner.run_files(changed), config, root=root, baseline=baseline
+                runner.run_files(changed),
+                config,
+                root=root,
+                baseline=baseline,
+                baseline_strict=strict,
             )
             changed_set = {str(p) for p in changed}
             findings = [f for f in findings if f.location.file not in changed_set] + rescanned

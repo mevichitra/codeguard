@@ -20,6 +20,7 @@ from codeguard.analysis import (
 )
 from codeguard.cli.formatters import finding_help_uri
 from codeguard.config import ConfigError, find_config, load_config
+from codeguard.engine.baseline import Baseline
 from codeguard.engine.finding import Finding
 from codeguard.engine.registry import REGISTRY
 
@@ -244,8 +245,11 @@ def _dashboard(path: Path, output: Path | None) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _scan_for_baseline(paths: tuple[Path, ...], config_path: Path | None) -> list[Finding]:
-    """Full scan (all rules, config applied) used to build/refresh a baseline."""
+def _scan_for_baseline(
+    paths: tuple[Path, ...], config_path: Path | None
+) -> tuple[list[Finding], Path]:
+    """Full scan (all rules, config applied) used to build/refresh a baseline, and the
+    project root the baseline's paths and commit refer to."""
     from codeguard.config import load_config
     from codeguard.engine.discovery import DiscoveryConfig, discover
     from codeguard.engine.policy import apply_config
@@ -271,7 +275,7 @@ def _scan_for_baseline(paths: tuple[Path, ...], config_path: Path | None) -> lis
     runner = AnalysisRunner(rule_ids=active, rule_options=rule_options_from(config))
     findings = runner.run_files(discover(targets, disc, root=cfg_root))
     findings = apply_config(findings, config, root=str(cfg_root))
-    return [f for f in findings if not f.suppressed]
+    return [f for f in findings if not f.suppressed], cfg_root
 
 
 @click.group("baseline")
@@ -296,10 +300,12 @@ def _baseline() -> None:
 )
 def _baseline_create(paths: tuple[Path, ...], config_path: Path | None, output: Path) -> None:
     """Snapshot every current finding into a new baseline file."""
-    from codeguard.engine.baseline import Baseline
+    from codeguard.engine.gitdiff import head_commit
 
-    findings = _scan_for_baseline(paths, config_path)
-    Baseline.from_findings(findings, tool_version=__version__).save(output)
+    findings, root = _scan_for_baseline(paths, config_path)
+    Baseline.from_findings(findings, tool_version=__version__, commit=head_commit(root)).save(
+        output
+    )
     click.echo(f"Wrote {output} ({len(findings)} finding(s) baselined)")
 
 
@@ -322,17 +328,20 @@ def _baseline_create(paths: tuple[Path, ...], config_path: Path | None, output: 
 def _baseline_update(
     paths: tuple[Path, ...], config_path: Path | None, baseline_file: Path
 ) -> None:
-    """Add newly-appeared findings to the baseline (keeps existing entries)."""
-    from codeguard.engine.baseline import Baseline
+    """Add newly-appeared findings to the baseline and let the existing entries
+    follow their findings (keeps ``first_seen``)."""
+    from codeguard.engine.gitdiff import head_commit
 
     if not baseline_file.exists():
         click.echo(f"No baseline at {baseline_file}; run `baseline create` first.", err=True)
         sys.exit(2)
-    findings = _scan_for_baseline(paths, config_path)
-    before = len(Baseline.load(baseline_file))
-    updated = Baseline.load(baseline_file).updated_with(findings)
+    findings, root = _scan_for_baseline(paths, config_path)
+    baseline = Baseline.load(baseline_file)
+    updated, followed, added = baseline.update(
+        findings, renames=_renames(baseline, root), root=root, commit=head_commit(root)
+    )
     updated.save(baseline_file)
-    click.echo(f"Updated {baseline_file} (+{len(updated) - before} new entry/entries)")
+    click.echo(f"Updated {baseline_file} (+{added} new entry/entries, {followed} followed)")
 
 
 @_baseline.command("prune")
@@ -353,16 +362,21 @@ def _baseline_update(
 )
 def _baseline_prune(paths: tuple[Path, ...], config_path: Path | None, baseline_file: Path) -> None:
     """Drop baseline entries whose finding no longer occurs."""
-    from codeguard.engine.baseline import Baseline
-
     if not baseline_file.exists():
         click.echo(f"No baseline at {baseline_file}.", err=True)
         sys.exit(2)
-    live = {f.fingerprint for f in _scan_for_baseline(paths, config_path) if f.fingerprint}
-    before = len(Baseline.load(baseline_file))
-    pruned = Baseline.load(baseline_file).pruned(live)
+    findings, root = _scan_for_baseline(paths, config_path)
+    baseline = Baseline.load(baseline_file)
+    pruned = baseline.pruned(findings, renames=_renames(baseline, root), root=root)
     pruned.save(baseline_file)
-    click.echo(f"Pruned {baseline_file} (-{before - len(pruned)} stale entry/entries)")
+    click.echo(f"Pruned {baseline_file} (-{len(baseline) - len(pruned)} stale entry/entries)")
+
+
+def _renames(baseline: Baseline, root: Path) -> dict[str, str] | None:
+    """Files git reports as renamed since the baseline's commit, if it has one."""
+    from codeguard.engine.gitdiff import renames_since
+
+    return renames_since(baseline.commit, root=root) if baseline.commit else None
 
 
 # ---------------------------------------------------------------------------

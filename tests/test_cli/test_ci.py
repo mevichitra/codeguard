@@ -67,6 +67,48 @@ class TestBaselineFlag:
         prune = r.invoke(cli, ["baseline", "prune", str(tmp_path), "-b", bl])
         assert "-2" in prune.output
 
+    def test_renamed_file_stays_baselined(self, tmp_path: Path) -> None:
+        _repo(tmp_path, {"a.py": VULN})
+        r = CliRunner()
+        bl = str(tmp_path / "bl.json")
+        r.invoke(cli, ["baseline", "create", str(tmp_path), "-o", bl])
+        assert json.loads(Path(bl).read_text())["commit"]
+        (tmp_path / "a.py").rename(tmp_path / "b.py")
+        _git(tmp_path, "add", "-A")
+        res = r.invoke(
+            cli,
+            ["scan", str(tmp_path), "--baseline", bl, "--format", "json", "--show-suppressed"],
+        )
+        assert res.exit_code == EXIT_OK
+        results = json.loads(res.output)["results"]
+        assert results and all(x["baselined"] for x in results)
+        assert {x["match"]["pass"] for x in results} == {"stmt"}
+
+    def test_strict_mode_reports_a_pasted_copy(self, tmp_path: Path) -> None:
+        _repo(tmp_path, {"a.py": 'import os\nos.system("rm " + a)\nprint(x)\n'})
+        r = CliRunner()
+        bl = str(tmp_path / "bl.json")
+        r.invoke(cli, ["baseline", "create", str(tmp_path), "-o", bl])
+        # Both neighbours change, so neither copy is the better candidate.
+        (tmp_path / "a.py").write_text(
+            'import sys\nos.system("rm " + a)\nos.system("rm " + a)\nprint(y)\n',
+            encoding="utf-8",
+        )
+        args = ["scan", str(tmp_path), "--baseline", bl, "--format", "json", "--show-suppressed"]
+        res = r.invoke(cli, args)
+        assert res.exit_code == EXIT_FINDINGS
+        results = json.loads(res.output)["results"]
+        assert [(x["baselined"], x["match"]["status"]) for x in results] == [
+            (True, "ambiguous"),
+            (False, "new"),
+        ]
+        strict = r.invoke(cli, [*args, "--baseline-strict"])
+        results = json.loads(strict.output)["results"]
+        assert [(x["baselined"], x["match"]["status"]) for x in results] == [
+            (False, "ambiguous"),
+            (False, "new"),
+        ]
+
 
 class TestCi:
     def test_scans_only_changed_files(self, tmp_path: Path) -> None:

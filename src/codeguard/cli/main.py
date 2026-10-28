@@ -124,6 +124,12 @@ def _common_options(fn: _CmdFn) -> _CmdFn:
             help="Baseline file; findings in it do not fail the run.",
         ),
         click.option(
+            "--baseline-strict",
+            is_flag=True,
+            help="Report a baseline match the matcher had to guess (a pasted copy of a "
+            "baselined finding) as new, so it fails the run.",
+        ),
+        click.option(
             "--show-suppressed",
             is_flag=True,
             help="Include suppressed / baselined findings in output.",

@@ -15,6 +15,7 @@ from codeguard.config import Config, ConfigError, find_config, load_config
 from codeguard.engine.baseline import Baseline, apply_baseline
 from codeguard.engine.discovery import DiscoveryConfig, discover, is_path_included
 from codeguard.engine.finding import Finding
+from codeguard.engine.gitdiff import renames_since
 from codeguard.engine.policy import apply_config
 from codeguard.engine.registry import REGISTRY
 from codeguard.engine.runner import AnalysisRunner
@@ -299,10 +300,20 @@ def apply_project_policy(
     *,
     root: Path,
     baseline: Baseline | None = None,
+    baseline_strict: bool | None = None,
 ) -> list[Finding]:
-    """Apply configuration and baseline policy, returning deterministically sorted results."""
+    """Apply configuration and baseline policy, returning deterministically sorted results.
+
+    The baseline is matched one to one, following renames git reports since the
+    commit the baseline records (when *root* is a git repository).  *baseline_strict*
+    (default: the config's ``baseline_strict``) reports ambiguous matches as new.
+    """
     findings = apply_config(findings, config, root=str(root))
     if baseline is not None:
-        findings = apply_baseline(findings, baseline)
+        renames = None
+        if baseline.commit:
+            renames = renames_since(baseline.commit, root=root)
+        strict = config.baseline_strict if baseline_strict is None else baseline_strict
+        findings = apply_baseline(findings, baseline, renames=renames, root=root, strict=strict)
     findings.sort(key=lambda item: (item.location.file, item.location.line, item.location.col))
     return findings

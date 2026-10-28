@@ -7,6 +7,8 @@ import enum
 from dataclasses import dataclass, field, replace
 from typing import Any
 
+from .identity import IdentityRecord
+
 _SEVERITY_ORDER = ["critical", "high", "medium", "low", "info"]
 
 
@@ -143,6 +145,24 @@ class Triage:
 
 
 @dataclass(frozen=True)
+class MatchInfo:
+    """How a baseline comparison classified a finding.
+
+    ``status`` is ``"known"`` (paired with a baseline entry), ``"ambiguous"`` (paired,
+    but the matcher had to guess between equal candidates) or ``"new"``.  ``pass_name``
+    is the matcher pass that paired it (``stmt``, ``nscope``, ``ident``, ``body``,
+    ``sim``, ``v1``) and ``score`` its score (the similarity for ``sim``).
+    """
+
+    status: str
+    pass_name: str = ""
+    score: float = 1.0
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"status": self.status, "pass": self.pass_name, "score": self.score}
+
+
+@dataclass(frozen=True)
 class Finding:
     """A single diagnostic produced by a rule.
 
@@ -177,8 +197,14 @@ class Finding:
         form) applied to this finding.  Suppressed findings are still returned so
         callers can audit suppression usage.
     fingerprint:
-        Stable identity of this finding across reformatting and line moves,
-        assigned by the runner.  Empty until assigned.
+        The ``codeguard/v1`` fingerprint, assigned by the runner.  Empty until
+        assigned.  Kept for consumers that treat it as an opaque id.
+    identity:
+        The ``codeguard/v2`` identity record the baseline matcher compares, or
+        ``None`` when the runner has not assigned one.
+    match:
+        How the last baseline comparison classified this finding, or ``None``
+        when no baseline was applied.
     fix:
         A suggested autofix, or ``None``.
     related:
@@ -205,6 +231,8 @@ class Finding:
     fix: Fix | None = field(default=None)
     triage: Triage | None = field(default=None)
     related: tuple[RelatedLocation, ...] = ()
+    identity: IdentityRecord | None = field(default=None, compare=False)
+    match: MatchInfo | None = field(default=None, compare=False)
 
     def __post_init__(self) -> None:
         if not self.rule_id:
@@ -220,9 +248,25 @@ class Finding:
         """Return a copy of this finding with ``fingerprint`` set."""
         return replace(self, fingerprint=fingerprint)
 
-    def as_baselined(self) -> Finding:
+    def with_identity(self, identity: IdentityRecord) -> Finding:
+        """Return a copy of this finding with its ``codeguard/v2`` identity set."""
+        return replace(self, identity=identity)
+
+    def as_baselined(self, match: MatchInfo | None = None) -> Finding:
         """Return a copy of this finding marked as present in the baseline."""
-        return replace(self, baselined=True)
+        return replace(self, baselined=True, match=match or MatchInfo("known"))
+
+    def with_match(self, match: MatchInfo) -> Finding:
+        """Return a copy of this finding carrying a baseline comparison result."""
+        return replace(self, match=match)
+
+    def identity_record(self) -> IdentityRecord:
+        """The identity to match on: the v2 record, or one built from the v1 hash."""
+        if self.identity is not None:
+            return self.identity
+        return IdentityRecord.from_fingerprint(
+            self.rule_id, self.location.file, self.location.line, self.fingerprint
+        )
 
     def to_dict(self) -> dict[str, Any]:
         """Serialise to a plain dict suitable for JSON output."""
@@ -246,6 +290,8 @@ class Finding:
             "suppressed": self.suppressed,
             "baselined": self.baselined,
             "fingerprint": self.fingerprint,
+            "identity": self.identity.to_dict() if self.identity is not None else None,
+            "match": self.match.to_dict() if self.match is not None else None,
             "fix": self.fix.to_dict() if self.fix is not None else None,
             "related": [r.to_dict() for r in self.related],
         }

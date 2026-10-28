@@ -9,6 +9,7 @@ from typing import Any
 
 from codeguard.engine.finding import Finding
 from codeguard.engine.fingerprint import SCHEME as _FP_SCHEME
+from codeguard.engine.identity import SCHEME as _ID_SCHEME
 
 _SEVERITY_ORDER = ("critical", "high", "medium", "low", "info")
 
@@ -69,11 +70,14 @@ def format_human(findings: list[Finding], *, show_suppressed: bool = False) -> s
         color = _SEVERITY_COLOR.get(f.severity.value, "white")
         loc = f"{f.location.file}:{f.location.line}:{f.location.col}"
         sev = f.severity.value.upper()
-        tag = (
-            " [dim](suppressed)[/dim]"
-            if f.suppressed
-            else (" [dim](baselined)[/dim]" if f.baselined else "")
-        )
+        if f.suppressed:
+            tag = " [dim](suppressed)[/dim]"
+        elif f.baselined:
+            tag = " [dim](baselined)[/dim]"
+        else:
+            tag = ""
+        if f.match is not None and f.match.status == "ambiguous":
+            tag += " [dim](ambiguous)[/dim]"
         console.print(f"[dim]{loc}[/dim]  [{color}][{f.rule_id}] {sev}[/{color}]  {f.title}{tag}")
 
         # Show the offending source line with a column marker.
@@ -295,8 +299,16 @@ def format_sarif(findings: list[Finding], *, tool_version: str = "0.0.0") -> str
                 "severity": f.severity.value,
             },
         }
-        if f.fingerprint:
-            result["partialFingerprints"] = {_FP_SCHEME: f.fingerprint}
+        if f.fingerprint or f.identity is not None:
+            prints: dict[str, str] = {}
+            if f.fingerprint:
+                prints[_FP_SCHEME] = f.fingerprint
+            if f.identity is not None:
+                for name in ("stmt", "nscope", "ident", "body", "lh"):
+                    value = f.identity.key(name)
+                    if value:
+                        prints[f"{_ID_SCHEME}/{name}"] = value
+            result["partialFingerprints"] = prints
         if f.related:
             result["relatedLocations"] = [
                 {

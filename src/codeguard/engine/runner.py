@@ -21,6 +21,7 @@ from codeguard.lang.registry import language_for_path, support_for
 from . import fingerprint as _fp
 from .context import RuleContext
 from .finding import Category, Finding, Location
+from .identity import IdentityBuilder
 from .registry import REGISTRY, RuleRegistry
 from .rule import Rule
 from .suppressions import META_EXPIRED, META_MISSING_REASON, SuppressionSet
@@ -134,11 +135,13 @@ class AnalysisRunner:
         rel = _fp.relative_path(filename, root=self._fingerprint_root)
         py_tree = ctx.python_ast if lang is Language.PYTHON else None
         enabled_ids = {r.id for r in self._active_rules}
+        identities = IdentityBuilder(source, lang, ctx.root.native)
 
         def _fingerprinted(f: Finding) -> Finding:
             scope = _fp.python_scope(py_tree, f.location.line) if py_tree is not None else ""
-            return f.with_fingerprint(
-                _fp.compute(f.rule_id, rel, source, f.location.line, scope=scope)
+            v1 = _fp.compute(f.rule_id, rel, source, f.location.line, scope=scope)
+            return f.with_fingerprint(v1).with_identity(
+                identities.record(f.rule_id, rel, f.location.line, v1=v1)
             )
 
         findings: list[Finding] = []
@@ -165,7 +168,8 @@ class AnalysisRunner:
 
         findings = _drop_superseded(findings, rules)
         findings.extend(
-            self._meta_findings(meta_lines, suppset, filename, source, rel, py_tree, enabled_ids)
+            _fingerprinted(f)
+            for f in self._meta_findings(meta_lines, suppset, filename, enabled_ids)
         )
 
         findings.sort(key=lambda f: (f.location.line, f.location.col, f.rule_id))
@@ -176,9 +180,6 @@ class AnalysisRunner:
         meta_lines: dict[str, set[int]],
         suppset: SuppressionSet,
         filename: str,
-        source: str,
-        rel: str,
-        py_tree: object,
         enabled_ids: set[str],
     ) -> list[Finding]:
         out: list[Finding] = []
@@ -200,8 +201,7 @@ class AnalysisRunner:
                 # a `# codeguard: ignore[CG-META-001]` on the same line still works
                 if suppset.outcome(meta_id, line, date.max):
                     f = f.as_suppressed()
-                scope = _fp.python_scope(py_tree, line) if py_tree is not None else ""  # type: ignore[arg-type]
-                out.append(f.with_fingerprint(_fp.compute(meta_id, rel, source, line, scope=scope)))
+                out.append(f)
         return out
 
     def run_file(self, path: Path) -> list[Finding]:

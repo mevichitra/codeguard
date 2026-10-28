@@ -85,6 +85,20 @@ class TestSarif:
             "endColumn": 40,
         }
 
+    def test_v2_identity_adds_partial_fingerprints(self) -> None:
+        from codeguard.engine.identity import IdentityRecord
+
+        identity = IdentityRecord(
+            "CG-SEC-001", "app.py", 12, keys={"stmt": "s1", "nscope": "n1", "lh": "l1"}
+        )
+        out = json.loads(format_sarif([_finding(identity=identity)]))
+        assert out["runs"][0]["results"][0]["partialFingerprints"] == {
+            "codeguard/v1": "deadbeefdeadbeef",
+            "codeguard/v2/stmt": "s1",
+            "codeguard/v2/nscope": "n1",
+            "codeguard/v2/lh": "l1",
+        }
+
     def test_suppressed_gets_suppressions_entry(self) -> None:
         out = json.loads(format_sarif([_finding(suppressed=True)]))
         assert out["runs"][0]["results"][0]["suppressions"][0]["kind"] == "inSource"
