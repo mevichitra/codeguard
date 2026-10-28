@@ -33,7 +33,8 @@ codeguard ci --diff origin/main --sarif codeguard.sarif
 ```
 
 `ci` scans only files changed since the base branch (auto-detected, or `--diff REF`),
-applies the [baseline](baseline.md), defaults to GitHub Actions annotations, and
+applies the [baseline](baseline.md) (add `--baseline-strict` to a security gate, so a
+pasted copy of a baselined vulnerability fails the build), defaults to GitHub Actions annotations, and
 uses the same [exit-code contract](exit-codes.md) as `scan`.
 
 ## Any CI, plain SARIF

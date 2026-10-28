@@ -34,6 +34,7 @@ nav:
   - Configuration: configuration.md
   - CI integration: ci.md
   - Baseline: baseline.md
+  - Finding identity: identity.md
   - Suppressions: suppressions.md
   - Taint tracking: taint.md
   - Autofix: autofix.md

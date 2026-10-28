@@ -34,7 +34,8 @@ discovery  →  language adapter (parse)  →  rules (analyze)  →  findings
   uniform `SourceNode`. Rules declare the languages they target.
 - **`config/`** — config discovery (first `codeguard.toml` / `.codeguard.toml` / `pyproject.toml [tool.codeguard]` found walking up to the repository root) and the validated schema.
 - **`engine/discovery.py`** — `.gitignore`-aware file discovery with parallel scanning.
-- **`engine/fingerprint.py`** — stable finding fingerprints for baseline and SARIF.
+- **`engine/fingerprint.py`** — the `codeguard/v1` finding fingerprint, kept for SARIF and old baselines.
+- **`engine/identity.py`**, **`engine/matcher.py`**, **`engine/filepairs.py`** — the `codeguard/v2` identity record, the one-to-one multi-pass matcher and the pairing of files across renames that `engine/baseline.py` builds on. See [Finding identity](identity.md).
 - **`engine/suppressions.py`** — language-aware suppression parsing with reasons and expiry.
 
 The `Rule → Finding` contract and the `RuleRegistry` pattern are unchanged in shape; the

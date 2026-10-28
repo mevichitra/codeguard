@@ -3,8 +3,21 @@
 How CodeGuard decides that a finding in today's scan is one it has seen before, what
 that gets wrong, and the scheme and matcher that replace it. The measurements come
 from the finding-identity study in `research/finding_identity/` (its paper is in
-`paper/`); the behaviours are pinned by `tests/test_engine/test_identity_behaviour.py`,
-whose `xfail` cases are the ones v2 has to turn green.
+`paper/`); the behaviours are pinned by `tests/test_engine/test_identity_behaviour.py`.
+
+**Status.** Section 2 is implemented in `engine/identity.py` (the record and its
+builder), `engine/matcher.py` (`match`, `MatchConfig`), `engine/filepairs.py`
+(`pair_files`, `PairConfig`), `engine/baseline.py` (schema 2) and `engine/gitdiff.py`
+(`head_commit`, `renames_since`); the user-facing description is `docs/identity.md`.
+Where the implementation differs from the text below: the keys are `stmt`, `nscope`,
+`ident`, `body`, `lh` plus the tie-break keys `ctx_prev` and `ctx_next` (two keys, so
+the following line can count more than the preceding one); the identifier pass and
+the similarity pass refuse to follow an identifier that still exists in the other
+version's scope (`identifier_gate`), which keeps `eval(b)` beside a surviving `a` a
+new finding; a pairing is *ambiguous* when a competing candidate had the same or any
+context evidence, not only when the scores tied; the similarity threshold defaults to
+0.7 and the token sets keep identifiers (literals masked); the passes run in the order
+`stmt`, `v1`, `nscope`, `body`, `ident`, `sim`.
 
 ## 1. What ships today (`codeguard/v1`)
 

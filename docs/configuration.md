@@ -62,6 +62,7 @@ CLI flags win over the config file. `--config PATH` forces a specific file.
 | `output` | format | `"human"` | Default `--format`. |
 | `jobs` | int | `0` | Worker processes (`0` = auto). |
 | `baseline` | path | — | Baseline file; its findings do not fail the run. See [Baseline](baseline.md). |
+| `baseline_strict` | bool | `false` | Report a baseline match the matcher had to guess about (a pasted copy of a baselined finding) as new. Same as `--baseline-strict`. |
 | `[rules] disable` / `enable` | list of IDs | `[]` | Turn rules off / restrict to a set. |
 | `[rules.<ID>] severity` | severity | — | Per-rule severity remap. |
 | `[rules.<ID>] confidence_min` | float | — | Drop that rule's low-confidence findings. |
