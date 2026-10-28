@@ -6,8 +6,7 @@ paper; the draft is [paper.tex](paper.tex), which pulls in `table_rq1.tex`, `fig
 [claims.md](claims.md) with the file it comes from, and the tables and figures are
 generated into this directory (see [Regenerating](#regenerating)).
 
-Working title: *Same Finding, New Commit? Measuring How Static Analysis Tools Track
-Findings Across Code Changes*
+Title: *An Empirical Evaluation of Static Analysis Finding Identity Across Code Changes*
 
 ## Page budget
 
