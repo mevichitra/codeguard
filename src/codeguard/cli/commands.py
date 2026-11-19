@@ -197,6 +197,8 @@ def _validate(config_path: Path | None) -> None:
         )
         sys.exit(3)
 
+    for warning in cfg.warnings():
+        click.echo(f"warning: {path}: {warning}", err=True)
     click.echo(f"OK: {path}")
 
 

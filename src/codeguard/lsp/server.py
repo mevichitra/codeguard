@@ -252,6 +252,7 @@ class CodeGuardLanguageServer:
             LOG.warning("CodeGuard configuration is invalid: %s", exc)
             self._show_error(str(exc))
             return None
+        self._show_config_warnings(analyzer)
         with self._lock:
             self._analyzer = analyzer
         return analyzer
@@ -277,6 +278,8 @@ class CodeGuardLanguageServer:
                 self._show_error(str(exc))
                 with self._lock:
                     self._analyzer = None
+            else:
+                self._show_config_warnings(analyzer)
         self._submit(self._refresh_all)
 
     def _register_config_watchers(self) -> None:
@@ -774,6 +777,12 @@ class CodeGuardLanguageServer:
 
     def _show_error(self, message: str) -> None:
         self.transport.notify("window/showMessage", {"type": 1, "message": f"CodeGuard: {message}"})
+
+    def _show_config_warnings(self, analyzer: ProjectAnalyzer) -> None:
+        for warning in analyzer.config.warnings():
+            self.transport.notify(
+                "window/showMessage", {"type": 2, "message": f"CodeGuard: {warning}"}
+            )
 
 
 def run_stdio() -> None:

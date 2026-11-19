@@ -121,6 +121,14 @@ class Config:
     #: Directory the config was loaded from (for resolving relative paths).
     source_dir: str | None = None
 
+    def warnings(self) -> list[str]:
+        """Settings that are accepted but have no effect yet."""
+        if self.rule_paths:
+            return [
+                "rule_paths is reserved for custom rules and is not supported yet; it has no effect"
+            ]
+        return []
+
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Config:
         out = cls()
