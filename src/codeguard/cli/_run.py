@@ -87,6 +87,8 @@ def execute(opt: RunOptions) -> int:
     except ConfigError as exc:
         err.print(f"[bold red]Config error:[/bold red] {exc}")
         return EXIT_CONFIG
+    for warning in config.warnings():
+        err.print(f"[yellow]warning:[/yellow] {warning}")
 
     root = Path(config.source_dir) if config.source_dir else scan_root
 

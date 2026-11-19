@@ -7,6 +7,7 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
 from click.testing import CliRunner
 
 from codeguard.cli import commands
@@ -66,6 +67,14 @@ class TestValidate:
         f.write_text("[codeguard]\nfail_on = 5\n", encoding="utf-8")
         r = CliRunner().invoke(cli, ["validate", "--config", str(f)])
         assert r.exit_code == 3
+
+    @pytest.mark.parametrize("command", ["validate", "scan", "ci"])
+    def test_rule_paths_warns_it_has_no_effect(self, tmp_path: Path, command: str) -> None:
+        f = tmp_path / "codeguard.toml"
+        f.write_text('[codeguard]\nrule_paths = ["rules/"]\n', encoding="utf-8")
+        args = ["--config", str(f)] if command == "validate" else [str(tmp_path)]
+        r = CliRunner().invoke(cli, [command, *args])
+        assert "rule_paths is reserved for custom rules" in r.output
 
 
 class TestInit:
